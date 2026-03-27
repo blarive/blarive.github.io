@@ -6,23 +6,26 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pêche">
-<meta name="theme-color" content="#1a3a4a">
+<meta name="theme-color" content="#1b3a6b">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Carnet de Pêche</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --eau: #1a3a4a;
-    --eau-profonde: #0d2231;
-    --eau-claire: #2a6080;
-    --sable: #e8d5a3;
+    --eau: #1b3a6b;
+    --eau-profonde: #0f2147;
+    --eau-claire: #2e6db4;
+    --sable: #f7d6e8;
     --mousse: #4a7c59;
-    --eclair: #f0c040;
-    --blanc: #f5f0e8;
-    --texte: #1a2a35;
-    --gris: #8a9aa5;
+    --eclair: #e8609a;
+    --blanc: #fdf4f8;
+    --texte: #1a2035;
+    --gris: #8a96b0;
     --rouge: #c0392b;
+    --rose: #e8609a;
+    --rose-clair: #fce4f0;
+    --bleu-clair: #e8f0fb;
     --radius: 14px;
     --sidebar-w: 240px;
   }
@@ -53,7 +56,7 @@
   .sidebar::after {
     content:'';position:absolute;bottom:60px;left:-20%;
     width:140%;height:100px;
-    background:rgba(42,96,128,0.2);border-radius:50%;filter:blur(30px);
+    background:rgba(232,96,154,0.15);border-radius:50%;filter:blur(30px);
     animation:vague 7s ease-in-out infinite;pointer-events:none;
   }
   @keyframes vague{0%,100%{transform:translateX(0) scaleY(1)}50%{transform:translateX(4%) scaleY(1.2)}}
@@ -66,7 +69,7 @@
   .sidebar-stats { display:flex;flex-direction:column;gap:8px;padding:0 16px 20px;position:relative;z-index:1; }
   .sidebar-stat { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center; }
   .sidebar-stat .label { font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:0.8px; }
-  .sidebar-stat .num { font-family:'Playfair Display',serif;font-size:20px;color:var(--eclair); }
+  .sidebar-stat .num { font-family:'Playfair Display',serif;font-size:20px;color:var(--rose); }
 
   .sidebar-nav { flex:1;padding:8px 12px;position:relative;z-index:1; }
   .nav-item {
@@ -76,7 +79,7 @@
   }
   .nav-item .nav-icon{font-size:20px;width:24px;text-align:center;}
   .nav-item:hover{background:rgba(255,255,255,0.07);color:white;}
-  .nav-item.active{background:var(--eclair);color:var(--eau-profonde);font-weight:700;}
+  .nav-item.active{background:var(--rose);color:white;font-weight:700;}
 
   /* ── APP BODY ────────────────────────────── */
   .app-body { flex:1;margin-left:var(--sidebar-w);display:flex;flex-direction:column;min-height:100vh; }
@@ -90,7 +93,7 @@
   .topbar-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--eau-profonde);}
   .topbar-title small{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--gris);font-weight:400;display:block;text-transform:uppercase;letter-spacing:1px;}
   .btn-primary {
-    padding:9px 20px;background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);
+    padding:9px 20px;background:linear-gradient(135deg,var(--eau-claire) 0%,var(--rose) 100%);
     color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
     font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
     transition:opacity 0.15s,transform 0.15s;
@@ -98,10 +101,10 @@
   .btn-primary:hover{opacity:0.9;} .btn-primary:active{transform:scale(0.97);}
   .btn-secondary {
     padding:9px 14px;background:white;color:var(--eau);
-    border:1.5px solid #d0dde5;border-radius:10px;font-family:'DM Sans',sans-serif;
+    border:1.5px solid #c8d8f0;border-radius:10px;font-family:'DM Sans',sans-serif;
     font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;
   }
-  .btn-secondary:hover{background:#eef4f8;}
+  .btn-secondary:hover{background:var(--bleu-clair);}
 
   /* ── PAGE CONTENT ────────────────────────── */
   .page-content { flex:1;padding:24px 28px 40px;max-width:1100px; }
@@ -145,7 +148,8 @@
   }
   .entry-card:hover{box-shadow:0 4px 18px rgba(0,0,0,0.1);}
   .entry-card.swiping{transition:none;}
-  .entry-card.trophy{border-left-color:var(--eclair);}
+  .entry-card.trophy{border-left-color:var(--rose);}
+  .entry-card.capot{border-left-color:#b0bcd8;background:#f8f9fd;}
 
   .btn-delete-desktop {
     display:none;position:absolute;top:12px;right:14px;
@@ -161,10 +165,11 @@
   .entry-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
   .entry-meta-item{display:flex;align-items:center;gap:4px;font-size:13px;color:#555;}
   .entry-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
-  .tag{padding:3px 10px;border-radius:10px;font-size:11px;background:rgba(42,96,128,0.1);color:var(--eau-claire);font-weight:500;}
+  .tag{padding:3px 10px;border-radius:10px;font-size:11px;background:var(--bleu-clair);color:var(--eau-claire);font-weight:500;}
+  .tag.rose{background:var(--rose-clair);color:var(--rose);}
   .entry-stars{font-size:13px;margin-top:4px;}
   .entry-notes{font-size:13px;color:#666;margin-top:6px;font-style:italic;line-height:1.4;}
-  .photo-badge{display:inline-block;background:linear-gradient(135deg,var(--eclair),#e0a800);color:var(--eau-profonde);padding:2px 9px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px;}
+  .photo-badge{display:inline-block;background:linear-gradient(135deg,var(--rose),#c0306a);color:white;padding:2px 9px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px;}
 
   .empty-state{text-align:center;padding:56px 24px;color:var(--gris);}
   .empty-state .icon{font-size:56px;margin-bottom:12px;display:block;opacity:0.4;}
@@ -190,18 +195,23 @@
   .star-btn.active{filter:none;transform:scale(1.1);}
 
   .meteo-btns{display:flex;gap:8px;flex-wrap:wrap;}
-  .meteo-btn{padding:8px 14px;border:1.5px solid #ddd;border-radius:20px;background:none;font-size:13px;cursor:pointer;transition:all 0.15s;color:var(--texte);font-family:'DM Sans',sans-serif;}
-  .meteo-btn.selected{border-color:var(--eau-claire);background:rgba(42,96,128,0.1);color:var(--eau-claire);font-weight:600;}
+  .meteo-btn{padding:8px 14px;border:1.5px solid #dde3f0;border-radius:20px;background:none;font-size:13px;cursor:pointer;transition:all 0.15s;color:var(--texte);font-family:'DM Sans',sans-serif;}
+  .meteo-btn.selected{border-color:var(--eau-claire);background:var(--bleu-clair);color:var(--eau-claire);font-weight:600;}
+  .meteo-btn.selected-rose{border-color:var(--rose);background:var(--rose-clair);color:var(--rose);font-weight:600;}
 
-  .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,74,0.25);transition:transform 0.15s;}
+  .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--eau-claire) 0%,var(--rose) 100%);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(46,109,180,0.25);transition:transform 0.15s;}
   .btn-submit:active{transform:scale(0.98);}
 
-  .photo-upload{border:2px dashed #ccc;border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:#fafaf8;transition:border-color 0.2s;}
+  .photo-upload{border:2px dashed #c8d8f0;border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:#f8faff;transition:border-color 0.2s;}
   .photo-upload:hover{border-color:var(--eau-claire);}
   .photo-upload input{display:none;}
   .photo-upload .icon{font-size:28px;display:block;margin-bottom:6px;}
   .photo-upload p{font-size:13px;color:var(--gris);}
   .photo-preview{width:100%;height:160px;object-fit:cover;border-radius:10px;display:none;}
+
+  /* capot section */
+  .capot-banner{display:none;background:var(--bleu-clair);border:1.5px solid #b8cef0;border-radius:12px;padding:14px 16px;margin-bottom:14px;color:var(--eau);font-size:14px;font-weight:500;text-align:center;}
+  .capot-banner.visible{display:block;}
 
   /* ── STATS ───────────────────────────────── */
   .stats-grid{display:grid;grid-template-columns:1fr;gap:14px;}
@@ -210,7 +220,7 @@
   .species-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
   .species-name{font-size:14px;width:100px;flex-shrink:0;color:var(--texte);}
   .bar-track{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;}
-  .bar-fill{height:100%;background:linear-gradient(90deg,var(--eau) 0%,var(--eau-claire) 100%);border-radius:4px;transition:width 0.5s ease;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--eau-claire) 0%,var(--rose) 100%);border-radius:4px;transition:width 0.5s ease;}
   .bar-count{font-size:13px;color:var(--gris);min-width:20px;text-align:right;}
   .record-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0;}
   .record-item:last-child{border-bottom:none;}
@@ -218,7 +228,7 @@
   .record-info{flex:1;}
   .record-info .species{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;}
   .record-info .detail{font-size:12px;color:var(--gris);margin-top:2px;}
-  .record-value{font-family:'Playfair Display',serif;font-size:20px;color:var(--eclair);}
+  .record-value{font-family:'Playfair Display',serif;font-size:20px;color:var(--rose);}
 
   /* ── MOBILE ONLY ─────────────────────────── */
   .bottom-nav{display:none;}
@@ -255,8 +265,8 @@
   ══════════════════════════════════════════ */
   @media(max-width:767px){
     body{display:block;background:var(--eau-profonde);}
-    body::before{content:'';position:fixed;top:0;left:0;right:0;height:210px;background:linear-gradient(180deg,var(--eau) 0%,var(--eau-profonde) 100%);z-index:0;}
-    body::after{content:'';position:fixed;top:155px;left:-10%;width:120%;height:70px;background:rgba(42,96,128,0.25);border-radius:50%;filter:blur(20px);animation:vague 6s ease-in-out infinite;z-index:0;}
+    body::before{content:'';position:fixed;top:0;left:0;right:0;height:210px;background:linear-gradient(180deg,var(--eau-claire) 0%,var(--eau-profonde) 100%);z-index:0;}
+    body::after{content:'';position:fixed;top:155px;left:-10%;width:120%;height:70px;background:rgba(232,96,154,0.2);border-radius:50%;filter:blur(20px);animation:vague 6s ease-in-out infinite;z-index:0;}
 
     .sidebar{display:none;}
     .topbar{display:none;}
@@ -273,7 +283,7 @@
       position:fixed;top:104px;left:0;right:0;padding:0 14px;z-index:50;
     }
     .mob-stat{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 6px;text-align:center;backdrop-filter:blur(8px);}
-    .mob-stat .num{font-family:'Playfair Display',serif;font-size:18px;color:var(--eclair);display:block;}
+    .mob-stat .num{font-family:'Playfair Display',serif;font-size:18px;color:var(--rose);display:block;}
     .mob-stat .label{font-size:9px;color:var(--gris);text-transform:uppercase;letter-spacing:0.7px;}
 
     .app-body{
@@ -295,7 +305,7 @@
     .mob-nav-btn{flex:1;background:none;border:none;padding:6px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
     .mob-nav-btn .nav-icon{font-size:22px;}
     .mob-nav-btn .nav-label{font-size:10px;font-weight:500;color:var(--gris);font-family:'DM Sans',sans-serif;}
-    .mob-nav-btn.active .nav-label{color:var(--eau-claire);font-weight:700;}
+    .mob-nav-btn.active .nav-label{color:var(--rose);font-weight:700;}
     .toast{bottom:80px;}
     .btn-delete-desktop{display:none;}
   }
@@ -363,6 +373,7 @@
         <button class="filter-pill" onclick="setFilter('Sandre',this)">🐡 Sandre</button>
         <button class="filter-pill" onclick="setFilter('Perche',this)">Perche</button>
         <button class="filter-pill" onclick="setFilter('trophy',this)">🏆 Trophées</button>
+        <button class="filter-pill" onclick="setFilter('capot',this)">🚫 Capots</button>
       </div>
       <div class="cards-grid" id="journal-list"></div>
     </div>
@@ -377,6 +388,13 @@
             <label class="form-label">📅 Date & Heure</label>
             <input type="datetime-local" class="form-input" id="f-date">
           </div>
+          <div class="form-group">
+            <label class="form-label">📋 Type de sortie</label>
+            <div class="meteo-btns">
+              <button class="meteo-btn" id="btn-capot" onclick="toggleCapot(this)">🚫 Capot (bredouille)</button>
+            </div>
+          </div>
+          <div id="prise-fields">
           <div class="form-group">
             <label class="form-label">🐟 Espèce</label>
             <select class="form-select" id="f-espece">
@@ -394,13 +412,9 @@
               <input type="number" class="form-input" id="f-taille" placeholder="ex. 45">
             </div>
             <div class="form-group">
-              <label class="form-label">⚖️ Poids (g)</label>
-              <input type="number" class="form-input" id="f-poids" placeholder="ex. 1200">
+              <label class="form-label">⚖️ Poids (kg)</label>
+              <input type="number" class="form-input" id="f-poids" placeholder="ex. 1.2" step="0.001" min="0">
             </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">📍 Lieu</label>
-            <input type="text" class="form-input" id="f-lieu" placeholder="Étang, rivière, lac…">
           </div>
           <div class="form-group">
             <label class="form-label">🎣 Technique</label>
@@ -413,6 +427,11 @@
               <option>Bolognaise</option><option>Pêche au coup</option>
               <option>Pêche au posé</option><option>Pêche au vif</option><option>Autre</option>
             </select>
+          </div>
+          </div><!-- /prise-fields -->
+          <div class="form-group">
+            <label class="form-label">📍 Lieu</label>
+            <input type="text" class="form-input" id="f-lieu" placeholder="Étang, rivière, lac…">
           </div>
         </div>
 
@@ -458,8 +477,8 @@
               <button class="star-btn" onclick="setStar(5)">⭐</button>
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">🏅 Statut</label>
+          <div class="form-group" id="statut-group">
+            <label class="form-label">🏅 Statut de la prise</label>
             <div class="meteo-btns">
               <button class="meteo-btn" id="btn-trophy" onclick="toggleTrophy(this)">🏆 Trophée</button>
               <button class="meteo-btn" id="btn-relache" onclick="toggleRelache(this)">↩️ Remis à l'eau</button>
@@ -515,7 +534,7 @@
 
 <script>
 let entries = JSON.parse(localStorage.getItem('peche-entries')||'[]');
-let currentFilter='tous', currentStars=0, selectedMeteo=[], isTrophy=false, isRelache=false, photoData=null;
+let currentFilter='tous', currentStars=0, selectedMeteo=[], isTrophy=false, isRelache=false, isCapot=false, photoData=null;
 
 const topbarTitles = {
   journal:['Mes sorties','Journal de pêche'],
@@ -534,9 +553,7 @@ function switchView(name, btn){
   document.getElementById('view-'+name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
-  // sidebar
   document.querySelectorAll('.nav-item').forEach(b=>{ if(b.textContent.trim().toLowerCase().includes(name==='ajouter'?'ajouter':name==='stats'?'stat':'journal')) b.classList.add('active'); });
-  // mobile nav
   const mn=document.getElementById('mnav-'+name); if(mn) mn.classList.add('active');
   const [sub,main]=topbarTitles[name];
   document.getElementById('topbar-title').innerHTML=`<small>${sub}</small>${main}`;
@@ -562,6 +579,25 @@ function toggleMeteo(btn,val){
 function toggleTrophy(btn){isTrophy=!isTrophy;btn.classList.toggle('selected',isTrophy);}
 function toggleRelache(btn){isRelache=!isRelache;btn.classList.toggle('selected',isRelache);}
 
+// ── CAPOT ────────────────────────────────────────────────────────────────────
+function toggleCapot(btn){
+  isCapot=!isCapot;
+  btn.classList.toggle('selected-rose', isCapot);
+  btn.classList.toggle('selected', false);
+  const fields=document.getElementById('prise-fields');
+  const statutGroup=document.getElementById('statut-group');
+  fields.style.opacity = isCapot ? '0.35' : '1';
+  fields.style.pointerEvents = isCapot ? 'none' : '';
+  statutGroup.style.opacity = isCapot ? '0.35' : '1';
+  statutGroup.style.pointerEvents = isCapot ? 'none' : '';
+  if(isCapot){
+    document.getElementById('f-espece').value='';
+    document.getElementById('f-taille').value='';
+    document.getElementById('f-poids').value='';
+    document.getElementById('f-technique').value='';
+  }
+}
+
 function previewPhoto(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
@@ -577,38 +613,48 @@ function previewPhoto(e){
 
 function saveEntry(){
   const espece=document.getElementById('f-espece').value;
-  if(!espece){showToast('⚠️ Sélectionne une espèce !');return;}
+  // Espèce obligatoire seulement si pas capot
+  if(!isCapot && !espece){showToast('⚠️ Sélectionne une espèce !');return;}
+  const poidsVal=document.getElementById('f-poids').value;
   const entry={
-    id:Date.now(), date:document.getElementById('f-date').value, espece,
-    taille:document.getElementById('f-taille').value||null,
-    poids:document.getElementById('f-poids').value||null,
+    id:Date.now(),
+    date:document.getElementById('f-date').value,
+    espece: isCapot ? '🚫 Capot' : espece,
+    taille: isCapot ? null : (document.getElementById('f-taille').value||null),
+    poids:  isCapot ? null : (poidsVal ? parseFloat(poidsVal) : null),  // stocké en kg
     lieu:document.getElementById('f-lieu').value,
-    technique:document.getElementById('f-technique').value,
+    technique: isCapot ? '' : document.getElementById('f-technique').value,
     meteo:[...selectedMeteo],
     tempAir:document.getElementById('f-temp-air').value||null,
     tempEau:document.getElementById('f-temp-eau').value||null,
     lune:document.getElementById('f-lune').value,
-    stars:currentStars, trophy:isTrophy, relache:isRelache,
+    stars:currentStars, trophy:isCapot?false:isTrophy, relache:isCapot?false:isRelache,
+    capot:isCapot,
     notes:document.getElementById('f-notes').value, photo:photoData
   };
   entries.unshift(entry);
   localStorage.setItem('peche-entries',JSON.stringify(entries));
   resetForm(); updateAllStats();
-  showToast('🎣 Sortie enregistrée !');
+  showToast(isCapot ? '😔 Capot enregistré…' : '🎣 Sortie enregistrée !');
   switchView('journal',null); renderJournal();
 }
 
 function resetForm(){
   ['f-espece','f-taille','f-poids','f-lieu','f-technique','f-temp-air','f-temp-eau','f-lune','f-notes']
     .forEach(id=>document.getElementById(id).value='');
-  document.querySelectorAll('.meteo-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.meteo-btn').forEach(b=>{b.classList.remove('selected');b.classList.remove('selected-rose');});
   document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('btn-trophy').classList.remove('selected');
   document.getElementById('btn-relache').classList.remove('selected');
+  document.getElementById('btn-capot').classList.remove('selected-rose');
   document.getElementById('photo-preview').style.display='none';
   document.getElementById('photo-icon').style.display='block';
   document.getElementById('photo-text').textContent='Ajouter une photo';
-  selectedMeteo=[];currentStars=0;isTrophy=false;isRelache=false;photoData=null;
+  const fields=document.getElementById('prise-fields');
+  fields.style.opacity='1'; fields.style.pointerEvents='';
+  const sg=document.getElementById('statut-group');
+  sg.style.opacity='1'; sg.style.pointerEvents='';
+  selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false; photoData=null;
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('f-date').value=now.toISOString().slice(0,16);
 }
@@ -625,8 +671,9 @@ function renderJournal(){
   const search=document.getElementById('search-input').value.toLowerCase();
   let filtered=entries.filter(e=>{
     if(currentFilter==='trophy') return e.trophy;
-    const mF=currentFilter==='tous'||e.espece.includes(currentFilter);
-    const mS=!search||e.espece.toLowerCase().includes(search)||(e.lieu&&e.lieu.toLowerCase().includes(search));
+    if(currentFilter==='capot') return e.capot;
+    const mF=currentFilter==='tous'||(e.espece&&e.espece.includes(currentFilter));
+    const mS=!search||(e.espece&&e.espece.toLowerCase().includes(search))||(e.lieu&&e.lieu.toLowerCase().includes(search));
     return mF&&mS;
   });
 
@@ -642,22 +689,26 @@ function renderJournal(){
     const date=e.date?new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
     const heure=e.date?new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
     const stars=e.stars?'⭐'.repeat(e.stars):'';
-    const tags=[]; if(e.technique)tags.push(e.technique); if(e.relache)tags.push("↩️ Remis à l'eau");
+    const tags=[];
+    if(e.technique) tags.push(e.technique);
+    if(e.relache) tags.push("↩️ Remis à l'eau");
+    const cardClass=e.capot?'capot':(e.trophy?'trophy':'');
     return `
       <div class="card-wrapper" style="animation-delay:${idx*0.04}s">
         ${isMobile?`<div class="card-delete-bg" onclick="deleteEntry(${e.id})">🗑<span>Supprimer</span></div>`:''}
-        <div class="entry-card ${e.trophy?'trophy':''}" data-id="${e.id}">
+        <div class="entry-card ${cardClass}" data-id="${e.id}">
           <button class="btn-delete-desktop" onclick="deleteEntry(${e.id})">🗑 Supprimer</button>
           <div class="entry-card-header">
             <div>
-              <span class="entry-species">${e.espece}</span>
+              <span class="entry-species">${e.espece||'—'}</span>
               ${e.trophy?'<span class="photo-badge">🏆 Trophée</span>':''}
+              ${e.capot?'<span class="photo-badge" style="background:linear-gradient(135deg,#7a8fb0,#4a6080)">🚫 Capot</span>':''}
             </div>
             <div class="entry-date">${date}<br>${heure}</div>
           </div>
           <div class="entry-meta">
             ${e.taille?`<div class="entry-meta-item"><span>📏</span>${e.taille} cm</div>`:''}
-            ${e.poids?`<div class="entry-meta-item"><span>⚖️</span>${formatPoids(e.poids)}</div>`:''}
+            ${e.poids!=null?`<div class="entry-meta-item"><span>⚖️</span>${formatPoids(e.poids)}</div>`:''}
             ${e.lieu?`<div class="entry-meta-item"><span>📍</span>${e.lieu}</div>`:''}
             ${e.meteo&&e.meteo.length?`<div class="entry-meta-item">${e.meteo.join(' ')}</div>`:''}
           </div>
@@ -669,7 +720,6 @@ function renderJournal(){
       </div>`;
   }).join('');
 
-  // Swipe (mobile)
   if(isMobile){
     document.querySelectorAll('.entry-card').forEach(card=>{
       let sx=0,cx=0,d=false;
@@ -686,13 +736,20 @@ function renderJournal(){
   }
 }
 
-function formatPoids(g){ return g>=1000?(g/1000).toFixed(2).replace(/\.?0+$/,'')+' kg':g+' g'; }
+// Poids stocké en kg, affiché en kg
+function formatPoids(kg){
+  if(kg==null) return '';
+  // Rétrocompat : anciennes entrées stockées en grammes (>100 = probablement en g)
+  const val = kg > 100 ? kg/1000 : kg;
+  return val < 1 ? (val*1000).toFixed(0)+' g' : val.toFixed(3).replace(/\.?0+$/,'')+' kg';
+}
 
 function updateAllStats(){
   const total=entries.length;
-  const records=entries.filter(e=>e.poids);
-  const rec=records.length?formatPoids(Math.max(...records.map(e=>parseInt(e.poids)))):'—';
-  const species=new Set(entries.map(e=>e.espece)).size;
+  const records=entries.filter(e=>e.poids!=null&&!e.capot);
+  const recKg = records.length ? Math.max(...records.map(e=>e.poids>100?e.poids/1000:e.poids)) : null;
+  const rec = recKg!=null ? formatPoids(recKg) : '—';
+  const species=new Set(entries.filter(e=>!e.capot).map(e=>e.espece)).size;
   ['m-total','m-poissons'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.textContent=i===0?total:species;});
   const mr=document.getElementById('m-record');if(mr)mr.textContent=rec;
   const st=document.getElementById('s-total');if(st)st.textContent=total;
@@ -705,31 +762,40 @@ function updateStats(){
     el.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">📊</span><p>Pas encore de données.</p></div>`;
     return;
   }
-  const sp={};entries.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+1;});
+  const prises=entries.filter(e=>!e.capot);
+  const capots=entries.filter(e=>e.capot);
+  const sp={};prises.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+1;});
   const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
-  const maxC=sorted[0][1];
-  const wP=[...entries].filter(e=>e.poids).sort((a,b)=>b.poids-a.poids);
-  const wT=[...entries].filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
+  const maxC=sorted.length?sorted[0][1]:1;
+  const wP=[...prises].filter(e=>e.poids!=null).sort((a,b)=>{
+    const ka=a.poids>100?a.poids/1000:a.poids;
+    const kb=b.poids>100?b.poids/1000:b.poids;
+    return kb-ka;
+  });
+  const wT=[...prises].filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
   const lx={};entries.forEach(e=>{if(e.lieu)lx[e.lieu]=(lx[e.lieu]||0)+1;});
   const tL=Object.entries(lx).sort((a,b)=>b[1]-a[1])[0];
 
   el.innerHTML=`
+    ${sorted.length?`
     <div class="stat-card">
       <div class="stat-card-title">🐟 Espèces capturées</div>
       ${sorted.map(([s,c])=>`<div class="species-bar"><span class="species-name">${s}</span><div class="bar-track"><div class="bar-fill" style="width:${c/maxC*100}%"></div></div><span class="bar-count">${c}</span></div>`).join('')}
-    </div>
+    </div>`:''}
     ${wP.length||wT.length?`
     <div class="stat-card">
       <div class="stat-card-title">🏆 Records</div>
-      ${wP[0]?`<div class="record-item"><span class="record-icon">⚖️</span><div class="record-info"><div class="species">${wP[0].espece}</div><div class="detail">${wP[0].lieu||'Lieu non précisé'}</div></div><span class="record-value">${formatPoids(wP[0].poids)}</span></div>`:''}
+      ${wP[0]?`<div class="record-item"><span class="record-icon">⚖️</span><div class="record-info"><div class="species">${wP[0].espece}</div><div class="detail">${wP[0].lieu||'Lieu non précisé'}</div></div><span class="record-value">${formatPoids(wP[0].poids>100?wP[0].poids/1000:wP[0].poids)}</span></div>`:''}
       ${wT[0]?`<div class="record-item"><span class="record-icon">📏</span><div class="record-info"><div class="species">${wT[0].espece}</div><div class="detail">${wT[0].lieu||'Lieu non précisé'}</div></div><span class="record-value">${wT[0].taille} cm</span></div>`:''}
     </div>`:''}
     <div class="stat-card">
       <div class="stat-card-title">📋 Résumé</div>
       <div class="record-item"><span class="record-icon">🎣</span><div class="record-info"><div class="species">Total sorties</div></div><span class="record-value">${entries.length}</span></div>
-      <div class="record-item"><span class="record-icon">🏆</span><div class="record-info"><div class="species">Trophées</div></div><span class="record-value">${entries.filter(e=>e.trophy).length}</span></div>
+      <div class="record-item"><span class="record-icon">🐟</span><div class="record-info"><div class="species">Sorties avec prise</div></div><span class="record-value">${prises.length}</span></div>
+      <div class="record-item"><span class="record-icon">🚫</span><div class="record-info"><div class="species">Capots (bredouille)</div></div><span class="record-value">${capots.length}</span></div>
+      <div class="record-item"><span class="record-icon">🏆</span><div class="record-info"><div class="species">Trophées</div></div><span class="record-value">${prises.filter(e=>e.trophy).length}</span></div>
       ${tL?`<div class="record-item"><span class="record-icon">📍</span><div class="record-info"><div class="species">Spot favori</div><div class="detail">${tL[1]} visite${tL[1]>1?'s':''}</div></div><span class="record-value" style="font-size:13px;max-width:110px;text-align:right">${tL[0]}</span></div>`:''}
-      <div class="record-item"><span class="record-icon">↩️</span><div class="record-info"><div class="species">Remises à l'eau</div></div><span class="record-value">${entries.filter(e=>e.relache).length}</span></div>
+      <div class="record-item"><span class="record-icon">↩️</span><div class="record-info"><div class="species">Remises à l'eau</div></div><span class="record-value">${prises.filter(e=>e.relache).length}</span></div>
     </div>`;
 }
 
