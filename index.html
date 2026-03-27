@@ -24,121 +24,25 @@
     height: 100%;
   }
 
-  /* Variables par défaut - Thème Océan profond */
+  /* Couleurs fixes - Bleu et Rose */
   :root {
-    --bg-body: #eef2f5;
-    --bg-sidebar-start: #0d2231;
-    --bg-sidebar-end: #1a3a4a;
-    --eau: #1a3a4a;
-    --eau-profonde: #0d2231;
-    --eau-claire: #2a6080;
-    --sable: #e8d5a3;
-    --mousse: #4a7c59;
-    --eclair: #f0c040;
-    --blanc: #f5f0e8;
-    --texte: #1a2a35;
-    --gris: #8a9aa5;
-    --rouge: #c0392b;
-    --card-bg: #ffffff;
-    --input-bg: #ffffff;
-    --border-color: #e0e6ea;
+    --bg-body: #f5f7fc;
+    --bg-sidebar-start: #1a4a6f;
+    --bg-sidebar-end: #2c6285;
+    --eau: #1a4a6f;
+    --eau-profonde: #0e3a57;
+    --eau-claire: #4a9eff;
+    --sable: #ffe8d4;
+    --mousse: #5a9c6e;
+    --eclair: #ff6b8b;
+    --blanc: #ffffff;
+    --texte: #2c3e50;
+    --gris: #7f8c8d;
+    --rose: #ff6b8b;
+    --rose-clair: #ff9eb5;
+    --rouge: #e74c3c;
     --radius: 14px;
     --sidebar-w: 240px;
-  }
-
-  /* Thème Océan profond */
-  body.theme-ocean {
-    --bg-body: #e0f0ff;
-    --bg-sidebar-start: #0A4D6C;
-    --bg-sidebar-end: #1a6d8c;
-    --eau: #0A4D6C;
-    --eau-profonde: #064663;
-    --eau-claire: #2AA9C9;
-    --sable: #FFE6B3;
-    --mousse: #5FAD56;
-    --eclair: #FF6B6B;
-    --blanc: #F8F9FA;
-    --texte: #2C3E50;
-    --gris: #7F8C8D;
-    --card-bg: #ffffff;
-    --input-bg: #ffffff;
-    --border-color: #d0e0e8;
-  }
-
-  /* Thème Coucher de soleil */
-  body.theme-sunset {
-    --bg-body: #FFF0E0;
-    --bg-sidebar-start: #1E3A5F;
-    --bg-sidebar-end: #2C4A6F;
-    --eau: #1E3A5F;
-    --eau-profonde: #142A44;
-    --eau-claire: #E67E22;
-    --sable: #FFD8A8;
-    --mousse: #D46B2A;
-    --eclair: #FF8C69;
-    --blanc: #FFF5E6;
-    --texte: #2C3E50;
-    --gris: #A67B5E;
-    --card-bg: #FFFEF9;
-    --input-bg: #ffffff;
-    --border-color: #FFE0C0;
-  }
-
-  /* Thème Aube sur le lac */
-  body.theme-dawn {
-    --bg-body: #F5EFFF;
-    --bg-sidebar-start: #9B7BB5;
-    --bg-sidebar-end: #B8A9C9;
-    --eau: #9B7BB5;
-    --eau-profonde: #7D5D97;
-    --eau-claire: #F3C5C5;
-    --sable: #FFF0E0;
-    --mousse: #C9B6E4;
-    --eclair: #F4D03F;
-    --blanc: #FFF5EE;
-    --texte: #4A4E69;
-    --gris: #8E8EA6;
-    --card-bg: #ffffff;
-    --input-bg: #ffffff;
-    --border-color: #E8D8F0;
-  }
-
-  /* Thème Moderne et sportif */
-  body.theme-modern {
-    --bg-body: #F0F4F8;
-    --bg-sidebar-start: #1E88E5;
-    --bg-sidebar-end: #1565C0;
-    --eau: #1E88E5;
-    --eau-profonde: #0D47A1;
-    --eau-claire: #8BC34A;
-    --sable: #FFE082;
-    --mousse: #8BC34A;
-    --eclair: #FF5722;
-    --blanc: #FFFFFF;
-    --texte: #212121;
-    --gris: #757575;
-    --card-bg: #ffffff;
-    --input-bg: #ffffff;
-    --border-color: #E0E0E0;
-  }
-
-  /* Thème Météo */
-  body.theme-weather {
-    --bg-body: #E8F0F5;
-    --bg-sidebar-start: #4A90A4;
-    --bg-sidebar-end: #6DA5B9;
-    --eau: #4A90A4;
-    --eau-profonde: #2C6B7A;
-    --eau-claire: #FFD966;
-    --sable: #F5E6D3;
-    --mousse: #6DA5B9;
-    --eclair: #FFA559;
-    --blanc: #FEF9E6;
-    --texte: #2C3E50;
-    --gris: #8EA0A8;
-    --card-bg: #ffffff;
-    --input-bg: #ffffff;
-    --border-color: #D0E0E8;
   }
 
   body {
@@ -147,7 +51,6 @@
     color: var(--texte);
     display: flex;
     min-height: 100vh;
-    transition: background 0.3s ease, color 0.3s ease;
   }
 
   /* Sidebar */
@@ -163,7 +66,6 @@
     bottom: 0;
     z-index: 100;
     overflow: hidden;
-    transition: background 0.3s ease;
   }
 
   .sidebar::after {
@@ -173,7 +75,7 @@
     left: -20%;
     width: 140%;
     height: 100px;
-    background: rgba(42, 96, 128, 0.2);
+    background: rgba(255, 107, 139, 0.2);
     border-radius: 50%;
     filter: blur(30px);
     animation: vague 7s ease-in-out infinite;
@@ -195,7 +97,7 @@
     font-size: 34px;
     display: block;
     margin-bottom: 8px;
-    filter: drop-shadow(0 2px 8px rgba(240, 192, 64, 0.5));
+    filter: drop-shadow(0 2px 8px rgba(255, 107, 139, 0.5));
   }
 
   .sidebar-logo h1 {
@@ -207,7 +109,7 @@
 
   .sidebar-logo p {
     font-size: 10px;
-    color: var(--gris);
+    color: rgba(255, 255, 255, 0.6);
     letter-spacing: 1.5px;
     text-transform: uppercase;
     margin-top: 3px;
@@ -223,8 +125,8 @@
   }
 
   .sidebar-stat {
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
     padding: 10px 14px;
     display: flex;
@@ -234,7 +136,7 @@
 
   .sidebar-stat .label {
     font-size: 11px;
-    color: var(--gris);
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     letter-spacing: 0.8px;
   }
@@ -242,7 +144,7 @@
   .sidebar-stat .num {
     font-family: 'Playfair Display', serif;
     font-size: 20px;
-    color: var(--eclair);
+    color: var(--rose);
   }
 
   .sidebar-nav {
@@ -260,7 +162,7 @@
     padding: 12px 16px;
     border-radius: 12px;
     cursor: pointer;
-    color: var(--gris);
+    color: rgba(255, 255, 255, 0.7);
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s;
@@ -278,13 +180,13 @@
   }
 
   .nav-item:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.1);
     color: white;
   }
 
   .nav-item.active {
-    background: var(--eclair);
-    color: var(--eau-profonde);
+    background: var(--rose);
+    color: white;
     font-weight: 700;
   }
 
@@ -296,13 +198,12 @@
     flex-direction: column;
     min-height: 100vh;
     background: var(--bg-body);
-    transition: background 0.3s ease;
   }
 
   /* Top Bar */
   .topbar {
-    background: var(--card-bg);
-    border-bottom: 1px solid var(--border-color);
+    background: var(--blanc);
+    border-bottom: 1px solid #e0e6ea;
     padding: 16px 28px;
     display: flex;
     align-items: center;
@@ -350,16 +251,16 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: opacity 0.15s, transform 0.15s;
+    transition: transform 0.15s;
   }
 
   .btn-primary:active { transform: scale(0.97); }
 
   .btn-secondary {
     padding: 9px 14px;
-    background: var(--card-bg);
+    background: var(--blanc);
     color: var(--eau);
-    border: 1.5px solid var(--border-color);
+    border: 1.5px solid #e0e6ea;
     border-radius: 10px;
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
@@ -368,26 +269,11 @@
     transition: background 0.15s;
   }
 
-  .btn-secondary:hover { background: var(--bg-body); }
+  .btn-secondary:hover { background: #f0f4f8; }
 
   .btn-location {
     padding: 9px 14px;
     background: linear-gradient(135deg, var(--mousse) 0%, #5a9c6e 100%);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .btn-theme {
-    padding: 9px 14px;
-    background: linear-gradient(135deg, var(--eau-claire) 0%, var(--eau) 100%);
     color: white;
     border: none;
     border-radius: 10px;
@@ -407,13 +293,8 @@
     max-width: 1200px;
   }
 
-  .view {
-    display: none;
-  }
-
-  .view.active {
-    display: block;
-  }
+  .view { display: none; }
+  .view.active { display: block; }
 
   /* Journal */
   .journal-toolbar {
@@ -433,14 +314,13 @@
   .search-box input {
     width: 100%;
     padding: 10px 14px 10px 36px;
-    border: 1.5px solid var(--border-color);
+    border: 1.5px solid #e0e6ea;
     border-radius: 10px;
     font-size: 14px;
     font-family: 'DM Sans', sans-serif;
     outline: none;
-    background: var(--input-bg);
+    background: var(--blanc);
     color: var(--texte);
-    transition: border-color 0.2s;
   }
 
   .search-box input:focus {
@@ -466,8 +346,8 @@
   .filter-pill {
     padding: 6px 14px;
     border-radius: 20px;
-    border: 1.5px solid var(--border-color);
-    background: var(--card-bg);
+    border: 1.5px solid #e0e6ea;
+    background: var(--blanc);
     font-size: 12px;
     white-space: nowrap;
     cursor: pointer;
@@ -516,18 +396,19 @@
   }
 
   .entry-card {
-    background: var(--card-bg);
+    background: var(--blanc);
     border-radius: var(--radius);
     padding: 16px 18px;
-    border-left: 4px solid var(--eau-claire);
+    border-left: 4px solid var(--rose);
     position: relative;
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     z-index: 1;
   }
 
   .entry-card.trophy {
-    border-left-color: var(--eclair);
+    border-left-color: var(--rose-clair);
+    background: linear-gradient(135deg, var(--blanc) 0%, #fff5f7 100%);
   }
 
   .btn-delete-desktop {
@@ -560,6 +441,7 @@
     font-size: 17px;
     font-style: italic;
     color: var(--eau-profonde);
+    font-weight: 600;
   }
 
   .entry-date {
@@ -594,7 +476,7 @@
     padding: 3px 10px;
     border-radius: 10px;
     font-size: 11px;
-    background: rgba(42, 96, 128, 0.1);
+    background: rgba(74, 158, 255, 0.1);
     color: var(--eau-claire);
     font-weight: 500;
   }
@@ -614,8 +496,8 @@
 
   .photo-badge {
     display: inline-block;
-    background: linear-gradient(135deg, var(--eclair), #e0a800);
-    color: var(--eau-profonde);
+    background: linear-gradient(135deg, var(--rose), var(--rose-clair));
+    color: white;
     padding: 2px 9px;
     border-radius: 8px;
     font-size: 10px;
@@ -637,10 +519,10 @@
   }
 
   .form-card {
-    background: var(--card-bg);
+    background: var(--blanc);
     border-radius: var(--radius);
     padding: 20px;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
 
   .form-card-title {
@@ -649,7 +531,7 @@
     color: var(--eau-profonde);
     margin-bottom: 16px;
     padding-bottom: 10px;
-    border-bottom: 2px solid var(--eau-claire);
+    border-bottom: 2px solid var(--rose);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -670,19 +552,19 @@
   .form-input, .form-select, .form-textarea {
     width: 100%;
     padding: 12px 14px;
-    border: 1.5px solid var(--border-color);
+    border: 1.5px solid #e0e6ea;
     border-radius: 12px;
     font-family: 'DM Sans', sans-serif;
     font-size: 14px;
     color: var(--texte);
-    background: var(--input-bg);
+    background: var(--blanc);
     outline: none;
     transition: all 0.2s;
   }
 
   .form-input:focus, .form-select:focus, .form-textarea:focus {
-    border-color: var(--eau-claire);
-    box-shadow: 0 0 0 3px rgba(42, 96, 128, 0.1);
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px rgba(255, 107, 139, 0.1);
   }
 
   .form-row {
@@ -727,7 +609,7 @@
   .star-btn.active {
     filter: none;
     transform: scale(1.1);
-    color: var(--eclair);
+    color: var(--rose);
   }
 
   .meteo-btns {
@@ -738,9 +620,9 @@
 
   .meteo-btn {
     padding: 8px 16px;
-    border: 1.5px solid var(--border-color);
+    border: 1.5px solid #e0e6ea;
     border-radius: 24px;
-    background: var(--card-bg);
+    background: var(--blanc);
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
@@ -749,16 +631,16 @@
   }
 
   .meteo-btn.selected {
-    border-color: var(--eau-claire);
-    background: rgba(42, 96, 128, 0.1);
-    color: var(--eau-claire);
+    border-color: var(--rose);
+    background: rgba(255, 107, 139, 0.1);
+    color: var(--rose);
     font-weight: 600;
   }
 
   .btn-submit {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(135deg, var(--eau) 0%, var(--eau-claire) 100%);
+    background: linear-gradient(135deg, var(--rose) 0%, var(--rose-clair) 100%);
     color: white;
     border: none;
     border-radius: 12px;
@@ -770,12 +652,12 @@
   }
 
   .photo-upload-area {
-    border: 2px dashed var(--border-color);
+    border: 2px dashed #e0e6ea;
     border-radius: 12px;
     padding: 24px;
     text-align: center;
     cursor: pointer;
-    background: var(--input-bg);
+    background: #fafbfc;
   }
 
   .photo-upload-icon {
@@ -806,10 +688,10 @@
   }
 
   .stat-card {
-    background: var(--card-bg);
+    background: var(--blanc);
     border-radius: var(--radius);
     padding: 20px;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
 
   .stat-card-title {
@@ -846,7 +728,7 @@
 
   .bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--eau) 0%, var(--eau-claire) 100%);
+    background: linear-gradient(90deg, var(--rose) 0%, var(--rose-clair) 100%);
     border-radius: 4px;
   }
 
@@ -855,7 +737,7 @@
     align-items: center;
     gap: 12px;
     padding: 12px 0;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #f0f0f0;
   }
 
   .record-item:last-child {
@@ -873,16 +755,16 @@
   .record-value {
     font-family: 'Playfair Display', serif;
     font-size: 20px;
-    color: var(--eclair);
+    color: var(--rose);
     font-weight: 700;
   }
 
   /* Map */
   .map-container {
-    background: var(--card-bg);
+    background: var(--blanc);
     border-radius: var(--radius);
     padding: 20px;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
 
   #map {
@@ -909,105 +791,7 @@
   .spot-stat .number {
     font-size: 24px;
     font-weight: 700;
-    color: var(--eau-claire);
-  }
-
-  /* Modal Thèmes */
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .modal.active {
-    display: flex;
-  }
-
-  .modal-content {
-    background: var(--card-bg);
-    border-radius: 24px;
-    padding: 24px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-
-  .modal-content h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 20px;
-    color: var(--eau-profonde);
-    margin-bottom: 16px;
-    text-align: center;
-  }
-
-  .theme-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin: 20px 0;
-  }
-
-  .theme-card {
-    background: var(--bg-body);
-    border: 2px solid var(--border-color);
-    border-radius: 16px;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .theme-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--eau-claire);
-  }
-
-  .theme-card.active {
-    border-color: var(--eau-claire);
-    background: rgba(42, 96, 128, 0.1);
-  }
-
-  .theme-preview {
-    width: 100%;
-    height: 60px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    display: flex;
-    gap: 4px;
-    padding: 4px;
-  }
-
-  .theme-color {
-    flex: 1;
-    border-radius: 8px;
-  }
-
-  .theme-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--texte);
-  }
-
-  .modal-close {
-    width: 100%;
-    padding: 12px;
-    background: var(--gris);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    margin-top: 12px;
+    color: var(--rose);
   }
 
   /* Menu Flottant Mobile */
@@ -1024,7 +808,7 @@
     width: 64px;
     height: 64px;
     border-radius: 32px;
-    background: linear-gradient(135deg, var(--eau) 0%, var(--eau-claire) 100%);
+    background: linear-gradient(135deg, var(--rose) 0%, var(--rose-clair) 100%);
     border: none;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     cursor: pointer;
@@ -1061,7 +845,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0.9);
-    background: var(--card-bg);
+    background: var(--blanc);
     border-radius: 28px;
     padding: 24px 20px;
     width: calc(100% - 48px);
@@ -1102,11 +886,7 @@
   }
 
   /* Mobile Header */
-  .mobile-header {
-    display: none;
-  }
-
-  .mobile-stats-bar {
+  .mobile-header, .mobile-stats-bar {
     display: none;
   }
 
@@ -1135,63 +915,32 @@
 
   /* Responsive */
   @media (min-width: 768px) {
-    .cards-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-    .stats-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-    .form-layout {
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    .btn-delete-desktop {
-      display: block;
-    }
-    .card-delete-bg {
-      display: none;
-    }
+    .cards-grid { grid-template-columns: 1fr 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-layout { grid-template-columns: 1fr 1fr; gap: 20px; }
+    .btn-delete-desktop { display: block; }
+    .card-delete-bg { display: none; }
   }
 
   @media (min-width: 1024px) {
-    .cards-grid {
-      grid-template-columns: 1fr 1fr 1fr;
-    }
-    .stats-grid {
-      grid-template-columns: 1fr 1fr 1fr;
-    }
+    .cards-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr 1fr; }
   }
 
   @media (max-width: 767px) {
-    .sidebar {
-      display: none;
-    }
-    .topbar {
-      display: none;
-    }
-    .app-body {
-      margin-left: 0;
-    }
+    .sidebar, .topbar { display: none; }
+    .app-body { margin-left: 0; }
 
     .mobile-header {
       display: block;
       position: relative;
       padding: 16px 20px 12px;
       text-align: center;
-      background: linear-gradient(180deg, var(--eau) 0%, var(--eau-profonde) 100%);
+      background: linear-gradient(135deg, var(--eau) 0%, var(--eau-profonde) 100%);
     }
 
-    .mobile-header .icon {
-      font-size: 36px;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .mobile-header h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px;
-      color: var(--sable);
-    }
+    .mobile-header .icon { font-size: 36px; display: block; margin-bottom: 4px; }
+    .mobile-header h1 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--sable); }
 
     .mobile-stats-bar {
       display: flex;
@@ -1210,125 +959,25 @@
       text-align: center;
     }
 
-    .mob-stat .num {
-      font-size: 20px;
-      color: var(--eclair);
-      font-weight: 700;
-    }
+    .mob-stat .num { font-size: 20px; color: var(--rose); font-weight: 700; }
+    .mob-stat .label { font-size: 10px; color: white; }
 
-    .mob-stat .label {
-      font-size: 10px;
-      color: white;
-    }
-
-    .app-body {
-      background: var(--bg-body);
-      border-radius: 28px 28px 0 0;
-    }
-
-    .page-content {
-      padding: 16px 14px 88px;
-    }
-
-    .cards-grid {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-
-    .stats-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .form-layout {
-      grid-template-columns: 1fr;
-    }
-
-    .form-card {
-      padding: 16px;
-    }
-
-    .form-row {
-      grid-template-columns: 1fr;
-      gap: 0;
-    }
-
-    .form-row-3 {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-
-    .meteo-btn {
-      padding: 8px 12px;
-      font-size: 12px;
-      flex: 1 0 auto;
-      min-width: calc(33.33% - 8px);
-    }
-
-    .fab-menu {
-      display: block;
-    }
-
-    .btn-delete-desktop {
-      display: none;
-    }
-
-    .entry-card-header {
-      padding-right: 0;
-    }
+    .app-body { background: var(--bg-body); border-radius: 28px 28px 0 0; }
+    .page-content { padding: 16px 14px 88px; }
+    .cards-grid { grid-template-columns: 1fr; gap: 10px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .form-layout { grid-template-columns: 1fr; }
+    .form-card { padding: 16px; }
+    .form-row { grid-template-columns: 1fr; gap: 0; }
+    .form-row-3 { grid-template-columns: 1fr; gap: 10px; }
+    .meteo-btn { padding: 8px 12px; font-size: 12px; flex: 1 0 auto; min-width: calc(33.33% - 8px); }
+    .fab-menu { display: block; }
+    .btn-delete-desktop { display: none; }
+    .entry-card-header { padding-right: 0; }
   }
 </style>
 </head>
-<body class="theme-ocean">
-
-<!-- MODAL THEMES -->
-<div class="modal" id="themeModal">
-  <div class="modal-content">
-    <h3>🎨 Choisissez votre thème</h3>
-    <div class="theme-options">
-      <div class="theme-card" data-theme="ocean">
-        <div class="theme-preview">
-          <div class="theme-color" style="background:#0A4D6C"></div>
-          <div class="theme-color" style="background:#2AA9C9"></div>
-          <div class="theme-color" style="background:#FF6B6B"></div>
-        </div>
-        <div class="theme-name">🌊 Océan profond</div>
-      </div>
-      <div class="theme-card" data-theme="sunset">
-        <div class="theme-preview">
-          <div class="theme-color" style="background:#1E3A5F"></div>
-          <div class="theme-color" style="background:#E67E22"></div>
-          <div class="theme-color" style="background:#FF8C69"></div>
-        </div>
-        <div class="theme-name">🌅 Coucher de soleil</div>
-      </div>
-      <div class="theme-card" data-theme="dawn">
-        <div class="theme-preview">
-          <div class="theme-color" style="background:#9B7BB5"></div>
-          <div class="theme-color" style="background:#F3C5C5"></div>
-          <div class="theme-color" style="background:#F4D03F"></div>
-        </div>
-        <div class="theme-name">🌄 Aube sur le lac</div>
-      </div>
-      <div class="theme-card" data-theme="modern">
-        <div class="theme-preview">
-          <div class="theme-color" style="background:#1E88E5"></div>
-          <div class="theme-color" style="background:#8BC34A"></div>
-          <div class="theme-color" style="background:#FF5722"></div>
-        </div>
-        <div class="theme-name">🎯 Moderne & sportif</div>
-      </div>
-      <div class="theme-card" data-theme="weather">
-        <div class="theme-preview">
-          <div class="theme-color" style="background:#4A90A4"></div>
-          <div class="theme-color" style="background:#FFD966"></div>
-          <div class="theme-color" style="background:#FFA559"></div>
-        </div>
-        <div class="theme-name">🌦️ Thème météo</div>
-      </div>
-    </div>
-    <button class="modal-close" onclick="closeThemeModal()">Fermer</button>
-  </div>
-</div>
+<body>
 
 <!-- MOBILE HEADER -->
 <div class="mobile-header">
@@ -1358,7 +1007,6 @@
     <button class="nav-item" data-view="map" onclick="switchView('map',this)"><span class="nav-icon">🗺️</span> Carte des spots</button>
     <button class="nav-item" data-view="stats" onclick="switchView('stats',this)"><span class="nav-icon">📊</span> Statistiques</button>
     <div style="height:1px;background:rgba(255,255,255,0.1);margin:10px 4px"></div>
-    <button class="nav-item" onclick="openThemeModal()"><span class="nav-icon">🎨</span> Thèmes</button>
     <button class="nav-item" onclick="exportData()"><span class="nav-icon">📤</span> Exporter</button>
     <button class="nav-item" onclick="document.getElementById('import-file').click()"><span class="nav-icon">📥</span> Importer</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
@@ -1370,7 +1018,6 @@
   <div class="topbar">
     <div class="topbar-title" id="topbar-title"><small>Mes sorties</small>Journal de pêche</div>
     <div class="topbar-actions">
-      <button class="btn-theme" onclick="openThemeModal()">🎨 Thèmes</button>
       <button class="btn-secondary" onclick="exportData()">📤 Exporter</button>
       <button class="btn-secondary" onclick="document.getElementById('import-file').click()">📥 Importer</button>
       <button class="btn-primary" onclick="switchView('ajouter',null)">➕ Nouvelle prise</button>
@@ -1474,7 +1121,6 @@
     <button class="menu-item" onclick="switchViewMobile('ajouter')"><span class="menu-icon">➕</span> Ajouter une prise</button>
     <button class="menu-item" onclick="switchViewMobile('map')"><span class="menu-icon">🗺️</span> Carte des spots</button>
     <button class="menu-item" onclick="switchViewMobile('stats')"><span class="menu-icon">📊</span> Statistiques</button>
-    <button class="menu-item" onclick="openThemeModalMobile()"><span class="menu-icon">🎨</span> Thèmes</button>
     <button class="menu-item" onclick="exportDataMobile()"><span class="menu-icon">📤</span> Exporter</button>
     <button class="menu-item" onclick="importDataMobile()"><span class="menu-icon">📥</span> Importer</button>
   </div>
@@ -1491,57 +1137,10 @@ let markers = [];
 
 const topbarTitles = { journal:['Mes sorties','Journal de pêche'], ajouter:['Nouvelle entrée','Ajouter une prise'], map:['Carte des spots','Mes spots de pêche'], stats:["Vue d'ensemble",'Statistiques'] };
 
-// Gestion des thèmes
-function applyTheme(themeName) {
-  document.body.className = '';
-  document.body.classList.add(`theme-${themeName}`);
-  localStorage.setItem('selectedTheme', themeName);
-  // Rafraîchir la carte si nécessaire
-  if (map) {
-    setTimeout(() => map.invalidateSize(), 100);
-  }
-}
-
-function loadTheme() {
-  const savedTheme = localStorage.getItem('selectedTheme');
-  if (savedTheme && savedTheme !== 'undefined') {
-    applyTheme(savedTheme);
-  } else {
-    applyTheme('ocean');
-  }
-}
-
-function openThemeModal() {
-  document.getElementById('themeModal').classList.add('active');
-}
-
-function openThemeModalMobile() {
-  toggleMenu();
-  openThemeModal();
-}
-
-function closeThemeModal() {
-  document.getElementById('themeModal').classList.remove('active');
-}
-
-function initThemeSelector() {
-  const themeCards = document.querySelectorAll('.theme-card');
-  themeCards.forEach(card => {
-    card.addEventListener('click', () => {
-      const theme = card.dataset.theme;
-      applyTheme(theme);
-      closeThemeModal();
-      showToast(`🎨 Thème "${card.querySelector('.theme-name').textContent}" appliqué !`);
-    });
-  });
-}
-
 function init(){
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   const dateInput = document.getElementById('f-date');
   if(dateInput) dateInput.value = now.toISOString().slice(0,16);
-  loadTheme();
-  initThemeSelector();
   renderJournal(); updateStats(); updateAllStats();
   initMap();
 }
