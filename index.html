@@ -91,6 +91,12 @@
     transition:opacity 0.15s,transform 0.15s;
   }
   .btn-primary:hover{opacity:0.9;} .btn-primary:active{transform:scale(0.97);}
+  .btn-secondary {
+    padding:9px 14px;background:white;color:var(--eau);
+    border:1.5px solid #d0dde5;border-radius:10px;font-family:'DM Sans',sans-serif;
+    font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;
+  }
+  .btn-secondary:hover{background:#eef4f8;}
 
   /* ── PAGE CONTENT ────────────────────────── */
   .page-content { flex:1;padding:24px 28px 40px;max-width:1100px; }
@@ -318,6 +324,10 @@
     <button class="nav-item active" onclick="switchView('journal',this)"><span class="nav-icon">📖</span> Journal</button>
     <button class="nav-item" onclick="switchView('ajouter',this)"><span class="nav-icon">➕</span> Ajouter une prise</button>
     <button class="nav-item" onclick="switchView('stats',this)"><span class="nav-icon">📊</span> Statistiques</button>
+    <div style="height:1px;background:rgba(255,255,255,0.1);margin:10px 4px"></div>
+    <button class="nav-item" onclick="exportData()"><span class="nav-icon">📤</span> Exporter</button>
+    <button class="nav-item" onclick="document.getElementById('import-file').click()"><span class="nav-icon">📥</span> Importer</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
   </nav>
 </aside>
 
@@ -326,7 +336,11 @@
 
   <div class="topbar">
     <div class="topbar-title" id="topbar-title"><small>Mes sorties</small>Journal de pêche</div>
-    <div><button class="btn-primary" onclick="switchView('ajouter',null)">➕ Nouvelle prise</button></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-secondary" onclick="exportData()" title="Exporter sauvegarde">📤 Exporter</button>
+      <button class="btn-secondary" onclick="document.getElementById('import-file').click()" title="Importer sauvegarde">📥 Importer</button>
+      <button class="btn-primary" onclick="switchView('ajouter',null)">➕ Nouvelle prise</button>
+    </div>
   </div>
 
   <div class="page-content">
@@ -483,6 +497,12 @@
   </button>
   <button class="mob-nav-btn" onclick="switchView('stats',this)" id="mnav-stats">
     <span class="nav-icon">📊</span><span class="nav-label">Stats</span>
+  </button>
+  <button class="mob-nav-btn" onclick="exportData()">
+    <span class="nav-icon">📤</span><span class="nav-label">Exporter</span>
+  </button>
+  <button class="mob-nav-btn" onclick="document.getElementById('import-file').click()">
+    <span class="nav-icon">📥</span><span class="nav-label">Importer</span>
   </button>
 </nav>
 
@@ -712,6 +732,47 @@ function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── EXPORT ───────────────────────────────────────────────────────────────────
+function exportData(){
+  if(!entries.length){ showToast('⚠️ Aucune donnée à exporter'); return; }
+  const data = { version:1, exportDate: new Date().toISOString(), entries };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const date = new Date().toISOString().slice(0,10);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `carnet-peche-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`📤 ${entries.length} sortie(s) exportée(s) !`);
+}
+
+// ── IMPORT ───────────────────────────────────────────────────────────────────
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const imported = data.entries || data; // support ancien format tableau direct
+      if(!Array.isArray(imported)) throw new Error('Format invalide');
+      const avant = entries.length;
+      // Fusionner sans doublons (par id)
+      const existingIds = new Set(entries.map(e=>e.id));
+      const nouveaux = imported.filter(e=>!existingIds.has(e.id));
+      entries = [...nouveaux, ...entries];
+      localStorage.setItem('peche-entries', JSON.stringify(entries));
+      renderJournal(); updateAllStats();
+      showToast(`📥 ${nouveaux.length} nouvelle(s) sortie(s) importée(s) !`);
+    } catch(err) {
+      showToast('❌ Fichier invalide');
+    }
+    event.target.value = ''; // reset input
+  };
+  reader.readAsText(file);
 }
 
 let rt;
