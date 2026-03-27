@@ -54,7 +54,7 @@
   .sidebar::after {
     content:'';position:absolute;bottom:60px;left:-20%;
     width:140%;height:100px;
-    background: rgba(255, 107, 139, 0.2);
+    background: rgba(255,107,139,0.2);
     border-radius:50%;filter:blur(30px);
     animation:vague 7s ease-in-out infinite;pointer-events:none;
   }
@@ -523,6 +523,7 @@ function switchView(name, btn){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   document.querySelectorAll('.sidebar .nav-item').forEach(b=>b.classList.remove('active'));
+  if(btn && btn.classList) btn.classList.add('active');
   const [sub,main] = topbarTitles[name];
   document.getElementById('topbar-title').innerHTML = `<small>${sub}</small>${main}`;
   if(name === 'map' && map) { setTimeout(() => { map.invalidateSize(); updateMapMarkers(); }, 100); }
