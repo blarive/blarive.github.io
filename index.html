@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pêche">
@@ -120,11 +120,11 @@
   .search-box input:focus{border-color:var(--eau-claire);}
   .search-box::before{content:'🔍';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;}
 
-  .filter-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+  .filter-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
   .filter-pill {
     padding:6px 14px;border-radius:20px;border:1.5px solid #ddd;background:white;
     font-size:12px;white-space:nowrap;cursor:pointer;color:var(--gris);
-    font-family:'DM Sans',sans-serif;transition:all 0.15s;
+    font-family:'DM Sans',sans-serif;transition:all 0.15s;flex-shrink:0;
   }
   .filter-pill.active{background:var(--eau-profonde);border-color:var(--eau-profonde);color:white;font-weight:600;}
 
@@ -261,71 +261,133 @@
   }
 
   /* ══════════════════════════════════════════
-     MOBILE (< 768px)
+     MOBILE (< 768px) - CORRIGÉ
   ══════════════════════════════════════════ */
   @media(max-width:767px){
-    body{display:block;background:var(--eau-profonde);}
-    body::before{content:'';position:fixed;top:0;left:0;right:0;height:230px;background:linear-gradient(180deg,var(--eau-claire) 0%,var(--eau-profonde) 100%);z-index:0;}
-    body::after{content:'';position:fixed;top:175px;left:-10%;width:120%;height:70px;background:rgba(232,96,154,0.2);border-radius:50%;filter:blur(20px);animation:vague 6s ease-in-out infinite;z-index:0;}
+    body{display:block;background:var(--blanc);}
+    
+    /* Suppression du background décoratif qui prenait trop de place */
+    body::before, body::after{display:none;}
 
     .sidebar{display:none;}
     .topbar{display:none;}
 
-    /* Header mobile — bien visible */
+    /* Header mobile réduit et compact */
     .mobile-header{
-      display:flex;align-items:center;justify-content:center;gap:10px;
-      position:fixed;top:0;left:0;right:0;z-index:50;
-      padding:44px 20px 10px;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      position:sticky;top:0;left:0;right:0;z-index:50;
+      padding:12px 16px 8px;
+      background:linear-gradient(135deg,var(--eau-profonde) 0%,var(--eau) 100%);
     }
-    .mobile-header .icon{font-size:28px;filter:drop-shadow(0 2px 8px rgba(232,96,154,0.6));}
-    .mobile-header h1{font-family:'Playfair Display',serif;font-size:20px;color:var(--sable);white-space:nowrap;}
+    .mobile-header .icon{font-size:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
+    .mobile-header h1{font-family:'Playfair Display',serif;font-size:18px;color:var(--sable);}
 
-    /* Stats pills sous le titre */
+    /* Stats pills réduites et placées sous le header */
     .mobile-stats-bar{
-      display:flex;gap:8px;
-      position:fixed;top:96px;left:0;right:0;padding:0 14px;z-index:50;
+      display:flex;gap:6px;
+      position:sticky;top:52px;left:0;right:0;padding:8px 12px;
+      background:var(--eau-profonde);
+      z-index:49;
     }
-    .mob-stat{flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:7px 6px;text-align:center;backdrop-filter:blur(8px);}
-    .mob-stat .num{font-family:'Playfair Display',serif;font-size:17px;color:var(--rose);display:block;line-height:1;}
-    .mob-stat .label{font-size:9px;color:var(--gris);text-transform:uppercase;letter-spacing:0.7px;}
+    .mob-stat{flex:1;background:rgba(255,255,255,0.1);border-radius:8px;padding:6px 4px;text-align:center;}
+    .mob-stat .num{font-family:'Playfair Display',serif;font-size:15px;color:var(--rose);display:block;line-height:1.2;}
+    .mob-stat .label{font-size:9px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.5px;}
 
-    /* App body commence sous le header */
+    /* App body - sans marge excessive */
     .app-body{
       margin-left:0;background:var(--blanc);
-      border-radius:24px 24px 0 0;margin-top:148px;min-height:calc(100vh - 148px);
+      min-height:calc(100vh - 100px);
     }
-    .page-content{padding:18px 14px 100px;}
+    .page-content{padding:16px 12px 80px;}
     .cards-grid{grid-template-columns:1fr;}
     .stats-grid{grid-template-columns:1fr;}
     .form-layout{grid-template-columns:1fr;}
     .form-card{padding:16px;}
-    /* Assure que le titre de carte form est visible */
-    .form-card-title{font-size:13px;margin-bottom:14px;}
-
-    /* ── BOTTOM FAB MENU ── */
+    
+    /* Filtres scrollables et visibles */
+    .filter-pills{
+      display:flex;
+      gap:8px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      margin-bottom:16px;
+      padding-bottom:8px;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:thin;
+    }
+    .filter-pill{
+      flex-shrink:0;
+      padding:8px 16px;
+      font-size:13px;
+      background:white;
+      border:1px solid #e0e6ea;
+    }
+    
+    /* Form cards - toutes visibles */
+    .form-card:first-child{
+      margin-top:0;
+    }
+    .form-card-title{
+      font-size:13px;
+      margin-bottom:12px;
+    }
+    
+    /* Ajustement des champs de formulaire */
+    .form-group{
+      margin-bottom:12px;
+    }
+    .form-input, .form-select, .form-textarea{
+      padding:10px 12px;
+      font-size:14px;
+    }
+    .form-row, .form-row-3{
+      gap:8px;
+    }
+    
+    /* Météo buttons compact */
+    .meteo-btns{
+      gap:6px;
+    }
+    .meteo-btn{
+      padding:6px 12px;
+      font-size:12px;
+    }
+    
+    /* Bottom FAB */
     .bottom-nav{
-      display:flex;align-items:center;justify-content:center;
-      position:fixed;bottom:0;left:0;right:0;
-      background:transparent;border:none;
-      padding:0 0 env(safe-area-inset-bottom,12px) 0;
-      z-index:100;pointer-events:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:fixed;
+      bottom:0;
+      left:0;
+      right:0;
+      background:transparent;
+      padding:0 0 max(12px, env(safe-area-inset-bottom)) 0;
+      z-index:100;
+      pointer-events:none;
     }
     .fab-menu-btn{
       pointer-events:all;
-      width:62px;height:62px;
+      width:56px;
+      height:56px;
       background:linear-gradient(135deg,var(--eau-claire),var(--rose));
-      border-radius:50%;border:none;
-      color:white;font-size:26px;
+      border-radius:50%;
+      border:none;
+      color:white;
+      font-size:24px;
       cursor:pointer;
-      box-shadow:0 6px 24px rgba(46,109,180,0.45);
-      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 16px rgba(46,109,180,0.4);
+      display:flex;
+      align-items:center;
+      justify-content:center;
       transition:transform 0.2s,box-shadow 0.2s;
-      margin-bottom:14px;
+      margin-bottom:12px;
     }
     .fab-menu-btn:active{transform:scale(0.93);}
     .fab-menu-btn.open{transform:rotate(45deg);}
 
-    .toast{bottom:100px;}
+    .toast{bottom:90px;}
     .btn-delete-desktop{display:none;}
   }
 
@@ -398,7 +460,7 @@
 </head>
 <body>
 
-<!-- MOBILE HEADER -->
+<!-- MOBILE HEADER (compact) -->
 <div class="mobile-header">
   <span class="icon">🎣</span>
   <h1>Carnet de Pêche</h1>
@@ -702,7 +764,6 @@ function toggleMeteo(btn,val){
 function toggleTrophy(btn){isTrophy=!isTrophy;btn.classList.toggle('selected',isTrophy);}
 function toggleRelache(btn){isRelache=!isRelache;btn.classList.toggle('selected',isRelache);}
 
-// ── CAPOT ────────────────────────────────────────────────────────────────────
 function toggleCapot(btn){
   isCapot=!isCapot;
   btn.classList.toggle('selected-rose', isCapot);
@@ -736,7 +797,6 @@ function previewPhoto(e){
 
 function saveEntry(){
   const espece=document.getElementById('f-espece').value;
-  // Espèce obligatoire seulement si pas capot
   if(!isCapot && !espece){showToast('⚠️ Sélectionne une espèce !');return;}
   const poidsVal=document.getElementById('f-poids').value;
   const entry={
@@ -744,7 +804,7 @@ function saveEntry(){
     date:document.getElementById('f-date').value,
     espece: isCapot ? '🚫 Capot' : espece,
     taille: isCapot ? null : (document.getElementById('f-taille').value||null),
-    poids:  isCapot ? null : (poidsVal ? parseFloat(poidsVal) : null),  // stocké en kg
+    poids:  isCapot ? null : (poidsVal ? parseFloat(poidsVal) : null),
     lieu:document.getElementById('f-lieu').value,
     technique: isCapot ? '' : document.getElementById('f-technique').value,
     meteo:[...selectedMeteo],
@@ -859,10 +919,8 @@ function renderJournal(){
   }
 }
 
-// Poids stocké en kg, affiché en kg
 function formatPoids(kg){
   if(kg==null) return '';
-  // Rétrocompat : anciennes entrées stockées en grammes (>100 = probablement en g)
   const val = kg > 100 ? kg/1000 : kg;
   return val < 1 ? (val*1000).toFixed(0)+' g' : val.toFixed(3).replace(/\.?0+$/,'')+' kg';
 }
@@ -928,7 +986,6 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-// ── POPUP MENU ────────────────────────────────────────────────────────────────
 let menuOpen=false;
 function toggleMenu(){
   menuOpen=!menuOpen;
@@ -948,24 +1005,21 @@ function closeMenuOnOverlay(e){
 function popupNav(name){
   closeMenu();
   switchView(name,null);
-  // highlight active in popup
   document.querySelectorAll('.menu-popup-item').forEach(b=>b.classList.remove('active-view'));
   const el=document.getElementById('mpop-'+name);
   if(el) el.classList.add('active-view');
 }
 
-// ── GÉOLOCALISATION ───────────────────────────────────────────────────────────
 let spots = JSON.parse(localStorage.getItem('peche-spots')||'[]');
 
 function geoLocate(){
   const btn=document.getElementById('geo-btn');
   if(!navigator.geolocation){showToast('❌ GPS non disponible');return;}
-  btn.textContent='📡 Localisation en cours…';
+  btn.textContent='📡 Localisation…';
   btn.disabled=true;
   navigator.geolocation.getCurrentPosition(
     pos=>{
       const {latitude:lat,longitude:lng}=pos.coords;
-      // Reverse geocode via nominatim
       fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
         .then(r=>r.json())
         .then(data=>{
@@ -974,7 +1028,6 @@ function geoLocate(){
           document.getElementById('f-lieu').value=nom;
           btn.textContent='✅ Position obtenue';
           btn.disabled=false;
-          // Proposer d'enregistrer le spot
           if(!spots.find(s=>s.nom===nom)){
             if(confirm(`📍 Enregistrer "${nom}" comme spot favori ?`)){
               spots.unshift({id:Date.now(),nom,lat,lng});
@@ -1026,7 +1079,6 @@ function deleteSpot(id,e){
   renderSpotsPage();
 }
 
-// ── SPOTS PAGE ────────────────────────────────────────────────────────────────
 function renderSpotsPage(){
   const el=document.getElementById('spots-page-content');
   if(!el) return;
@@ -1064,7 +1116,6 @@ function renderSpotsPage(){
     </div>`;
 }
 
-// ── EXPORT ───────────────────────────────────────────────────────────────────
 function exportData(){
   if(!entries.length){ showToast('⚠️ Aucune donnée à exporter'); return; }
   const data = { version:1, exportDate: new Date().toISOString(), entries };
@@ -1079,7 +1130,6 @@ function exportData(){
   showToast(`📤 ${entries.length} sortie(s) exportée(s) !`);
 }
 
-// ── IMPORT ───────────────────────────────────────────────────────────────────
 function importData(event){
   const file = event.target.files[0];
   if(!file) return;
@@ -1087,10 +1137,8 @@ function importData(event){
   reader.onload = ev => {
     try {
       const data = JSON.parse(ev.target.result);
-      const imported = data.entries || data; // support ancien format tableau direct
+      const imported = data.entries || data;
       if(!Array.isArray(imported)) throw new Error('Format invalide');
-      const avant = entries.length;
-      // Fusionner sans doublons (par id)
       const existingIds = new Set(entries.map(e=>e.id));
       const nouveaux = imported.filter(e=>!existingIds.has(e.id));
       entries = [...nouveaux, ...entries];
@@ -1100,7 +1148,7 @@ function importData(event){
     } catch(err) {
       showToast('❌ Fichier invalide');
     }
-    event.target.value = ''; // reset input
+    event.target.value = '';
   };
   reader.readAsText(file);
 }
