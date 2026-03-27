@@ -506,71 +506,66 @@
   }
 
   /* ══════════════════════════════════════════
-     MOBILE (< 768px)
+     MOBILE (< 768px) - VERSION CORRIGÉE
   ══════════════════════════════════════════ */
   @media(max-width:767px){
     body{display:block;background:var(--eau-profonde);}
-    body::before{content:'';position:fixed;top:0;left:0;right:0;height:180px;background:linear-gradient(180deg,var(--eau) 0%,var(--eau-profonde) 100%);z-index:0;}
-    body::after{content:'';position:fixed;top:135px;left:-10%;width:120%;height:70px;background:rgba(42,96,128,0.25);border-radius:50%;filter:blur(20px);animation:vague 6s ease-in-out infinite;z-index:0;}
+    body::before{content:'';position:fixed;top:0;left:0;right:0;height:160px;background:linear-gradient(180deg,var(--eau) 0%,var(--eau-profonde) 100%);z-index:0;}
+    body::after{content:'';position:fixed;top:125px;left:-10%;width:120%;height:70px;background:rgba(42,96,128,0.25);border-radius:50%;filter:blur(20px);animation:vague 6s ease-in-out infinite;z-index:0;}
 
     .sidebar{display:none;}
     .topbar{display:none;}
 
     .mobile-header{
       display:block;
-      position:fixed;
-      top:0;
-      left:0;
-      right:0;
+      position:relative;
       z-index:50;
-      padding:20px 20px 8px;
+      padding:16px 20px 12px;
       text-align:center;
-      background:linear-gradient(180deg,var(--eau) 0%,transparent 100%);
+      background:linear-gradient(180deg,var(--eau) 0%,var(--eau-profonde) 100%);
     }
     .mobile-header .icon{
-      font-size:32px;
+      font-size:36px;
       display:block;
       margin-bottom:4px;
       filter:drop-shadow(0 2px 8px rgba(240,192,64,0.5));
     }
     .mobile-header h1{
       font-family:'Playfair Display',serif;
-      font-size:20px;
+      font-size:22px;
       color:var(--sable);
     }
 
     .mobile-stats-bar{
       display:flex;
       gap:10px;
-      position:fixed;
-      top:76px;
-      left:0;
-      right:0;
-      padding:0 16px;
+      position:relative;
+      padding:0 16px 16px;
       z-index:50;
+      background:linear-gradient(180deg,var(--eau-profonde) 0%,transparent 100%);
     }
     .mob-stat{
       flex:1;
-      background:rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.15);
       backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,0.15);
+      border:1px solid rgba(255,255,255,0.2);
       border-radius:12px;
-      padding:8px 6px;
+      padding:10px 6px;
       text-align:center;
     }
     .mob-stat .num{
       font-family:'Playfair Display',serif;
-      font-size:18px;
+      font-size:20px;
       color:var(--eclair);
       display:block;
       font-weight:700;
     }
     .mob-stat .label{
-      font-size:9px;
-      color:rgba(255,255,255,0.7);
+      font-size:10px;
+      color:rgba(255,255,255,0.8);
       text-transform:uppercase;
       letter-spacing:0.7px;
-      margin-top:2px;
+      margin-top:4px;
       display:block;
     }
 
@@ -578,57 +573,59 @@
       margin-left:0;
       background:var(--blanc);
       border-radius:28px 28px 0 0;
-      margin-top:122px;
-      min-height:calc(100vh - 122px);
+      margin-top:0;
+      min-height:calc(100vh - 0px);
     }
-    .page-content{padding:20px 16px 100px;}
-    .cards-grid{grid-template-columns:1fr;}
+    .page-content{
+      padding:16px 14px 88px;
+    }
+    .cards-grid{
+      grid-template-columns:1fr;
+      gap:10px;
+    }
     .stats-grid{grid-template-columns:1fr;}
     .form-layout{grid-template-columns:1fr;gap:16px;}
     
-    .form-card { padding: 18px; }
-    .form-card-title { font-size: 16px; margin-bottom: 18px; }
+    .form-card { padding: 16px; }
+    .form-card-title { font-size: 15px; margin-bottom: 16px; }
     .form-row { grid-template-columns: 1fr; gap: 0; }
-    .form-row-3 { grid-template-columns: 1fr; gap: 12px; }
-    .form-group { margin-bottom: 18px; }
+    .form-row-3 { grid-template-columns: 1fr; gap: 10px; }
+    .form-group { margin-bottom: 14px; }
     
-    .meteo-btns { gap: 10px; }
-    .meteo-btn { padding: 10px 14px; font-size: 13px; flex: 1 0 auto; min-width: calc(33.33% - 10px); }
-    .star-btn { font-size: 32px; min-width: 48px; min-height: 48px; }
-    .photo-upload-area { padding: 28px 20px; }
-    .photo-upload-icon { font-size: 52px; }
-    .btn-submit { padding: 16px; font-size: 16px; }
+    .meteo-btns { gap: 8px; }
+    .meteo-btn { padding: 8px 12px; font-size: 12px; flex: 1 0 auto; min-width: calc(33.33% - 8px); }
+    .star-btn { font-size: 28px; min-width: 44px; min-height: 44px; }
+    .photo-upload-area { padding: 20px; }
+    .photo-upload-icon { font-size: 44px; }
+    .btn-submit { padding: 14px; font-size: 15px; }
     
-    #map { height: 350px; }
+    #map { height: 300px; }
     .spots-stats { flex-direction: column; gap: 8px; }
 
-    .fab-menu { display:block; }
+    .fab-menu { display:block; bottom: 20px; }
     
     .btn-delete-desktop{display:none;}
     .entry-card-header{padding-right:0;}
+    .entry-card { padding: 14px; }
+    .entry-species { font-size: 16px; }
+    .entry-meta-item { font-size: 12px; }
+    .filter-pill { padding: 5px 12px; font-size: 11px; }
+    .search-box input { padding: 8px 12px 8px 32px; font-size: 13px; }
+    .journal-toolbar { margin-bottom: 10px; }
+    .filter-pills { margin-bottom: 12px; }
   }
 
   /* Small mobile (<= 480px) */
   @media(max-width:480px){
-    .meteo-btn { min-width: calc(50% - 10px); font-size: 12px; padding: 8px 12px; }
-    .form-card { padding: 16px; }
+    .meteo-btn { min-width: calc(50% - 8px); font-size: 11px; padding: 7px 10px; }
+    .form-card { padding: 14px; }
     .menu-popup { width: calc(100% - 32px); padding: 20px 16px; }
-    
-    .mobile-header {
-      padding: 16px 20px 6px;
-    }
-    .mobile-header .icon {
-      font-size: 28px;
-    }
-    .mobile-header h1 {
-      font-size: 18px;
-    }
-    .mobile-stats-bar {
-      top: 68px;
-    }
-    .app-body {
-      margin-top: 112px;
-    }
+    .mobile-header .icon { font-size: 32px; }
+    .mobile-header h1 { font-size: 20px; }
+    .mob-stat { padding: 8px 4px; }
+    .mob-stat .num { font-size: 18px; }
+    .mob-stat .label { font-size: 9px; }
+    .page-content { padding: 12px 12px 80px; }
   }
 </style>
 </head>
