@@ -174,58 +174,59 @@
   .empty-state .icon{font-size:56px;margin-bottom:12px;display:block;opacity:0.4;}
 
   /* ── FORM ────────────────────────────────── */
-  .form-layout{display:grid;grid-template-columns:1fr;gap:0;}
-  .form-card{background:white;border-radius:var(--radius);padding:24px;box-shadow:0 1px 6px rgba(0,0,0,0.06);margin-bottom:16px;}
-  .form-card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #eee;}
-  .form-group{margin-bottom:14px;}
-  .form-label{font-size:11px;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
+  .form-layout{display:grid;grid-template-columns:1fr;gap:16px;}
+  .form-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
+  .form-card-title{font-size:14px;font-weight:700;color:var(--eau-profonde);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--eau-claire);display:flex;align-items:center;gap:8px;}
+  .form-card-title .icon{font-size:18px;}
+  .form-group{margin-bottom:16px;}
+  .form-label{font-size:12px;font-weight:600;color:var(--gris);margin-bottom:6px;display:block;}
   .form-input,.form-select,.form-textarea {
-    width:100%;padding:11px 14px;border:1.5px solid #ddd;border-radius:10px;
+    width:100%;padding:12px 14px;border:1.5px solid #e0e6ea;border-radius:12px;
     font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texte);
-    background:#fafaf8;outline:none;transition:border-color 0.2s;appearance:none;
+    background:white;outline:none;transition:all 0.2s;
   }
-  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--eau-claire);}
-  .form-textarea{resize:none;height:80px;}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--eau-claire);box-shadow:0 0 0 3px rgba(42,96,128,0.1);}
+  .form-textarea{resize:vertical;min-height:80px;}
   .form-row{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:10px;
+    gap:12px;
   }
   .form-row-3{
     display:grid;
     grid-template-columns:repeat(3, 1fr);
-    gap:8px;
+    gap:12px;
   }
 
-  .stars-input{display:flex;gap:6px;flex-wrap:wrap;}
+  .stars-input{display:flex;gap:8px;flex-wrap:wrap;}
   .star-btn{
-    font-size:26px;
+    font-size:28px;
     background:none;
     border:none;
     cursor:pointer;
-    filter:grayscale(1) opacity(0.3);
-    transition:all 0.15s;
-    padding:2px;
-    min-width:40px;
+    filter:grayscale(1) opacity(0.4);
+    transition:all 0.2s;
+    padding:4px;
+    min-width:44px;
+    min-height:44px;
   }
-  .star-btn.active{filter:none;transform:scale(1.1);}
+  .star-btn.active{filter:none;transform:scale(1.1);color:var(--eclair);}
 
   .meteo-btns{
     display:flex;
-    gap:8px;
+    gap:10px;
     flex-wrap:wrap;
   }
   .meteo-btn{
-    padding:8px 14px;
-    border:1.5px solid #ddd;
-    border-radius:20px;
-    background:none;
+    padding:8px 16px;
+    border:1.5px solid #e0e6ea;
+    border-radius:24px;
+    background:white;
     font-size:13px;
     cursor:pointer;
-    transition:all 0.15s;
+    transition:all 0.2s;
     color:var(--texte);
     font-family:'DM Sans',sans-serif;
-    flex: 0 0 auto;
   }
   .meteo-btn.selected{
     border-color:var(--eau-claire);
@@ -242,54 +243,52 @@
     border:none;
     border-radius:12px;
     font-family:'DM Sans',sans-serif;
-    font-size:15px;
+    font-size:16px;
     font-weight:600;
     cursor:pointer;
-    box-shadow:0 4px 16px rgba(26,58,74,0.25);
-    transition:transform 0.15s;
+    transition:transform 0.15s, opacity 0.15s;
     margin-top:8px;
   }
   .btn-submit:active{transform:scale(0.98);}
 
-  .photo-upload{
-    border:2px dashed #ccc;
-    border-radius:10px;
-    padding:20px;
+  .photo-upload-area{
+    border:2px dashed #cbd5e0;
+    border-radius:12px;
+    padding:24px;
     text-align:center;
     cursor:pointer;
-    background:#fafaf8;
-    transition:border-color 0.2s;
-    width:100%;
+    background:#fafbfc;
+    transition:all 0.2s;
   }
-  .photo-upload:hover{border-color:var(--eau-claire);}
-  .photo-upload input{display:none;}
-  .photo-upload .icon{font-size:28px;display:block;margin-bottom:6px;}
-  .photo-upload p{font-size:13px;color:var(--gris);word-break:break-word;}
+  .photo-upload-area:hover{border-color:var(--eau-claire);background:#f0f4f8;}
+  .photo-upload-area input{display:none;}
+  .photo-upload-icon{font-size:48px;display:block;margin-bottom:12px;}
+  .photo-upload-text{font-size:13px;color:var(--gris);margin-top:8px;}
   .photo-preview{
     width:100%;
-    max-height:160px;
+    max-height:180px;
     object-fit:cover;
-    border-radius:10px;
+    border-radius:12px;
+    margin-top:12px;
     display:none;
-    margin-bottom:10px;
   }
 
   /* ── STATS ───────────────────────────────── */
-  .stats-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  .stats-grid{display:grid;grid-template-columns:1fr;gap:16px;}
   .stat-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
-  .stat-card-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:14px;font-weight:700;}
-  .species-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-  .species-name{font-size:14px;width:100px;flex-shrink:0;color:var(--texte);}
+  .stat-card-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:16px;font-weight:700;}
+  .species-bar{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .species-name{font-size:14px;width:100px;flex-shrink:0;color:var(--texte);font-weight:500;}
   .bar-track{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;}
   .bar-fill{height:100%;background:linear-gradient(90deg,var(--eau) 0%,var(--eau-claire) 100%);border-radius:4px;transition:width 0.5s ease;}
-  .bar-count{font-size:13px;color:var(--gris);min-width:20px;text-align:right;}
-  .record-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0;}
+  .bar-count{font-size:13px;color:var(--gris);min-width:30px;text-align:right;}
+  .record-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0;}
   .record-item:last-child{border-bottom:none;}
-  .record-icon{font-size:26px;}
+  .record-icon{font-size:28px;}
   .record-info{flex:1;}
-  .record-info .species{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;}
-  .record-info .detail{font-size:12px;color:var(--gris);margin-top:2px;}
-  .record-value{font-family:'Playfair Display',serif;font-size:20px;color:var(--eclair);}
+  .record-info .species{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;font-weight:600;}
+  .record-info .detail{font-size:12px;color:var(--gris);margin-top:4px;}
+  .record-value{font-family:'Playfair Display',serif;font-size:20px;color:var(--eclair);font-weight:700;}
 
   /* ── MOBILE ONLY ─────────────────────────── */
   .bottom-nav{display:none;}
@@ -309,8 +308,7 @@
   @media(min-width:768px){
     .cards-grid{grid-template-columns:1fr 1fr;}
     .stats-grid{grid-template-columns:1fr 1fr;}
-    .form-layout{grid-template-columns:1fr 1fr;gap:16px;}
-    .form-card.full{grid-column:1/-1;}
+    .form-layout{grid-template-columns:1fr 1fr;gap:20px;}
     .btn-delete-desktop{display:block;}
     .card-delete-bg{display:none;}
   }
@@ -326,39 +324,44 @@
   ══════════════════════════════════════════ */
   @media(max-width:767px){
     body{display:block;background:var(--eau-profonde);}
-    body::before{content:'';position:fixed;top:0;left:0;right:0;height:210px;background:linear-gradient(180deg,var(--eau) 0%,var(--eau-profonde) 100%);z-index:0;}
-    body::after{content:'';position:fixed;top:155px;left:-10%;width:120%;height:70px;background:rgba(42,96,128,0.25);border-radius:50%;filter:blur(20px);animation:vague 6s ease-in-out infinite;z-index:0;}
+    body::before{content:'';position:fixed;top:0;left:0;right:0;height:200px;background:linear-gradient(180deg,var(--eau) 0%,var(--eau-profonde) 100%);z-index:0;}
+    body::after{content:'';position:fixed;top:145px;left:-10%;width:120%;height:70px;background:rgba(42,96,128,0.25);border-radius:50%;filter:blur(20px);animation:vague 6s ease-in-out infinite;z-index:0;}
 
     .sidebar{display:none;}
     .topbar{display:none;}
 
     .mobile-header{
       display:block;position:fixed;top:0;left:0;right:0;z-index:50;
-      padding:38px 20px 8px;text-align:center;
+      padding:40px 20px 12px;text-align:center;
     }
-    .mobile-header .icon{font-size:32px;display:block;margin-bottom:4px;filter:drop-shadow(0 2px 8px rgba(240,192,64,0.5));}
-    .mobile-header h1{font-family:'Playfair Display',serif;font-size:20px;color:var(--sable);}
+    .mobile-header .icon{font-size:36px;display:block;margin-bottom:6px;filter:drop-shadow(0 2px 8px rgba(240,192,64,0.5));}
+    .mobile-header h1{font-family:'Playfair Display',serif;font-size:22px;color:var(--sable);}
 
     .mobile-stats-bar{
-      display:flex;gap:8px;
-      position:fixed;top:104px;left:0;right:0;padding:0 14px;z-index:50;
+      display:flex;gap:10px;
+      position:fixed;top:108px;left:0;right:0;padding:0 16px;z-index:50;
     }
-    .mob-stat{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 6px;text-align:center;backdrop-filter:blur(8px);}
-    .mob-stat .num{font-family:'Playfair Display',serif;font-size:18px;color:var(--eclair);display:block;}
-    .mob-stat .label{font-size:9px;color:var(--gris);text-transform:uppercase;letter-spacing:0.7px;}
+    .mob-stat{flex:1;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:10px 6px;text-align:center;}
+    .mob-stat .num{font-family:'Playfair Display',serif;font-size:20px;color:var(--eclair);display:block;font-weight:700;}
+    .mob-stat .label{font-size:10px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.7px;margin-top:4px;display:block;}
 
     .app-body{
       margin-left:0;background:var(--blanc);
-      border-radius:24px 24px 0 0;margin-top:168px;min-height:calc(100vh - 168px);
+      border-radius:28px 28px 0 0;margin-top:168px;min-height:calc(100vh - 168px);
     }
-    .page-content{padding:16px 14px 88px;}
+    .page-content{padding:20px 16px 88px;}
     .cards-grid{grid-template-columns:1fr;}
     .stats-grid{grid-template-columns:1fr;}
-    .form-layout{grid-template-columns:1fr;}
+    .form-layout{grid-template-columns:1fr;gap:16px;}
     
     /* Form responsive fixes */
     .form-card {
-      padding: 16px;
+      padding: 18px;
+    }
+    
+    .form-card-title {
+      font-size: 16px;
+      margin-bottom: 18px;
     }
     
     /* Stack form rows on mobile */
@@ -372,82 +375,62 @@
       gap: 12px;
     }
     
-    /* Make all inputs full width */
-    .form-input,
-    .form-select,
-    .form-textarea {
-      font-size: 16px;
-    }
-    
     /* Better spacing for form groups */
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
     
     /* Meteor buttons - better fit */
     .meteo-btns {
-      gap: 8px;
+      gap: 10px;
     }
     
     .meteo-btn {
-      padding: 8px 12px;
-      font-size: 12px;
+      padding: 10px 14px;
+      font-size: 13px;
       flex: 1 0 auto;
-      min-width: calc(33.33% - 8px);
+      min-width: calc(33.33% - 10px);
     }
     
     /* Stars rating - touch friendly */
     .star-btn {
       font-size: 32px;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
     }
     
     /* Photo upload area */
-    .photo-upload {
-      padding: 16px;
+    .photo-upload-area {
+      padding: 28px 20px;
     }
     
-    .photo-upload .icon {
-      font-size: 32px;
+    .photo-upload-icon {
+      font-size: 52px;
     }
     
     .photo-preview {
-      max-height: 140px;
+      max-height: 160px;
     }
     
     /* Submit button */
     .btn-submit {
       padding: 16px;
       font-size: 16px;
-      margin-top: 12px;
-    }
-    
-    /* Card titles */
-    .form-card-title {
-      font-size: 13px;
-      margin-bottom: 14px;
-    }
-    
-    /* Labels */
-    .form-label {
-      font-size: 12px;
-      margin-bottom: 8px;
     }
 
     .bottom-nav{
       display:flex;position:fixed;bottom:0;left:0;right:0;
-      background:white;border-top:1px solid #eee;
-      padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));z-index:100;
-      box-shadow:0 -4px 20px rgba(0,0,0,0.08);
+      background:white;border-top:1px solid #eef2f5;
+      padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px));z-index:100;
+      box-shadow:0 -2px 20px rgba(0,0,0,0.08);
     }
-    .mob-nav-btn{flex:1;background:none;border:none;padding:6px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all 0.2s;}
-    .mob-nav-btn .nav-icon{font-size:22px;}
-    .mob-nav-btn .nav-label{font-size:10px;font-weight:500;color:var(--gris);font-family:'DM Sans',sans-serif;}
+    .mob-nav-btn{flex:1;background:none;border:none;padding:8px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.2s;}
+    .mob-nav-btn .nav-icon{font-size:24px;}
+    .mob-nav-btn .nav-label{font-size:11px;font-weight:500;color:var(--gris);font-family:'DM Sans',sans-serif;}
     .mob-nav-btn.active .nav-label{color:var(--eau-claire);font-weight:700;}
     .mob-nav-btn:active{transform:scale(0.95);}
     
-    .toast{bottom:80px;white-space:normal;text-align:center;max-width:90%;}
+    .toast{bottom:80px;white-space:normal;text-align:center;max-width:90%;font-size:13px;}
     .btn-delete-desktop{display:none;}
     .entry-card-header{padding-right:0;}
   }
@@ -455,17 +438,13 @@
   /* Small mobile (<= 480px) */
   @media(max-width:480px){
     .meteo-btn {
-      min-width: calc(50% - 8px);
-      font-size: 11px;
-      padding: 8px 10px;
+      min-width: calc(50% - 10px);
+      font-size: 12px;
+      padding: 8px 12px;
     }
     
     .form-card {
-      padding: 14px;
-    }
-    
-    .stars-input {
-      justify-content: center;
+      padding: 16px;
     }
   }
 </style>
@@ -541,7 +520,10 @@
       <div class="form-layout">
 
         <div class="form-card">
-          <div class="form-card-title">📋 Informations principales</div>
+          <div class="form-card-title">
+            <span class="icon">📋</span>
+            Informations principales
+          </div>
           <div class="form-group">
             <label class="form-label">📅 Date & Heure</label>
             <input type="datetime-local" class="form-input" id="f-date">
@@ -560,11 +542,11 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">📏 Taille (cm)</label>
-              <input type="number" class="form-input" id="f-taille" placeholder="ex. 45">
+              <input type="number" class="form-input" id="f-taille" placeholder="ex: 45">
             </div>
             <div class="form-group">
               <label class="form-label">⚖️ Poids (g)</label>
-              <input type="number" class="form-input" id="f-poids" placeholder="ex. 1200">
+              <input type="number" class="form-input" id="f-poids" placeholder="ex: 1200">
             </div>
           </div>
           <div class="form-group">
@@ -586,7 +568,10 @@
         </div>
 
         <div class="form-card">
-          <div class="form-card-title">🌤 Conditions & Notes</div>
+          <div class="form-card-title">
+            <span class="icon">🌤</span>
+            Conditions & Notes
+          </div>
           <div class="form-group">
             <label class="form-label">🌤 Météo</label>
             <div class="meteo-btns">
@@ -640,12 +625,12 @@
           </div>
           <div class="form-group">
             <label class="form-label">📸 Photo</label>
-            <label class="photo-upload" for="f-photo">
+            <div class="photo-upload-area" onclick="document.getElementById('f-photo').click()">
               <input type="file" id="f-photo" accept="image/*" onchange="previewPhoto(event)">
-              <img class="photo-preview" id="photo-preview" alt="">
-              <span class="icon" id="photo-icon">📷</span>
-              <p id="photo-text">Ajouter une photo</p>
-            </label>
+              <div class="photo-upload-icon">📷</div>
+              <div class="photo-upload-text">Ajouter une photo</div>
+              <img class="photo-preview" id="photo-preview" alt="Aperçu photo">
+            </div>
           </div>
           <button class="btn-submit" onclick="saveEntry()">✅ Enregistrer la sortie</button>
         </div>
@@ -764,14 +749,14 @@ function previewPhoto(e){
   reader.onload=ev=>{
     photoData=ev.target.result;
     const preview = document.getElementById('photo-preview');
-    const icon = document.getElementById('photo-icon');
-    const text = document.getElementById('photo-text');
+    const uploadIcon = document.querySelector('.photo-upload-icon');
+    const uploadText = document.querySelector('.photo-upload-text');
     if(preview){
       preview.style.display='block';
       preview.src=photoData;
     }
-    if(icon) icon.style.display='none';
-    if(text) text.textContent='✅ Photo ajoutée';
+    if(uploadIcon) uploadIcon.style.display='none';
+    if(uploadText) uploadText.textContent = '✅ Photo ajoutée';
   };
   reader.readAsDataURL(file);
 }
@@ -820,11 +805,14 @@ function resetForm(){
   if(relacheBtn) relacheBtn.classList.remove('selected');
   
   const preview = document.getElementById('photo-preview');
-  const icon = document.getElementById('photo-icon');
-  const text = document.getElementById('photo-text');
-  if(preview) preview.style.display='none';
-  if(icon) icon.style.display='block';
-  if(text) text.textContent='Ajouter une photo';
+  const uploadIcon = document.querySelector('.photo-upload-icon');
+  const uploadText = document.querySelector('.photo-upload-text');
+  if(preview) {
+    preview.style.display='none';
+    preview.src='';
+  }
+  if(uploadIcon) uploadIcon.style.display='block';
+  if(uploadText) uploadText.textContent = 'Ajouter une photo';
   
   selectedMeteo=[];
   currentStars=0;
