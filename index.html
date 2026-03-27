@@ -109,16 +109,6 @@
     color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
     font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
   }
-  
-  /* Bouton Capot */
-  .btn-capot {
-    padding:9px 20px;background:linear-gradient(135deg,var(--gris) 0%,#6b7b85 100%);
-    color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
-    font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
-    transition:opacity 0.15s,transform 0.15s;
-  }
-  .btn-capot:hover{opacity:0.9;} .btn-capot:active{transform:scale(0.97);}
-  .btn-capot.active { background:linear-gradient(135deg,var(--mousse) 0%,var(--eau-claire) 100%); }
 
   /* ── PAGE CONTENT ────────────────────────── */
   .page-content { flex:1;padding:24px 28px 40px;max-width:1200px; }
@@ -166,7 +156,6 @@
   .entry-card:hover{box-shadow:0 4px 18px rgba(0,0,0,0.1);}
   .entry-card.swiping{transition:none;}
   .entry-card.trophy{border-left-color:var(--eclair);}
-  .entry-card.capot { border-left-color: var(--gris); background: #f9f9f9; }
 
   .btn-delete-desktop {
     display:none;position:absolute;top:12px;right:14px;
@@ -703,7 +692,6 @@
         <button class="filter-pill" onclick="setFilter('Sandre',this)">🐡 Sandre</button>
         <button class="filter-pill" onclick="setFilter('Perche',this)">Perche</button>
         <button class="filter-pill" onclick="setFilter('trophy',this)">🏆 Trophées</button>
-        <button class="filter-pill" onclick="setFilter('capot',this)">🎣 Capot</button>
       </div>
       <div class="cards-grid" id="journal-list"></div>
     </div>
@@ -723,7 +711,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">🐟 Espèce</label>
-            <select class="form-select" id="f-espece" onchange="toggleCapotMode()">
+            <select class="form-select" id="f-espece">
               <option value="">— Sélectionner —</option>
               <option>Carpe</option><option>Brochet</option><option>Truite fario</option>
               <option>Truite arc-en-ciel</option><option>Sandre</option><option>Perche</option>
@@ -732,14 +720,14 @@
               <option>Barbeau</option><option>Chevesne</option><option>Ablette</option><option>Autre</option>
             </select>
           </div>
-          <div class="form-row" id="fish-details-row">
+          <div class="form-row">
             <div class="form-group">
               <label class="form-label">📏 Taille (cm)</label>
               <input type="number" class="form-input" id="f-taille" placeholder="ex: 45">
             </div>
             <div class="form-group">
-              <label class="form-label">⚖️ Poids (kg)</label>
-              <input type="number" step="0.01" class="form-input" id="f-poids" placeholder="ex: 1.2">
+              <label class="form-label">⚖️ Poids (g)</label>
+              <input type="number" class="form-input" id="f-poids" placeholder="ex: 1200">
             </div>
           </div>
           <div class="form-group">
@@ -762,12 +750,6 @@
               <option>Bolognaise</option><option>Pêche au coup</option>
               <option>Pêche au posé</option><option>Pêche au vif</option><option>Autre</option>
             </select>
-          </div>
-          <div class="form-group">
-            <button type="button" class="btn-capot" id="btn-capot" onclick="toggleCapot()">
-              🎣 Capot (sortie sans prise)
-            </button>
-            <small style="display:block; margin-top:6px; color:var(--gris); font-size:11px;">Activez pour enregistrer une sortie sans poisson capturé</small>
           </div>
         </div>
 
@@ -911,7 +893,6 @@
 <script>
 let entries = JSON.parse(localStorage.getItem('peche-entries')||'[]');
 let currentFilter='tous', currentStars=0, selectedMeteo=[], isTrophy=false, isRelache=false, photoData=null;
-let isCapotMode = false;
 let map = null;
 let markers = [];
 
@@ -1073,49 +1054,6 @@ function getCurrentLocation() {
   );
 }
 
-function toggleCapot() {
-  isCapotMode = !isCapotMode;
-  const btn = document.getElementById('btn-capot');
-  if (isCapotMode) {
-    btn.classList.add('active');
-    // Désactiver les champs poisson
-    const especeSelect = document.getElementById('f-espece');
-    especeSelect.disabled = true;
-    especeSelect.value = '';
-    document.getElementById('f-taille').disabled = true;
-    document.getElementById('f-poids').disabled = true;
-    document.getElementById('btn-trophy').disabled = true;
-    document.getElementById('btn-relache').disabled = true;
-    document.getElementById('f-technique').disabled = true;
-    // Reset values
-    document.getElementById('f-taille').value = '';
-    document.getElementById('f-poids').value = '';
-    document.getElementById('f-espece').value = '';
-    // Reset trophy/relache
-    if (isTrophy) toggleTrophy(document.getElementById('btn-trophy'));
-    if (isRelache) toggleRelache(document.getElementById('btn-relache'));
-  } else {
-    btn.classList.remove('active');
-    document.getElementById('f-espece').disabled = false;
-    document.getElementById('f-taille').disabled = false;
-    document.getElementById('f-poids').disabled = false;
-    document.getElementById('btn-trophy').disabled = false;
-    document.getElementById('btn-relache').disabled = false;
-    document.getElementById('f-technique').disabled = false;
-  }
-}
-
-function toggleCapotMode() {
-  // Called when species changes - if capot mode is active and user tries to select a species, warn
-  if (isCapotMode) {
-    const espece = document.getElementById('f-espece').value;
-    if (espece) {
-      showToast('⚠️ Désactivez d\'abord le mode Capot pour enregistrer une prise');
-      document.getElementById('f-espece').value = '';
-    }
-  }
-}
-
 function toggleMenu() {
   const overlay = document.getElementById('menuOverlay');
   const popup = document.getElementById('menuPopup');
@@ -1190,13 +1128,11 @@ function toggleMeteo(btn,val){
 }
 
 function toggleTrophy(btn){
-  if (isCapotMode) return;
   isTrophy = !isTrophy;
   btn.classList.toggle('selected', isTrophy);
 }
 
 function toggleRelache(btn){
-  if (isCapotMode) return;
   isRelache = !isRelache;
   btn.classList.toggle('selected', isRelache);
 }
@@ -1221,49 +1157,34 @@ function previewPhoto(e){
 }
 
 function saveEntry(){
-  const date = document.getElementById('f-date').value;
-  if(!date){showToast('⚠️ Veuillez sélectionner une date');return;}
-  
-  let entry = {
+  const espece=document.getElementById('f-espece').value;
+  if(!espece){showToast('⚠️ Sélectionne une espèce !');return;}
+  const entry={
     id:Date.now(), 
-    date: date,
+    date:document.getElementById('f-date').value, 
+    espece,
+    taille:document.getElementById('f-taille').value||null,
+    poids:document.getElementById('f-poids').value||null,
     lieu:document.getElementById('f-lieu').value,
     lat:document.getElementById('f-lat').value||null,
     lng:document.getElementById('f-lng').value||null,
+    technique:document.getElementById('f-technique').value,
     meteo:[...selectedMeteo],
     tempAir:document.getElementById('f-temp-air').value||null,
     tempEau:document.getElementById('f-temp-eau').value||null,
     lune:document.getElementById('f-lune').value,
     stars:currentStars, 
+    trophy:isTrophy, 
+    relache:isRelache,
     notes:document.getElementById('f-notes').value, 
-    photo:photoData,
-    capot: isCapotMode
+    photo:photoData
   };
-  
-  if (isCapotMode) {
-    entry.espece = 'Capot (aucune prise)';
-    entry.taille = null;
-    entry.poids = null;
-    entry.technique = null;
-    entry.trophy = false;
-    entry.relache = false;
-  } else {
-    const espece=document.getElementById('f-espece').value;
-    if(!espece){showToast('⚠️ Sélectionnez une espèce ou activez le mode Capot');return;}
-    entry.espece = espece;
-    entry.taille = document.getElementById('f-taille').value||null;
-    entry.poids = document.getElementById('f-poids').value ? parseFloat(document.getElementById('f-poids').value) : null;
-    entry.technique = document.getElementById('f-technique').value;
-    entry.trophy = isTrophy;
-    entry.relache = isRelache;
-  }
-  
   entries.unshift(entry);
   localStorage.setItem('peche-entries',JSON.stringify(entries));
   resetForm(); 
   updateAllStats();
   if(map) updateMapMarkers();
-  showToast(isCapotMode ? '🎣 Sortie capot enregistrée !' : '🎣 Sortie enregistrée !');
+  showToast('🎣 Sortie enregistrée !');
   switchView('journal',null); 
   renderJournal();
 }
@@ -1273,18 +1194,13 @@ function resetForm(){
     .forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.value='';
-      if(el && id === 'f-espece') el.disabled = false;
-      if(el && (id === 'f-taille' || id === 'f-poids')) el.disabled = false;
     });
   document.querySelectorAll('.meteo-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('active'));
   const trophyBtn = document.getElementById('btn-trophy');
   const relacheBtn = document.getElementById('btn-relache');
-  if(trophyBtn) { trophyBtn.classList.remove('selected'); trophyBtn.disabled = false; }
-  if(relacheBtn) { relacheBtn.classList.remove('selected'); relacheBtn.disabled = false; }
-  const capotBtn = document.getElementById('btn-capot');
-  if(capotBtn) { capotBtn.classList.remove('active'); }
-  document.getElementById('f-technique').disabled = false;
+  if(trophyBtn) trophyBtn.classList.remove('selected');
+  if(relacheBtn) relacheBtn.classList.remove('selected');
   
   const preview = document.getElementById('photo-preview');
   const uploadIcon = document.querySelector('.photo-upload-icon');
@@ -1300,7 +1216,6 @@ function resetForm(){
   currentStars=0;
   isTrophy=false;
   isRelache=false;
-  isCapotMode=false;
   photoData=null;
   
   const now=new Date(); 
@@ -1323,7 +1238,6 @@ function renderJournal(){
   const search=document.getElementById('search-input')?.value.toLowerCase() || '';
   let filtered=entries.filter(e=>{
     if(currentFilter==='trophy') return e.trophy;
-    if(currentFilter==='capot') return e.capot === true;
     const mF = currentFilter==='tous' || (e.espece && e.espece.includes(currentFilter));
     const mS = !search || (e.espece && e.espece.toLowerCase().includes(search)) || (e.lieu && e.lieu.toLowerCase().includes(search));
     return mF && mS;
@@ -1347,27 +1261,21 @@ function renderJournal(){
     if(e.technique) tags.push(e.technique); 
     if(e.relache) tags.push("↩️ Remis à l'eau");
     if(e.lat && e.lng) tags.push("📍 Géolocalisé");
-    if(e.capot) tags.push("🎣 Capot (aucune prise)");
-    
-    const isCapot = e.capot === true;
-    const poidsFormatted = e.poids ? formatPoids(e.poids) : '';
-    
     return `
       <div class="card-wrapper" style="animation-delay:${idx*0.04}s">
         ${isMobile?`<div class="card-delete-bg" onclick="deleteEntry(${e.id})">🗑<span>Supprimer</span></div>`:''}
-        <div class="entry-card ${e.trophy?'trophy':''} ${isCapot?'capot':''}" data-id="${e.id}">
+        <div class="entry-card ${e.trophy?'trophy':''}" data-id="${e.id}">
           <button class="btn-delete-desktop" onclick="deleteEntry(${e.id})">🗑 Supprimer</button>
           <div class="entry-card-header">
             <div>
               <span class="entry-species">${escapeHtml(e.espece)}</span>
               ${e.trophy?'<span class="photo-badge">🏆 Trophée</span>':''}
-              ${isCapot?'<span class="photo-badge" style="background:var(--gris);color:white;">🎣 Capot</span>':''}
             </div>
             <div class="entry-date">${date}<br>${heure}</div>
           </div>
           <div class="entry-meta">
             ${e.taille?`<div class="entry-meta-item"><span>📏</span>${e.taille} cm</div>`:''}
-            ${poidsFormatted?`<div class="entry-meta-item"><span>⚖️</span>${poidsFormatted}</div>`:''}
+            ${e.poids?`<div class="entry-meta-item"><span>⚖️</span>${formatPoids(e.poids)}</div>`:''}
             ${e.lieu?`<div class="entry-meta-item"><span>📍</span>${escapeHtml(e.lieu)}</div>`:''}
             ${e.meteo&&e.meteo.length?`<div class="entry-meta-item">${e.meteo.join(' ')}</div>`:''}
           </div>
@@ -1424,23 +1332,16 @@ function escapeHtml(str) {
   });
 }
 
-function formatPoids(poids){ 
-  if(!poids && poids !== 0) return '';
-  // poids est maintenant en kg (décimal)
-  if (poids >= 1) {
-    return poids.toFixed(2).replace(/\.?0+$/, '') + ' kg';
-  } else {
-    // Moins de 1 kg, afficher en grammes
-    const grammes = Math.round(poids * 1000);
-    return grammes + ' g';
-  }
+function formatPoids(g){ 
+  if(!g) return '';
+  return g>=1000?(g/1000).toFixed(2).replace(/\.?0+$/,'')+' kg':g+' g'; 
 }
 
 function updateAllStats(){
   const total=entries.length;
-  const records=entries.filter(e=>e.poids && !e.capot);
-  const rec=records.length ? formatPoids(Math.max(...records.map(e=>parseFloat(e.poids)))):'—';
-  const species=new Set(entries.filter(e=>!e.capot).map(e=>e.espece)).size;
+  const records=entries.filter(e=>e.poids);
+  const rec=records.length?formatPoids(Math.max(...records.map(e=>parseInt(e.poids)))):'—';
+  const species=new Set(entries.map(e=>e.espece)).size;
   
   const mTotal = document.getElementById('m-total');
   const mPoissons = document.getElementById('m-poissons');
@@ -1459,28 +1360,25 @@ function updateStats(){
   const el=document.getElementById('stats-content');
   if(!el) return;
   
-  const nonCapotEntries = entries.filter(e => !e.capot);
-  
   if(!entries.length){
     el.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">📊</span><p>Pas encore de données.</p></div>`;
     return;
   }
   const sp={};
-  nonCapotEntries.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+1;});
+  entries.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+1;});
   const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
   const maxC=sorted[0]?sorted[0][1]:1;
-  const wP=[...nonCapotEntries].filter(e=>e.poids).sort((a,b)=>b.poids-a.poids);
-  const wT=[...nonCapotEntries].filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
+  const wP=[...entries].filter(e=>e.poids).sort((a,b)=>b.poids-a.poids);
+  const wT=[...entries].filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
   const lx={};
   entries.forEach(e=>{if(e.lieu)lx[e.lieu]=(lx[e.lieu]||0)+1;});
   const tL=Object.entries(lx).sort((a,b)=>b[1]-a[1])[0];
   const spotsWithCoords = entries.filter(e=>e.lat && e.lng).length;
-  const capotCount = entries.filter(e=>e.capot).length;
 
   el.innerHTML=`
     <div class="stat-card">
       <div class="stat-card-title">🐟 Espèces capturées</div>
-      ${sorted.length ? sorted.map(([s,c])=>`<div class="species-bar"><span class="species-name">${escapeHtml(s)}</span><div class="bar-track"><div class="bar-fill" style="width:${c/maxC*100}%"></div></div><span class="bar-count">${c}</span></div>`).join('') : '<div class="species-bar">Aucune prise enregistrée</div>'}
+      ${sorted.map(([s,c])=>`<div class="species-bar"><span class="species-name">${escapeHtml(s)}</span><div class="bar-track"><div class="bar-fill" style="width:${c/maxC*100}%"></div></div><span class="bar-count">${c}</span></div>`).join('')}
     </div>
     ${wP.length||wT.length?`
     <div class="stat-card">
@@ -1491,7 +1389,6 @@ function updateStats(){
     <div class="stat-card">
       <div class="stat-card-title">📋 Résumé</div>
       <div class="record-item"><span class="record-icon">🎣</span><div class="record-info"><div class="species">Total sorties</div></div><span class="record-value">${entries.length}</span></div>
-      <div class="record-item"><span class="record-icon">🎣</span><div class="record-info"><div class="species">Sorties capot</div></div><span class="record-value">${capotCount}</span></div>
       <div class="record-item"><span class="record-icon">🗺️</span><div class="record-info"><div class="species">Spots géolocalisés</div></div><span class="record-value">${spotsWithCoords}</span></div>
       <div class="record-item"><span class="record-icon">🏆</span><div class="record-info"><div class="species">Trophées</div></div><span class="record-value">${entries.filter(e=>e.trophy).length}</span></div>
       ${tL?`<div class="record-item"><span class="record-icon">📍</span><div class="record-info"><div class="species">Spot favori</div><div class="detail">${tL[1]} visite${tL[1]>1?'s':''}</div></div><span class="record-value" style="font-size:13px;max-width:110px;text-align:right">${escapeHtml(tL[0])}</span></div>`:''}
