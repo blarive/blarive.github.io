@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#1a3a4a">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Carnet de Pêche</title>
+<title>Carnet de Pêche - Journal de bord</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -186,26 +186,93 @@
   }
   .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--eau-claire);}
   .form-textarea{resize:none;height:80px;}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .form-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .form-row-3{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:8px;
+  }
 
-  .stars-input{display:flex;gap:6px;}
-  .star-btn{font-size:26px;background:none;border:none;cursor:pointer;filter:grayscale(1) opacity(0.3);transition:all 0.15s;padding:2px;}
+  .stars-input{display:flex;gap:6px;flex-wrap:wrap;}
+  .star-btn{
+    font-size:26px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    filter:grayscale(1) opacity(0.3);
+    transition:all 0.15s;
+    padding:2px;
+    min-width:40px;
+  }
   .star-btn.active{filter:none;transform:scale(1.1);}
 
-  .meteo-btns{display:flex;gap:8px;flex-wrap:wrap;}
-  .meteo-btn{padding:8px 14px;border:1.5px solid #ddd;border-radius:20px;background:none;font-size:13px;cursor:pointer;transition:all 0.15s;color:var(--texte);font-family:'DM Sans',sans-serif;}
-  .meteo-btn.selected{border-color:var(--eau-claire);background:rgba(42,96,128,0.1);color:var(--eau-claire);font-weight:600;}
+  .meteo-btns{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .meteo-btn{
+    padding:8px 14px;
+    border:1.5px solid #ddd;
+    border-radius:20px;
+    background:none;
+    font-size:13px;
+    cursor:pointer;
+    transition:all 0.15s;
+    color:var(--texte);
+    font-family:'DM Sans',sans-serif;
+    flex: 0 0 auto;
+  }
+  .meteo-btn.selected{
+    border-color:var(--eau-claire);
+    background:rgba(42,96,128,0.1);
+    color:var(--eau-claire);
+    font-weight:600;
+  }
 
-  .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,74,0.25);transition:transform 0.15s;}
+  .btn-submit{
+    width:100%;
+    padding:14px;
+    background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);
+    color:white;
+    border:none;
+    border-radius:12px;
+    font-family:'DM Sans',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 4px 16px rgba(26,58,74,0.25);
+    transition:transform 0.15s;
+    margin-top:8px;
+  }
   .btn-submit:active{transform:scale(0.98);}
 
-  .photo-upload{border:2px dashed #ccc;border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:#fafaf8;transition:border-color 0.2s;}
+  .photo-upload{
+    border:2px dashed #ccc;
+    border-radius:10px;
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+    background:#fafaf8;
+    transition:border-color 0.2s;
+    width:100%;
+  }
   .photo-upload:hover{border-color:var(--eau-claire);}
   .photo-upload input{display:none;}
   .photo-upload .icon{font-size:28px;display:block;margin-bottom:6px;}
-  .photo-upload p{font-size:13px;color:var(--gris);}
-  .photo-preview{width:100%;height:160px;object-fit:cover;border-radius:10px;display:none;}
+  .photo-upload p{font-size:13px;color:var(--gris);word-break:break-word;}
+  .photo-preview{
+    width:100%;
+    max-height:160px;
+    object-fit:cover;
+    border-radius:10px;
+    display:none;
+    margin-bottom:10px;
+  }
 
   /* ── STATS ───────────────────────────────── */
   .stats-grid{display:grid;grid-template-columns:1fr;gap:14px;}
@@ -288,8 +355,85 @@
     .cards-grid{grid-template-columns:1fr;}
     .stats-grid{grid-template-columns:1fr;}
     .form-layout{grid-template-columns:1fr;}
-    .form-card{padding:16px;}
-    .form-row-3{grid-template-columns:1fr;gap:10px;}
+    
+    /* Form responsive fixes */
+    .form-card {
+      padding: 16px;
+    }
+    
+    /* Stack form rows on mobile */
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    
+    .form-row-3 {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    
+    /* Make all inputs full width */
+    .form-input,
+    .form-select,
+    .form-textarea {
+      font-size: 16px;
+    }
+    
+    /* Better spacing for form groups */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    /* Meteor buttons - better fit */
+    .meteo-btns {
+      gap: 8px;
+    }
+    
+    .meteo-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+      flex: 1 0 auto;
+      min-width: calc(33.33% - 8px);
+    }
+    
+    /* Stars rating - touch friendly */
+    .star-btn {
+      font-size: 32px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    
+    /* Photo upload area */
+    .photo-upload {
+      padding: 16px;
+    }
+    
+    .photo-upload .icon {
+      font-size: 32px;
+    }
+    
+    .photo-preview {
+      max-height: 140px;
+    }
+    
+    /* Submit button */
+    .btn-submit {
+      padding: 16px;
+      font-size: 16px;
+      margin-top: 12px;
+    }
+    
+    /* Card titles */
+    .form-card-title {
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    
+    /* Labels */
+    .form-label {
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
 
     .bottom-nav{
       display:flex;position:fixed;bottom:0;left:0;right:0;
@@ -306,6 +450,23 @@
     .toast{bottom:80px;white-space:normal;text-align:center;max-width:90%;}
     .btn-delete-desktop{display:none;}
     .entry-card-header{padding-right:0;}
+  }
+
+  /* Small mobile (<= 480px) */
+  @media(max-width:480px){
+    .meteo-btn {
+      min-width: calc(50% - 8px);
+      font-size: 11px;
+      padding: 8px 10px;
+    }
+    
+    .form-card {
+      padding: 14px;
+    }
+    
+    .stars-input {
+      justify-content: center;
+    }
   }
 </style>
 </head>
@@ -879,7 +1040,6 @@ function importData(event){
       const data = JSON.parse(ev.target.result);
       const imported = data.entries || data;
       if(!Array.isArray(imported)) throw new Error('Format invalide');
-      const avant = entries.length;
       const existingIds = new Set(entries.map(e=>e.id));
       const nouveaux = imported.filter(e=>e.id && !existingIds.has(e.id));
       entries = [...nouveaux, ...entries];
