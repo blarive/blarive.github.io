@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Carnet de Pêche</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --eau: #1a3a4a;
+    --eau-profonde: #0d2231;
+    --eau-claire: #2a6080;
+    --roseau: #8b6914;
+    --sable: #e8d5a3;
+    --mousse: #4a7c59;
+    --eclair: #f0c040;
+    --blanc: #f5f0e8;
+    --texte: #1a2a35;
+    --gris: #8a9aa5;
+    --rouge: #c0392b;
+    --ombre: 0 4px 24px rgba(13,34,49,0.18);
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--eau-profonde);
+    color: var(--blanc);
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+
+  /* FOND ANIMÉ */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 260px;
+    background: linear-gradient(180deg, var(--eau) 0%, var(--eau-profonde) 100%);
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    top: 180px; left: -10%;
+    width: 120%;
+    height: 80px;
+    background: rgba(42,96,128,0.25);
+    border-radius: 50%;
+    filter: blur(20px);
+    animation: vague 6s ease-in-out infinite;
+    z-index: 0;
+  }
+  @keyframes vague {
+    0%, 100% { transform: translateX(0) scaleY(1); }
+    50% { transform: translateX(3%) scaleY(1.15); }
+  }
+
+  /* HEADER */
+  .header {
+    position: relative;
+    z-index: 10;
+    padding: 52px 24px 20px;
+    text-align: center;
+  }
+  .header-icon {
+    font-size: 42px;
+    display: block;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 2px 8px rgba(240,192,64,0.5));
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--sable);
+    letter-spacing: 0.5px;
+  }
+  .header p {
+    font-size: 12px;
+    color: var(--gris);
+    margin-top: 2px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 10px;
+    padding: 0 16px 20px;
+  }
+  .stat-pill {
+    flex: 1;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+  .stat-pill .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--eclair);
+    display: block;
+    line-height: 1;
+  }
+  .stat-pill .label {
+    font-size: 10px;
+    color: var(--gris);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 3px;
+  }
+
+  /* NAV TABS */
+  .tabs {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 6px;
+    padding: 0 16px 16px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 6px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    color: var(--gris);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .tab-btn.active {
+    background: var(--eclair);
+    color: var(--eau-profonde);
+    font-weight: 700;
+  }
+  .tab-btn span { display: block; font-size: 16px; margin-bottom: 2px; }
+
+  /* MAIN CONTENT */
+  .main {
+    position: relative;
+    z-index: 10;
+    background: var(--blanc);
+    color: var(--texte);
+    border-radius: 24px 24px 0 0;
+    min-height: calc(100vh - 260px);
+    padding: 24px 16px 100px;
+  }
+
+  /* SECTION VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--eau-profonde);
+    margin-bottom: 16px;
+  }
+  .section-title small {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: var(--gris);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    font-style: normal;
+  }
+
+  /* FORM */
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gris);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--texte);
+    background: #fafaf8;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--eau-claire);
+  }
+  .form-textarea { resize: none; height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+  /* RATING STARS */
+  .stars-input { display: flex; gap: 6px; }
+  .star-btn {
+    font-size: 26px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    filter: grayscale(1) opacity(0.3);
+    transition: all 0.15s;
+    padding: 2px;
+  }
+  .star-btn.active { filter: none; transform: scale(1.1); }
+
+  /* METEO BUTTONS */
+  .meteo-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .meteo-btn {
+    padding: 8px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 20px;
+    background: none;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--texte);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .meteo-btn.selected {
+    border-color: var(--eau-claire);
+    background: rgba(42,96,128,0.12);
+    color: var(--eau-claire);
+    font-weight: 600;
+  }
+
+  /* SUBMIT BTN */
+  .btn-submit {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--eau) 0%, var(--eau-claire) 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+    box-shadow: 0 6px 20px rgba(26,58,74,0.3);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .btn-submit:active { transform: scale(0.98); box-shadow: 0 2px 10px rgba(26,58,74,0.2); }
+
+  /* SUCCESS TOAST */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--mousse);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 1000;
+    white-space: nowrap;
+    box-shadow: var(--ombre);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* JOURNAL LIST */
+  .journal-filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .journal-filters::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #ddd;
+    background: none;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+    color: var(--gris);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .filter-pill.active {
+    background: var(--eau-profonde);
+    border-color: var(--eau-profonde);
+    color: white;
+  }
+
+  .search-box {
+    position: relative;
+    margin-bottom: 14px;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 11px 14px 11px 38px;
+    border: 1.5px solid #ddd;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    background: #fafaf8;
+    color: var(--texte);
+  }
+  .search-box::before {
+    content: '🔍';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+  }
+
+  .entry-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    border-left: 4px solid var(--eau-claire);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .entry-card:active { transform: scale(0.99); }
+  .entry-card.trophy { border-left-color: var(--eclair); }
+
+  .entry-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .entry-species {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-style: italic;
+    color: var(--eau-profonde);
+  }
+  .entry-date {
+    font-size: 11px;
+    color: var(--gris);
+    text-align: right;
+  }
+  .entry-meta {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .entry-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #555;
+  }
+  .entry-meta-item span:first-child { font-size: 15px; }
+  .entry-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .tag {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    background: rgba(42,96,128,0.1);
+    color: var(--eau-claire);
+    font-weight: 500;
+  }
+  .tag.gold { background: rgba(240,192,64,0.15); color: #a07a00; }
+  .entry-stars { font-size: 13px; }
+  .entry-notes {
+    font-size: 13px;
+    color: #666;
+    margin-top: 6px;
+    font-style: italic;
+    line-height: 1.4;
+  }
+  .btn-delete {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: opacity 0.15s;
+  }
+  .btn-delete:hover { opacity: 0.8; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--gris);
+  }
+  .empty-state .icon { font-size: 56px; margin-bottom: 12px; display: block; opacity: 0.5; }
+  .empty-state p { font-size: 15px; }
+
+  /* STATS VIEW */
+  .stat-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+  .stat-card-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gris);
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+  .species-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .species-name { font-size: 14px; width: 90px; flex-shrink: 0; color: var(--texte); }
+  .bar-track {
+    flex: 1;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--eau) 0%, var(--eau-claire) 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+  .bar-count { font-size: 13px; color: var(--gris); min-width: 20px; text-align: right; }
+
+  .record-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .record-item:last-child { border-bottom: none; }
+  .record-icon { font-size: 28px; }
+  .record-info { flex: 1; }
+  .record-info .species { font-family: 'Playfair Display', serif; font-style: italic; font-size: 15px; }
+  .record-info .detail { font-size: 12px; color: var(--gris); margin-top: 2px; }
+  .record-value { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--eclair); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  }
+  .nav-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 6px 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: transform 0.15s;
+  }
+  .nav-btn:active { transform: scale(0.9); }
+  .nav-btn .nav-icon { font-size: 22px; }
+  .nav-btn .nav-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gris);
+    letter-spacing: 0.3px;
+  }
+  .nav-btn.active .nav-label { color: var(--eau-claire); font-weight: 700; }
+  .nav-btn.active .nav-icon { filter: drop-shadow(0 0 4px rgba(42,96,128,0.5)); }
+
+  /* ADD BUTTON */
+  .fab {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--eau) 0%, var(--eau-claire) 100%);
+    border-radius: 50%;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(42,96,128,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -20px;
+    transition: transform 0.15s;
+  }
+  .fab:active { transform: scale(0.9); }
+
+  /* PHOTO BADGE */
+  .photo-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--eclair), #e0a800);
+    color: var(--eau-profonde);
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  /* SLIDER */
+  input[type=range] {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    appearance: none;
+    background: linear-gradient(90deg, var(--eau-claire) 0%, var(--eau-claire) var(--val, 50%), #ddd var(--val, 50%));
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--eau);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--gris);
+    margin-top: 4px;
+  }
+  .slider-val {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--eau);
+    margin: 4px 0;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: #eee;
+    margin: 18px 0;
+  }
+
+  /* PHOTO UPLOAD */
+  .photo-upload {
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    background: #fafaf8;
+  }
+  .photo-upload:hover { border-color: var(--eau-claire); }
+  .photo-upload input { display: none; }
+  .photo-upload .icon { font-size: 32px; display: block; margin-bottom: 6px; }
+  .photo-upload p { font-size: 13px; color: var(--gris); }
+  .photo-preview {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 12px;
+    display: none;
+  }
+
+  /* ANIMATIONS */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .entry-card { animation: slideUp 0.3s ease both; }
+
+  /* RESPONSIVE adjustments */
+  @media (max-width: 360px) {
+    .header h1 { font-size: 22px; }
+    .form-row-3 { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <span class="header-icon">🎣</span>
+  <h1>Mon Carnet de Pêche</h1>
+  <p>Journal du pêcheur</p>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-pill">
+    <span class="num" id="stat-total">0</span>
+    <span class="label">Sorties</span>
+  </div>
+  <div class="stat-pill">
+    <span class="num" id="stat-poissons">0</span>
+    <span class="label">Poissons</span>
+  </div>
+  <div class="stat-pill">
+    <span class="num" id="stat-record">—</span>
+    <span class="label">Record</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchView('journal')" id="tab-journal">
+    <span>📖</span>Journal
+  </button>
+  <button class="tab-btn" onclick="switchView('ajouter')" id="tab-ajouter">
+    <span>➕</span>Ajouter
+  </button>
+  <button class="tab-btn" onclick="switchView('stats')" id="tab-stats">
+    <span>📊</span>Stats
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- VUE JOURNAL -->
+  <div class="view active" id="view-journal">
+    <p class="section-title">
+      <small>Mes sorties</small>
+      Journal de pêche
+    </p>
+
+    <div class="search-box">
+      <input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="renderJournal()">
+    </div>
+
+    <div class="journal-filters">
+      <button class="filter-pill active" onclick="setFilter('tous', this)">Toutes</button>
+      <button class="filter-pill" onclick="setFilter('Carpe', this)">🐟 Carpe</button>
+      <button class="filter-pill" onclick="setFilter('Brochet', this)">🦈 Brochet</button>
+      <button class="filter-pill" onclick="setFilter('Truite', this)">🐠 Truite</button>
+      <button class="filter-pill" onclick="setFilter('Sandre', this)">🐡 Sandre</button>
+      <button class="filter-pill" onclick="setFilter('Perche', this)">Perche</button>
+    </div>
+
+    <div id="journal-list"></div>
+  </div>
+
+  <!-- VUE AJOUTER -->
+  <div class="view" id="view-ajouter">
+    <p class="section-title">
+      <small>Nouvelle entrée</small>
+      Ajouter une prise
+    </p>
+
+    <div class="form-group">
+      <label class="form-label">📅 Date & Heure</label>
+      <input type="datetime-local" class="form-input" id="f-date">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🐟 Espèce</label>
+      <select class="form-select" id="f-espece">
+        <option value="">— Sélectionner —</option>
+        <option>Carpe</option>
+        <option>Brochet</option>
+        <option>Truite fario</option>
+        <option>Truite arc-en-ciel</option>
+        <option>Sandre</option>
+        <option>Perche</option>
+        <option>Gardon</option>
+        <option>Rotengle</option>
+        <option>Tanche</option>
+        <option>Anguille</option>
+        <option>Black-bass</option>
+        <option>Silure</option>
+        <option>Barbeau</option>
+        <option>Chevesne</option>
+        <option>Ablette</option>
+        <option>Autre</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">📏 Taille (cm)</label>
+        <input type="number" class="form-input" id="f-taille" placeholder="ex. 45" min="0" max="300">
+      </div>
+      <div class="form-group">
+        <label class="form-label">⚖️ Poids (g)</label>
+        <input type="number" class="form-input" id="f-poids" placeholder="ex. 1200" min="0">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">📍 Lieu</label>
+      <input type="text" class="form-input" id="f-lieu" placeholder="Étang, rivière, lac…">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🎣 Technique</label>
+      <select class="form-select" id="f-technique">
+        <option value="">— Technique —</option>
+        <option>Carpe — Cheveu</option>
+        <option>Lancer — Cuillère</option>
+        <option>Lancer — Leurre souple</option>
+        <option>Lancer — Popper</option>
+        <option>Mouche sèche</option>
+        <option>Mouche noyée</option>
+        <option>Toc / Vairon</option>
+        <option>Feeder</option>
+        <option>Bolognaise</option>
+        <option>Pêche au coup</option>
+        <option>Pêche au posé</option>
+        <option>Pêche au vif</option>
+        <option>Autre</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🌤 Météo</label>
+      <div class="meteo-btns" id="meteo-btns">
+        <button class="meteo-btn" onclick="toggleMeteo(this, '☀️ Soleil')">☀️ Soleil</button>
+        <button class="meteo-btn" onclick="toggleMeteo(this, '⛅ Nuageux')">⛅ Nuageux</button>
+        <button class="meteo-btn" onclick="toggleMeteo(this, '🌧 Pluie')">🌧 Pluie</button>
+        <button class="meteo-btn" onclick="toggleMeteo(this, '💨 Vent')">💨 Vent</button>
+        <button class="meteo-btn" onclick="toggleMeteo(this, '🌫 Brume')">🌫 Brume</button>
+        <button class="meteo-btn" onclick="toggleMeteo(this, '❄️ Froid')">❄️ Froid</button>
+      </div>
+    </div>
+
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label">🌡 Temp. air (°C)</label>
+        <input type="number" class="form-input" id="f-temp-air" placeholder="18">
+      </div>
+      <div class="form-group">
+        <label class="form-label">💧 Temp. eau</label>
+        <input type="number" class="form-input" id="f-temp-eau" placeholder="14">
+      </div>
+      <div class="form-group">
+        <label class="form-label">🌙 Lune</label>
+        <select class="form-select" id="f-lune">
+          <option value="">—</option>
+          <option>🌑 NL</option>
+          <option>🌒 CC</option>
+          <option>🌓 PQ</option>
+          <option>🌔 GC</option>
+          <option>🌕 PL</option>
+          <option>🌖 GD</option>
+          <option>🌗 DQ</option>
+          <option>🌘 CD</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">⭐ Note de la sortie</label>
+      <div class="stars-input" id="stars-input">
+        <button class="star-btn" onclick="setStar(1)">⭐</button>
+        <button class="star-btn" onclick="setStar(2)">⭐</button>
+        <button class="star-btn" onclick="setStar(3)">⭐</button>
+        <button class="star-btn" onclick="setStar(4)">⭐</button>
+        <button class="star-btn" onclick="setStar(5)">⭐</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🏆 Trophée (prise exceptionnelle ?)</label>
+      <div class="meteo-btns">
+        <button class="meteo-btn" id="btn-trophy" onclick="toggleTrophy(this)">🏆 Marquer comme trophée</button>
+        <button class="meteo-btn" id="btn-relache" onclick="toggleRelache(this)">↩️ Remise à l'eau</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">📝 Notes & Observations</label>
+      <textarea class="form-textarea" id="f-notes" placeholder="Appâts utilisés, conditions, anecdotes…"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">📸 Photo</label>
+      <label class="photo-upload" for="f-photo">
+        <input type="file" id="f-photo" accept="image/*" onchange="previewPhoto(event)">
+        <img class="photo-preview" id="photo-preview" alt="Photo">
+        <span class="icon" id="photo-icon">📷</span>
+        <p id="photo-text">Ajouter une photo</p>
+      </label>
+    </div>
+
+    <button class="btn-submit" onclick="saveEntry()">✅ Enregistrer la sortie</button>
+  </div>
+
+  <!-- VUE STATS -->
+  <div class="view" id="view-stats">
+    <p class="section-title">
+      <small>Vue d'ensemble</small>
+      Statistiques
+    </p>
+    <div id="stats-content"></div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let entries = JSON.parse(localStorage.getItem('peche-entries') || '[]');
+let currentFilter = 'tous';
+let currentStars = 0;
+let selectedMeteo = [];
+let isTrophy = false;
+let isRelache = false;
+let photoData = null;
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function init() {
+  // Set default datetime
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('f-date').value = now.toISOString().slice(0, 16);
+  
+  renderJournal();
+  updateStats();
+  updateHeaderStats();
+}
+
+// ─── VIEW SWITCHING ──────────────────────────────────────────────────────────
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'stats') updateStats();
+}
+
+// ─── FILTER ──────────────────────────────────────────────────────────────────
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderJournal();
+}
+
+// ─── STARS ───────────────────────────────────────────────────────────────────
+function setStar(n) {
+  currentStars = n;
+  document.querySelectorAll('.star-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i < n);
+  });
+}
+
+// ─── METEO ───────────────────────────────────────────────────────────────────
+function toggleMeteo(btn, val) {
+  btn.classList.toggle('selected');
+  if (selectedMeteo.includes(val)) {
+    selectedMeteo = selectedMeteo.filter(v => v !== val);
+  } else {
+    selectedMeteo.push(val);
+  }
+}
+
+// ─── TROPHY / RELÂCHE ────────────────────────────────────────────────────────
+function toggleTrophy(btn) {
+  isTrophy = !isTrophy;
+  btn.classList.toggle('selected', isTrophy);
+}
+function toggleRelache(btn) {
+  isRelache = !isRelache;
+  btn.classList.toggle('selected', isRelache);
+}
+
+// ─── PHOTO ───────────────────────────────────────────────────────────────────
+function previewPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    photoData = ev.target.result;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('photo-preview').src = photoData;
+    document.getElementById('photo-icon').style.display = 'none';
+    document.getElementById('photo-text').textContent = '✅ Photo ajoutée';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── SAVE ENTRY ──────────────────────────────────────────────────────────────
+function saveEntry() {
+  const espece = document.getElementById('f-espece').value;
+  if (!espece) { showToast('⚠️ Sélectionne une espèce !'); return; }
+
+  const entry = {
+    id: Date.now(),
+    date: document.getElementById('f-date').value,
+    espece,
+    taille: document.getElementById('f-taille').value || null,
+    poids: document.getElementById('f-poids').value || null,
+    lieu: document.getElementById('f-lieu').value,
+    technique: document.getElementById('f-technique').value,
+    meteo: [...selectedMeteo],
+    tempAir: document.getElementById('f-temp-air').value || null,
+    tempEau: document.getElementById('f-temp-eau').value || null,
+    lune: document.getElementById('f-lune').value,
+    stars: currentStars,
+    trophy: isTrophy,
+    relache: isRelache,
+    notes: document.getElementById('f-notes').value,
+    photo: photoData
+  };
+
+  entries.unshift(entry);
+  localStorage.setItem('peche-entries', JSON.stringify(entries));
+
+  resetForm();
+  updateHeaderStats();
+  showToast('🎣 Sortie enregistrée !');
+  switchView('journal');
+  renderJournal();
+}
+
+// ─── RESET FORM ──────────────────────────────────────────────────────────────
+function resetForm() {
+  document.getElementById('f-espece').value = '';
+  document.getElementById('f-taille').value = '';
+  document.getElementById('f-poids').value = '';
+  document.getElementById('f-lieu').value = '';
+  document.getElementById('f-technique').value = '';
+  document.getElementById('f-temp-air').value = '';
+  document.getElementById('f-temp-eau').value = '';
+  document.getElementById('f-lune').value = '';
+  document.getElementById('f-notes').value = '';
+  document.querySelectorAll('.meteo-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-trophy').classList.remove('selected');
+  document.getElementById('btn-relache').classList.remove('selected');
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo-icon').style.display = 'block';
+  document.getElementById('photo-text').textContent = 'Ajouter une photo';
+  selectedMeteo = [];
+  currentStars = 0;
+  isTrophy = false;
+  isRelache = false;
+  photoData = null;
+
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('f-date').value = now.toISOString().slice(0, 16);
+}
+
+// ─── DELETE ENTRY ─────────────────────────────────────────────────────────────
+function deleteEntry(id, e) {
+  e.stopPropagation();
+  if (!confirm('Supprimer cette entrée ?')) return;
+  entries = entries.filter(e => e.id !== id);
+  localStorage.setItem('peche-entries', JSON.stringify(entries));
+  renderJournal();
+  updateHeaderStats();
+  showToast('🗑 Entrée supprimée');
+}
+
+// ─── RENDER JOURNAL ──────────────────────────────────────────────────────────
+function renderJournal() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  let filtered = entries.filter(e => {
+    const matchFilter = currentFilter === 'tous' || e.espece.includes(currentFilter);
+    const matchSearch = !search || e.espece.toLowerCase().includes(search) || (e.lieu && e.lieu.toLowerCase().includes(search));
+    return matchFilter && matchSearch;
+  });
+
+  const list = document.getElementById('journal-list');
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state"><span class="icon">🎣</span><p>Aucune sortie enregistrée.<br>Ajoutez votre première prise !</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((e, idx) => {
+    const date = e.date ? new Date(e.date).toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'}) : '';
+    const heure = e.date ? new Date(e.date).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '';
+    const stars = e.stars ? '⭐'.repeat(e.stars) : '';
+    const tags = [];
+    if (e.technique) tags.push(e.technique);
+    if (e.relache) tags.push('↩️ Remis à l\'eau');
+    return `
+      <div class="entry-card ${e.trophy ? 'trophy' : ''}" style="animation-delay:${idx*0.04}s">
+        <button class="btn-delete" onclick="deleteEntry(${e.id}, event)">🗑</button>
+        <div class="entry-card-header">
+          <div>
+            <span class="entry-species">${e.espece}</span>
+            ${e.trophy ? '<span class="photo-badge">🏆 Trophée</span>' : ''}
+          </div>
+          <div class="entry-date">${date}<br>${heure}</div>
+        </div>
+        <div class="entry-meta">
+          ${e.taille ? `<div class="entry-meta-item"><span>📏</span>${e.taille} cm</div>` : ''}
+          ${e.poids ? `<div class="entry-meta-item"><span>⚖️</span>${formatPoids(e.poids)}</div>` : ''}
+          ${e.lieu ? `<div class="entry-meta-item"><span>📍</span>${e.lieu}</div>` : ''}
+          ${e.meteo && e.meteo.length ? `<div class="entry-meta-item">${e.meteo.join(' ')}</div>` : ''}
+        </div>
+        ${stars ? `<div class="entry-stars">${stars}</div>` : ''}
+        ${tags.length ? `<div class="entry-tags">${tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
+        ${e.notes ? `<div class="entry-notes">"${e.notes.slice(0,80)}${e.notes.length>80?'…':''}"</div>` : ''}
+        ${e.photo ? `<div style="margin-top:10px"><img src="${e.photo}" style="width:100%;height:120px;object-fit:cover;border-radius:10px"></div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function formatPoids(g) {
+  return g >= 1000 ? (g/1000).toFixed(2).replace(/\.?0+$/, '') + ' kg' : g + ' g';
+}
+
+// ─── UPDATE HEADER STATS ─────────────────────────────────────────────────────
+function updateHeaderStats() {
+  document.getElementById('stat-total').textContent = entries.length;
+  document.getElementById('stat-poissons').textContent = entries.length;
+  
+  const records = entries.filter(e => e.poids);
+  if (records.length) {
+    const max = Math.max(...records.map(e => parseInt(e.poids)));
+    document.getElementById('stat-record').textContent = formatPoids(max);
+  } else {
+    document.getElementById('stat-record').textContent = '—';
+  }
+}
+
+// ─── STATS VIEW ──────────────────────────────────────────────────────────────
+function updateStats() {
+  const el = document.getElementById('stats-content');
+  if (entries.length === 0) {
+    el.innerHTML = `<div class="empty-state"><span class="icon">📊</span><p>Pas encore de données.<br>Enregistrez vos premières sorties !</p></div>`;
+    return;
+  }
+
+  // Species count
+  const species = {};
+  entries.forEach(e => { species[e.espece] = (species[e.espece] || 0) + 1; });
+  const sorted = Object.entries(species).sort((a,b) => b[1]-a[1]);
+  const maxCount = sorted[0][1];
+
+  // Records
+  const withPoids = entries.filter(e => e.poids).sort((a,b) => b.poids - a.poids);
+  const withTaille = entries.filter(e => e.taille).sort((a,b) => b.taille - a.taille);
+
+  // Trophies
+  const trophies = entries.filter(e => e.trophy);
+
+  // Lieux
+  const lieux = {};
+  entries.forEach(e => { if (e.lieu) lieux[e.lieu] = (lieux[e.lieu] || 0) + 1; });
+  const topLieu = Object.entries(lieux).sort((a,b) => b[1]-a[1])[0];
+
+  el.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-card-title">🐟 Espèces capturées</div>
+      ${sorted.map(([sp, count]) => `
+        <div class="species-bar">
+          <span class="species-name">${sp}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(count/maxCount*100)}%"></div></div>
+          <span class="bar-count">${count}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    ${withPoids.length || withTaille.length ? `
+    <div class="stat-card">
+      <div class="stat-card-title">🏆 Records personnels</div>
+      ${withPoids[0] ? `
+        <div class="record-item">
+          <span class="record-icon">⚖️</span>
+          <div class="record-info">
+            <div class="species">${withPoids[0].espece}</div>
+            <div class="detail">${withPoids[0].lieu || 'Lieu non précisé'} — ${withPoids[0].date ? new Date(withPoids[0].date).toLocaleDateString('fr-FR') : ''}</div>
+          </div>
+          <span class="record-value">${formatPoids(withPoids[0].poids)}</span>
+        </div>
+      ` : ''}
+      ${withTaille[0] ? `
+        <div class="record-item">
+          <span class="record-icon">📏</span>
+          <div class="record-info">
+            <div class="species">${withTaille[0].espece}</div>
+            <div class="detail">${withTaille[0].lieu || 'Lieu non précisé'}</div>
+          </div>
+          <span class="record-value">${withTaille[0].taille} cm</span>
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    <div class="stat-card">
+      <div class="stat-card-title">📋 Résumé</div>
+      <div class="record-item">
+        <span class="record-icon">🎣</span>
+        <div class="record-info"><div class="species">Total sorties</div></div>
+        <span class="record-value">${entries.length}</span>
+      </div>
+      <div class="record-item">
+        <span class="record-icon">🏆</span>
+        <div class="record-info"><div class="species">Trophées</div></div>
+        <span class="record-value">${trophies.length}</span>
+      </div>
+      ${topLieu ? `
+      <div class="record-item">
+        <span class="record-icon">📍</span>
+        <div class="record-info">
+          <div class="species">Spot favori</div>
+          <div class="detail">${topLieu[1]} visite${topLieu[1]>1?'s':''}</div>
+        </div>
+        <span class="record-value" style="font-size:14px;max-width:100px;text-align:right">${topLieu[0]}</span>
+      </div>
+      ` : ''}
+      <div class="record-item">
+        <span class="record-icon">↩️</span>
+        <div class="record-info"><div class="species">Remises à l'eau</div></div>
+        <span class="record-value">${entries.filter(e=>e.relache).length}</span>
+      </div>
+    </div>
+  `;
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── START ───────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
