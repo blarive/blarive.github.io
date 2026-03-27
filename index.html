@@ -11,7 +11,6 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Carnet de Pêche - Journal de bord</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<!-- Leaflet CSS pour la carte -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   :root {
@@ -40,7 +39,6 @@
     min-height:100vh;
   }
 
-  /* ── SIDEBAR ─────────────────────────────── */
   .sidebar {
     width:var(--sidebar-w);
     background:linear-gradient(180deg,var(--eau-profonde) 0%,var(--eau) 100%);
@@ -52,6 +50,7 @@
     z-index:100;
     overflow:hidden;
   }
+
   .sidebar::after {
     content:'';position:absolute;bottom:60px;left:-20%;
     width:140%;height:100px;
@@ -70,7 +69,7 @@
   .sidebar-stat .label { font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:0.8px; }
   .sidebar-stat .num { font-family:'Playfair Display',serif;font-size:20px;color:var(--eclair); }
 
-  .sidebar-nav { flex:1;padding:8px 12px;position:relative;z-index:1; }
+  .sidebar-nav { flex:1;padding:8px 12px;position:relative;z-index:1; overflow-y:auto; }
   .nav-item {
     display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;cursor:pointer;
     color:var(--gris);font-size:14px;font-weight:500;transition:all 0.2s;
@@ -80,14 +79,14 @@
   .nav-item:hover{background:rgba(255,255,255,0.07);color:white;}
   .nav-item.active{background:var(--eclair);color:var(--eau-profonde);font-weight:700;}
 
-  /* ── APP BODY ────────────────────────────── */
   .app-body { flex:1;margin-left:var(--sidebar-w);display:flex;flex-direction:column;min-height:100vh; }
 
-  /* ── TOP BAR ─────────────────────────────── */
   .topbar {
     background:white;border-bottom:1px solid #e0e6ea;
     padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
     position:sticky;top:0;z-index:50;
+    flex-wrap:wrap;
+    gap:10px;
   }
   .topbar-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--eau-profonde);}
   .topbar-title small{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--gris);font-weight:400;display:block;text-transform:uppercase;letter-spacing:1px;}
@@ -95,9 +94,9 @@
     padding:9px 20px;background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);
     color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
     font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
-    transition:opacity 0.15s,transform 0.15s;
+    transition:transform 0.15s;
   }
-  .btn-primary:hover{opacity:0.9;} .btn-primary:active{transform:scale(0.97);}
+  .btn-primary:active{transform:scale(0.97);}
   .btn-secondary {
     padding:9px 14px;background:white;color:var(--eau);
     border:1.5px solid #d0dde5;border-radius:10px;font-family:'DM Sans',sans-serif;
@@ -109,22 +108,15 @@
     color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
     font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
   }
-  .btn-cloud {
-    padding:9px 14px;background:linear-gradient(135deg,var(--eau-claire) 0%,#3a7a9a 100%);
-    color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
-    font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
-  }
 
-  /* ── PAGE CONTENT ────────────────────────── */
   .page-content { flex:1;padding:24px 28px 40px;max-width:1200px; }
   .view{display:none;} .view.active{display:block;}
 
-  /* ── JOURNAL ─────────────────────────────── */
   .journal-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
   .search-box{position:relative;flex:1;min-width:180px;}
   .search-box input {
     width:100%;padding:10px 14px 10px 36px;border:1.5px solid #ddd;border-radius:10px;
-    font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:white;color:var(--texte);transition:border-color 0.2s;
+    font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:white;color:var(--texte);
   }
   .search-box input:focus{border-color:var(--eau-claire);}
   .search-box::before{content:'🔍';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;}
@@ -139,7 +131,6 @@
 
   .cards-grid{display:grid;grid-template-columns:1fr;gap:12px;}
 
-  /* ── CARD / SWIPE ────────────────────────── */
   .card-wrapper{position:relative;border-radius:var(--radius);overflow:hidden;}
   .card-delete-bg {
     position:absolute;top:0;right:0;bottom:0;width:90px;
@@ -147,30 +138,20 @@
     flex-direction:column;gap:4px;color:white;font-size:20px;cursor:pointer;border-radius:var(--radius);
     z-index:2;
   }
-  .card-delete-bg span{font-size:10px;font-weight:600;}
-
   .entry-card {
     background:white;border-radius:var(--radius);padding:16px 18px;
     border-left:4px solid var(--eau-claire);position:relative;
     transition:transform 0.3s cubic-bezier(.2,.8,.3,1);
-    will-change:transform;touch-action:pan-y;user-select:none;
     box-shadow:0 1px 6px rgba(0,0,0,0.06);
     z-index:1;
-    position:relative;
   }
-  .entry-card:hover{box-shadow:0 4px 18px rgba(0,0,0,0.1);}
-  .entry-card.swiping{transition:none;}
   .entry-card.trophy{border-left-color:var(--eclair);}
-
   .btn-delete-desktop {
     display:none;position:absolute;top:12px;right:14px;
     background:#fee;border:1.5px solid #fcc;color:var(--rouge);border-radius:8px;
     padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;
-    font-family:'DM Sans',sans-serif;transition:background 0.15s;
-    z-index:3;
+    font-family:'DM Sans',sans-serif;z-index:3;
   }
-  .btn-delete-desktop:hover{background:var(--rouge);color:white;}
-
   .entry-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-right:90px;}
   .entry-species{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:var(--eau-profonde);}
   .entry-date{font-size:11px;color:var(--gris);text-align:right;}
@@ -181,15 +162,11 @@
   .entry-stars{font-size:13px;margin-top:4px;}
   .entry-notes{font-size:13px;color:#666;margin-top:6px;font-style:italic;line-height:1.4;}
   .photo-badge{display:inline-block;background:linear-gradient(135deg,var(--eclair),#e0a800);color:var(--eau-profonde);padding:2px 9px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px;}
-
   .empty-state{text-align:center;padding:56px 24px;color:var(--gris);}
-  .empty-state .icon{font-size:56px;margin-bottom:12px;display:block;opacity:0.4;}
 
-  /* ── FORM ────────────────────────────────── */
   .form-layout{display:grid;grid-template-columns:1fr;gap:16px;}
   .form-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
   .form-card-title{font-size:14px;font-weight:700;color:var(--eau-profonde);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--eau-claire);display:flex;align-items:center;gap:8px;}
-  .form-card-title .icon{font-size:18px;}
   .form-group{margin-bottom:16px;}
   .form-label{font-size:12px;font-weight:600;color:var(--gris);margin-bottom:6px;display:block;}
   .form-input,.form-select,.form-textarea {
@@ -198,393 +175,54 @@
     background:white;outline:none;transition:all 0.2s;
   }
   .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--eau-claire);box-shadow:0 0 0 3px rgba(42,96,128,0.1);}
-  .form-textarea{resize:vertical;min-height:80px;}
-  .form-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-  }
-  .form-row-3{
-    display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:12px;
-  }
-  .location-row {
-    display:flex;
-    gap:10px;
-    align-items:center;
-  }
-  .location-row .form-input {
-    flex:1;
-  }
-
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .form-row-3{display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;}
+  .location-row {display:flex;gap:10px;align-items:center;}
+  .location-row .form-input {flex:1;}
   .stars-input{display:flex;gap:8px;flex-wrap:wrap;}
-  .star-btn{
-    font-size:28px;
-    background:none;
-    border:none;
-    cursor:pointer;
-    filter:grayscale(1) opacity(0.4);
-    transition:all 0.2s;
-    padding:4px;
-    min-width:44px;
-    min-height:44px;
-  }
+  .star-btn{font-size:28px;background:none;border:none;cursor:pointer;filter:grayscale(1) opacity(0.4);transition:all 0.2s;padding:4px;min-width:44px;}
   .star-btn.active{filter:none;transform:scale(1.1);color:var(--eclair);}
-
-  .meteo-btns{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-  .meteo-btn{
-    padding:8px 16px;
-    border:1.5px solid #e0e6ea;
-    border-radius:24px;
-    background:white;
-    font-size:13px;
-    cursor:pointer;
-    transition:all 0.2s;
-    color:var(--texte);
-    font-family:'DM Sans',sans-serif;
-  }
-  .meteo-btn.selected{
-    border-color:var(--eau-claire);
-    background:rgba(42,96,128,0.1);
-    color:var(--eau-claire);
-    font-weight:600;
-  }
-
-  .btn-submit{
-    width:100%;
-    padding:14px;
-    background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);
-    color:white;
-    border:none;
-    border-radius:12px;
-    font-family:'DM Sans',sans-serif;
-    font-size:16px;
-    font-weight:600;
-    cursor:pointer;
-    transition:transform 0.15s, opacity 0.15s;
-    margin-top:8px;
-  }
-  .btn-submit:active{transform:scale(0.98);}
-
-  .photo-upload-area{
-    border:2px dashed #cbd5e0;
-    border-radius:12px;
-    padding:24px;
-    text-align:center;
-    cursor:pointer;
-    background:#fafbfc;
-    transition:all 0.2s;
-  }
-  .photo-upload-area:hover{border-color:var(--eau-claire);background:#f0f4f8;}
-  .photo-upload-area input{display:none;}
+  .meteo-btns{display:flex;gap:10px;flex-wrap:wrap;}
+  .meteo-btn{padding:8px 16px;border:1.5px solid #e0e6ea;border-radius:24px;background:white;font-size:13px;cursor:pointer;transition:all 0.2s;color:var(--texte);}
+  .meteo-btn.selected{border-color:var(--eau-claire);background:rgba(42,96,128,0.1);color:var(--eau-claire);font-weight:600;}
+  .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);color:white;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:8px;}
+  .photo-upload-area{border:2px dashed #cbd5e0;border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:#fafbfc;}
   .photo-upload-icon{font-size:48px;display:block;margin-bottom:12px;}
-  .photo-upload-text{font-size:13px;color:var(--gris);margin-top:8px;}
-  .photo-preview{
-    width:100%;
-    max-height:180px;
-    object-fit:cover;
-    border-radius:12px;
-    margin-top:12px;
-    display:none;
-  }
+  .photo-upload-text{font-size:13px;color:var(--gris);}
+  .photo-preview{width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin-top:12px;display:none;}
 
-  /* ── STATS ───────────────────────────────── */
   .stats-grid{display:grid;grid-template-columns:1fr;gap:16px;}
   .stat-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
   .stat-card-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:16px;font-weight:700;}
   .species-bar{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
   .species-name{font-size:14px;width:100px;flex-shrink:0;color:var(--texte);font-weight:500;}
   .bar-track{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;}
-  .bar-fill{height:100%;background:linear-gradient(90deg,var(--eau) 0%,var(--eau-claire) 100%);border-radius:4px;transition:width 0.5s ease;}
-  .bar-count{font-size:13px;color:var(--gris);min-width:30px;text-align:right;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--eau) 0%,var(--eau-claire) 100%);border-radius:4px;}
   .record-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f0f0;}
-  .record-item:last-child{border-bottom:none;}
-  .record-icon{font-size:28px;}
-  .record-info{flex:1;}
-  .record-info .species{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;font-weight:600;}
-  .record-info .detail{font-size:12px;color:var(--gris);margin-top:4px;}
   .record-value{font-family:'Playfair Display',serif;font-size:20px;color:var(--eclair);font-weight:700;}
 
-  /* ── MAP ─────────────────────────────────── */
-  .map-container {
-    background:white;
-    border-radius:var(--radius);
-    padding:20px;
-    box-shadow:0 1px 6px rgba(0,0,0,0.06);
-    margin-bottom:20px;
-  }
-  .map-title {
-    font-size:14px;
-    font-weight:700;
-    color:var(--eau-profonde);
-    margin-bottom:16px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  #map {
-    height: 400px;
-    border-radius:12px;
-    z-index:1;
-  }
-  .spots-stats {
-    display:flex;
-    gap:12px;
-    margin-top:16px;
-    flex-wrap:wrap;
-  }
-  .spot-stat {
-    flex:1;
-    background:#f8f9fa;
-    padding:12px;
-    border-radius:10px;
-    text-align:center;
-  }
-  .spot-stat .number {
-    font-size:24px;
-    font-weight:700;
-    color:var(--eau-claire);
-  }
-  .spot-stat .label {
-    font-size:11px;
-    color:var(--gris);
-    margin-top:4px;
-  }
+  .map-container {background:white;border-radius:var(--radius);padding:20px;box-shadow:0 1px 6px rgba(0,0,0,0.06);margin-bottom:20px;}
+  #map {height: 400px;border-radius:12px;z-index:1;}
+  .spots-stats {display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;}
+  .spot-stat {flex:1;background:#f8f9fa;padding:12px;border-radius:10px;text-align:center;}
+  .spot-stat .number {font-size:24px;font-weight:700;color:var(--eau-claire);}
 
-  /* ── MENU FLOTTANT MOBILE ─────────────────── */
-  .fab-menu {
-    display:none;
-    position:fixed;
-    bottom:24px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:1000;
-  }
-  .fab-button {
-    width:64px;
-    height:64px;
-    border-radius:32px;
-    background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);
-    border:none;
-    box-shadow:0 4px 20px rgba(0,0,0,0.25);
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition:all 0.3s ease;
-    z-index:1001;
-    position:relative;
-  }
-  .fab-button:active {
-    transform:scale(0.92);
-  }
-  .fab-button span {
-    font-size:32px;
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-  }
-  
-  .menu-overlay {
-    position:fixed;
-    top:0;
-    left:0;
-    right:0;
-    bottom:0;
-    background:rgba(0,0,0,0.5);
-    backdrop-filter:blur(4px);
-    z-index:1002;
-    opacity:0;
-    visibility:hidden;
-    transition:all 0.3s ease;
-  }
-  .menu-overlay.active {
-    opacity:1;
-    visibility:visible;
-  }
-  
-  .menu-popup {
-    position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%, -50%) scale(0.9);
-    background:white;
-    border-radius:28px;
-    padding:24px 20px;
-    width:calc(100% - 48px);
-    max-width:320px;
-    z-index:1003;
-    opacity:0;
-    visibility:hidden;
-    transition:all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
-    box-shadow:0 20px 40px rgba(0,0,0,0.3);
-  }
-  .menu-popup.active {
-    transform:translate(-50%, -50%) scale(1);
-    opacity:1;
-    visibility:visible;
-  }
-  .menu-popup-header {
-    text-align:center;
-    padding-bottom:16px;
-    margin-bottom:16px;
-    border-bottom:2px solid #eef2f5;
-  }
-  .menu-popup-header .icon {
-    font-size:40px;
-    display:block;
-    margin-bottom:8px;
-  }
-  .menu-popup-header h3 {
-    font-family:'Playfair Display',serif;
-    font-size:18px;
-    color:var(--eau-profonde);
-  }
-  .menu-items {
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .menu-item {
-    display:flex;
-    align-items:center;
-    gap:14px;
-    padding:14px 16px;
-    background:#f8f9fa;
-    border:none;
-    border-radius:16px;
-    width:100%;
-    text-align:left;
-    cursor:pointer;
-    transition:all 0.2s;
-    font-family:'DM Sans',sans-serif;
-    font-size:15px;
-    font-weight:500;
-    color:var(--texte);
-  }
-  .menu-item:active {
-    transform:scale(0.97);
-    background:#eef2f5;
-  }
-  .menu-item .menu-icon {
-    font-size:24px;
-    width:36px;
-    text-align:center;
-  }
-  .menu-item.active {
-    background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);
-    color:white;
-  }
-  .menu-item.active .menu-icon {
-    filter:brightness(0) invert(1);
-  }
+  .fab-menu {display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1000;}
+  .fab-button {width:64px;height:64px;border-radius:32px;background:linear-gradient(135deg,var(--eau) 0%,var(--eau-claire) 100%);border:none;box-shadow:0 4px 20px rgba(0,0,0,0.25);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .fab-button span {font-size:32px;}
+  .menu-overlay {position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:1002;opacity:0;visibility:hidden;transition:all 0.3s ease;}
+  .menu-overlay.active {opacity:1;visibility:visible;}
+  .menu-popup {position:fixed;top:50%;left:50%;transform:translate(-50%, -50%) scale(0.9);background:white;border-radius:28px;padding:24px 20px;width:calc(100% - 48px);max-width:320px;z-index:1003;opacity:0;visibility:hidden;transition:all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);}
+  .menu-popup.active {transform:translate(-50%, -50%) scale(1);opacity:1;visibility:visible;}
+  .menu-items {display:flex;flex-direction:column;gap:8px;}
+  .menu-item {display:flex;align-items:center;gap:14px;padding:14px 16px;background:#f8f9fa;border:none;border-radius:16px;width:100%;text-align:left;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;color:var(--texte);}
 
-  /* ── MODAL CLOUD ─────────────────────────── */
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal.active {
-    display: flex;
-  }
-  .modal-content {
-    background: white;
-    border-radius: 24px;
-    padding: 24px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-  }
-  .modal-content h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 20px;
-    color: var(--eau-profonde);
-    margin-bottom: 16px;
-  }
-  .modal-content p {
-    color: var(--gris);
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-  .cloud-options {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    margin: 20px 0;
-  }
-  .cloud-btn {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .cloud-btn:active {
-    transform: scale(0.95);
-  }
-  .cloud-google {
-    background: #4285f4;
-    color: white;
-  }
-  .cloud-icloud {
-    background: #000;
-    color: white;
-  }
-  .modal-close {
-    background: var(--gris);
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  .sync-status {
-    font-size: 12px;
-    padding: 8px;
-    border-radius: 8px;
-    margin-top: 12px;
-  }
-  .sync-status.success {
-    background: #d4edda;
-    color: #155724;
-  }
-  .sync-status.error {
-    background: #f8d7da;
-    color: #721c24;
-  }
-
-  /* ── MOBILE ONLY ─────────────────────────── */
   .mobile-header{display:none;}
   .mobile-stats-bar{display:none;}
 
-  /* ── TOAST ───────────────────────────────── */
-  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--mousse);color:white;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:500;opacity:0;transition:all 0.3s;z-index:2000;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.15);}
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--mousse);color:white;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:500;opacity:0;transition:all 0.3s;z-index:2000;white-space:nowrap;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-  @keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-  .card-wrapper{animation:slideUp 0.3s ease both;}
-
-  /* ══════════════════════════════════════════
-     TABLETTE (768–1024px)
-  ══════════════════════════════════════════ */
   @media(min-width:768px){
     .cards-grid{grid-template-columns:1fr 1fr;}
     .stats-grid{grid-template-columns:1fr 1fr;}
@@ -592,154 +230,51 @@
     .btn-delete-desktop{display:block;}
     .card-delete-bg{display:none;}
   }
-
   @media(min-width:1024px){
     .cards-grid{grid-template-columns:1fr 1fr 1fr;}
     .stats-grid{grid-template-columns:1fr 1fr 1fr;}
-    .page-content{padding:28px 36px 48px;}
   }
-
-  /* ══════════════════════════════════════════
-     MOBILE (< 768px)
-  ══════════════════════════════════════════ */
   @media(max-width:767px){
-    body{display:block;background:var(--eau-profonde);}
-    body::before{content:'';position:fixed;top:0;left:0;right:0;height:160px;background:linear-gradient(180deg,var(--eau) 0%,var(--eau-profonde) 100%);z-index:0;}
-    body::after{content:'';position:fixed;top:125px;left:-10%;width:120%;height:70px;background:rgba(42,96,128,0.25);border-radius:50%;filter:blur(20px);animation:vague 6s ease-in-out infinite;z-index:0;}
-
     .sidebar{display:none;}
     .topbar{display:none;}
-
+    .app-body{margin-left:0;}
     .mobile-header{
       display:block;
       position:relative;
-      z-index:50;
       padding:16px 20px 12px;
       text-align:center;
       background:linear-gradient(180deg,var(--eau) 0%,var(--eau-profonde) 100%);
     }
-    .mobile-header .icon{
-      font-size:36px;
-      display:block;
-      margin-bottom:4px;
-      filter:drop-shadow(0 2px 8px rgba(240,192,64,0.5));
-    }
-    .mobile-header h1{
-      font-family:'Playfair Display',serif;
-      font-size:22px;
-      color:var(--sable);
-    }
-
+    .mobile-header .icon{font-size:36px;display:block;margin-bottom:4px;filter:drop-shadow(0 2px 8px rgba(240,192,64,0.5));}
+    .mobile-header h1{font-family:'Playfair Display',serif;font-size:22px;color:var(--sable);}
     .mobile-stats-bar{
       display:flex;
       gap:10px;
       position:relative;
       padding:0 16px 16px;
-      z-index:50;
       background:linear-gradient(180deg,var(--eau-profonde) 0%,transparent 100%);
     }
-    .mob-stat{
-      flex:1;
-      background:rgba(255,255,255,0.15);
-      backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,0.2);
-      border-radius:12px;
-      padding:10px 6px;
-      text-align:center;
-    }
-    .mob-stat .num{
-      font-family:'Playfair Display',serif;
-      font-size:20px;
-      color:var(--eclair);
-      display:block;
-      font-weight:700;
-    }
-    .mob-stat .label{
-      font-size:10px;
-      color:rgba(255,255,255,0.8);
-      text-transform:uppercase;
-      letter-spacing:0.7px;
-      margin-top:4px;
-      display:block;
-    }
-
-    .app-body{
-      margin-left:0;
-      background:var(--blanc);
-      border-radius:28px 28px 0 0;
-      margin-top:0;
-      min-height:calc(100vh - 0px);
-    }
-    .page-content{
-      padding:16px 14px 88px;
-    }
-    .cards-grid{
-      grid-template-columns:1fr;
-      gap:10px;
-    }
+    .mob-stat{flex:1;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border-radius:12px;padding:10px 6px;text-align:center;}
+    .mob-stat .num{font-size:20px;color:var(--eclair);font-weight:700;}
+    .mob-stat .label{font-size:10px;color:white;}
+    .app-body{background:#f5f0e8;border-radius:28px 28px 0 0;margin-top:0;}
+    .page-content{padding:16px 14px 88px;}
+    .cards-grid{grid-template-columns:1fr;gap:10px;}
     .stats-grid{grid-template-columns:1fr;}
     .form-layout{grid-template-columns:1fr;gap:16px;}
-    
-    .form-card { padding: 16px; }
-    .form-card-title { font-size: 15px; margin-bottom: 16px; }
-    .form-row { grid-template-columns: 1fr; gap: 0; }
-    .form-row-3 { grid-template-columns: 1fr; gap: 10px; }
-    .form-group { margin-bottom: 14px; }
-    
-    .meteo-btns { gap: 8px; }
-    .meteo-btn { padding: 8px 12px; font-size: 12px; flex: 1 0 auto; min-width: calc(33.33% - 8px); }
-    .star-btn { font-size: 28px; min-width: 44px; min-height: 44px; }
-    .photo-upload-area { padding: 20px; }
-    .photo-upload-icon { font-size: 44px; }
-    .btn-submit { padding: 14px; font-size: 15px; }
-    
-    #map { height: 300px; }
-    .spots-stats { flex-direction: column; gap: 8px; }
-
-    .fab-menu { display:block; bottom: 20px; }
-    
+    .form-card{padding:16px;}
+    .form-row{grid-template-columns:1fr;gap:0;}
+    .form-row-3{grid-template-columns:1fr;gap:10px;}
+    .meteo-btn{padding:8px 12px;font-size:12px;flex:1 0 auto;min-width:calc(33.33% - 8px);}
+    .fab-menu{display:block;}
     .btn-delete-desktop{display:none;}
     .entry-card-header{padding-right:0;}
-    .entry-card { padding: 14px; }
-    .entry-species { font-size: 16px; }
-    .entry-meta-item { font-size: 12px; }
-    .filter-pill { padding: 5px 12px; font-size: 11px; }
-    .search-box input { padding: 8px 12px 8px 32px; font-size: 13px; }
-    .journal-toolbar { margin-bottom: 10px; }
-    .filter-pills { margin-bottom: 12px; }
-  }
-
-  /* Small mobile (<= 480px) */
-  @media(max-width:480px){
-    .meteo-btn { min-width: calc(50% - 8px); font-size: 11px; padding: 7px 10px; }
-    .form-card { padding: 14px; }
-    .menu-popup { width: calc(100% - 32px); padding: 20px 16px; }
-    .mobile-header .icon { font-size: 32px; }
-    .mobile-header h1 { font-size: 20px; }
-    .mob-stat { padding: 8px 4px; }
-    .mob-stat .num { font-size: 18px; }
-    .mob-stat .label { font-size: 9px; }
-    .page-content { padding: 12px 12px 80px; }
+    #map{height:300px;}
   }
 </style>
 </head>
 <body>
 
-<!-- MODAL CLOUD -->
-<div class="modal" id="cloudModal">
-  <div class="modal-content">
-    <h3>☁️ Synchronisation Cloud</h3>
-    <p>Choisissez votre service de synchronisation pour sauvegarder vos données et les retrouver sur tous vos appareils.</p>
-    <div class="cloud-options">
-      <button class="cloud-btn cloud-google" onclick="syncWithGoogle()">📧 Google Drive</button>
-      <button class="cloud-btn cloud-icloud" onclick="syncWithICloud()">🍎 iCloud</button>
-    </div>
-    <div id="syncStatus"></div>
-    <button class="modal-close" onclick="closeCloudModal()">Fermer</button>
-  </div>
-</div>
-
-<!-- MOBILE HEADER -->
 <div class="mobile-header">
   <span class="icon">🎣</span>
   <h1>Carnet de Pêche</h1>
@@ -750,7 +285,6 @@
   <div class="mob-stat"><span class="num" id="m-record">—</span><span class="label">Record</span></div>
 </div>
 
-<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
     <span class="icon">🎣</span>
@@ -767,29 +301,23 @@
     <button class="nav-item" data-view="map" onclick="switchView('map',this)"><span class="nav-icon">🗺️</span> Carte des spots</button>
     <button class="nav-item" data-view="stats" onclick="switchView('stats',this)"><span class="nav-icon">📊</span> Statistiques</button>
     <div style="height:1px;background:rgba(255,255,255,0.1);margin:10px 4px"></div>
-    <button class="nav-item" onclick="openCloudModal()"><span class="nav-icon">☁️</span> Cloud</button>
     <button class="nav-item" onclick="exportData()"><span class="nav-icon">📤</span> Exporter</button>
     <button class="nav-item" onclick="document.getElementById('import-file').click()"><span class="nav-icon">📥</span> Importer</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
   </nav>
 </aside>
 
-<!-- APP BODY -->
 <div class="app-body">
-
   <div class="topbar">
     <div class="topbar-title" id="topbar-title"><small>Mes sorties</small>Journal de pêche</div>
     <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn-cloud" onclick="openCloudModal()">☁️ Cloud</button>
-      <button class="btn-secondary" onclick="exportData()" title="Exporter sauvegarde">📤 Exporter</button>
-      <button class="btn-secondary" onclick="document.getElementById('import-file').click()" title="Importer sauvegarde">📥 Importer</button>
+      <button class="btn-secondary" onclick="exportData()">📤 Exporter</button>
+      <button class="btn-secondary" onclick="document.getElementById('import-file').click()">📥 Importer</button>
       <button class="btn-primary" onclick="switchView('ajouter',null)">➕ Nouvelle prise</button>
     </div>
   </div>
 
   <div class="page-content">
-
-    <!-- JOURNAL -->
     <div class="view active" id="view-journal">
       <div class="journal-toolbar">
         <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="renderJournal()"></div>
@@ -806,21 +334,12 @@
       <div class="cards-grid" id="journal-list"></div>
     </div>
 
-    <!-- AJOUTER -->
     <div class="view" id="view-ajouter">
       <div class="form-layout">
-
         <div class="form-card">
-          <div class="form-card-title">
-            <span class="icon">📋</span>
-            Informations principales
-          </div>
-          <div class="form-group">
-            <label class="form-label">📅 Date & Heure</label>
-            <input type="datetime-local" class="form-input" id="f-date">
-          </div>
-          <div class="form-group">
-            <label class="form-label">🐟 Espèce</label>
+          <div class="form-card-title"><span class="icon">📋</span> Informations principales</div>
+          <div class="form-group"><label class="form-label">📅 Date & Heure</label><input type="datetime-local" class="form-input" id="f-date"></div>
+          <div class="form-group"><label class="form-label">🐟 Espèce</label>
             <select class="form-select" id="f-espece">
               <option value="">— Sélectionner —</option>
               <option>Carpe</option><option>Brochet</option><option>Truite fario</option>
@@ -831,26 +350,14 @@
             </select>
           </div>
           <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">📏 Taille (cm)</label>
-              <input type="number" class="form-input" id="f-taille" placeholder="ex: 45">
-            </div>
-            <div class="form-group">
-              <label class="form-label">⚖️ Poids (kg)</label>
-              <input type="number" step="0.01" class="form-input" id="f-poids" placeholder="ex: 1.2">
-            </div>
+            <div class="form-group"><label class="form-label">📏 Taille (cm)</label><input type="number" class="form-input" id="f-taille" placeholder="ex: 45"></div>
+            <div class="form-group"><label class="form-label">⚖️ Poids (kg)</label><input type="number" step="0.01" class="form-input" id="f-poids" placeholder="ex: 1.2"></div>
           </div>
-          <div class="form-group">
-            <label class="form-label">📍 Lieu</label>
-            <div class="location-row">
-              <input type="text" class="form-input" id="f-lieu" placeholder="Nom du spot">
-              <button type="button" class="btn-location" onclick="getCurrentLocation()" title="Utiliser ma position">📍</button>
-            </div>
+          <div class="form-group"><label class="form-label">📍 Lieu</label>
+            <div class="location-row"><input type="text" class="form-input" id="f-lieu" placeholder="Nom du spot"><button type="button" class="btn-location" onclick="getCurrentLocation()">📍</button></div>
           </div>
-          <input type="hidden" id="f-lat">
-          <input type="hidden" id="f-lng">
-          <div class="form-group">
-            <label class="form-label">🎣 Technique</label>
+          <input type="hidden" id="f-lat"><input type="hidden" id="f-lng">
+          <div class="form-group"><label class="form-label">🎣 Technique</label>
             <select class="form-select" id="f-technique">
               <option value="">— Technique —</option>
               <option>Carpe — Cheveu</option><option>Lancer — Cuillère</option>
@@ -862,14 +369,9 @@
             </select>
           </div>
         </div>
-
         <div class="form-card">
-          <div class="form-card-title">
-            <span class="icon">🌤</span>
-            Conditions & Notes
-          </div>
-          <div class="form-group">
-            <label class="form-label">🌤 Météo</label>
+          <div class="form-card-title"><span class="icon">🌤</span> Conditions & Notes</div>
+          <div class="form-group"><label class="form-label">🌤 Météo</label>
             <div class="meteo-btns">
               <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'☀️ Soleil')">☀️ Soleil</button>
               <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'⛅ Nuageux')">⛅ Nuageux</button>
@@ -880,129 +382,40 @@
             </div>
           </div>
           <div class="form-row-3">
-            <div class="form-group">
-              <label class="form-label">🌡 Air (°C)</label>
-              <input type="number" class="form-input" id="f-temp-air" placeholder="18">
-            </div>
-            <div class="form-group">
-              <label class="form-label">💧 Eau (°C)</label>
-              <input type="number" class="form-input" id="f-temp-eau" placeholder="14">
-            </div>
-            <div class="form-group">
-              <label class="form-label">🌙 Lune</label>
-              <select class="form-select" id="f-lune">
-                <option value="">—</option>
-                <option>🌑 NL</option><option>🌒 CC</option><option>🌓 PQ</option>
-                <option>🌔 GC</option><option>🌕 PL</option><option>🌖 GD</option>
-                <option>🌗 DQ</option><option>🌘 CD</option>
-              </select>
-            </div>
+            <div class="form-group"><label class="form-label">🌡 Air (°C)</label><input type="number" class="form-input" id="f-temp-air" placeholder="18"></div>
+            <div class="form-group"><label class="form-label">💧 Eau (°C)</label><input type="number" class="form-input" id="f-temp-eau" placeholder="14"></div>
+            <div class="form-group"><label class="form-label">🌙 Lune</label><select class="form-select" id="f-lune"><option value="">—</option><option>🌑 NL</option><option>🌒 CC</option><option>🌓 PQ</option><option>🌔 GC</option><option>🌕 PL</option><option>🌖 GD</option><option>🌗 DQ</option><option>🌘 CD</option></select></div>
           </div>
-          <div class="form-group">
-            <label class="form-label">⭐ Note de la sortie</label>
-            <div class="stars-input">
-              <button type="button" class="star-btn" onclick="setStar(1)">⭐</button>
-              <button type="button" class="star-btn" onclick="setStar(2)">⭐</button>
-              <button type="button" class="star-btn" onclick="setStar(3)">⭐</button>
-              <button type="button" class="star-btn" onclick="setStar(4)">⭐</button>
-              <button type="button" class="star-btn" onclick="setStar(5)">⭐</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">🏅 Statut</label>
-            <div class="meteo-btns">
-              <button type="button" class="meteo-btn" id="btn-trophy" onclick="toggleTrophy(this)">🏆 Trophée</button>
-              <button type="button" class="meteo-btn" id="btn-relache" onclick="toggleRelache(this)">↩️ Remis à l'eau</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">📝 Notes</label>
-            <textarea class="form-textarea" id="f-notes" placeholder="Appâts, conditions, anecdotes…"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">📸 Photo</label>
-            <div class="photo-upload-area" onclick="document.getElementById('f-photo').click()">
-              <input type="file" id="f-photo" accept="image/*" onchange="previewPhoto(event)">
-              <div class="photo-upload-icon">📷</div>
-              <div class="photo-upload-text">Ajouter une photo</div>
-              <img class="photo-preview" id="photo-preview" alt="Aperçu photo">
-            </div>
-          </div>
+          <div class="form-group"><label class="form-label">⭐ Note de la sortie</label><div class="stars-input"><button type="button" class="star-btn" onclick="setStar(1)">⭐</button><button type="button" class="star-btn" onclick="setStar(2)">⭐</button><button type="button" class="star-btn" onclick="setStar(3)">⭐</button><button type="button" class="star-btn" onclick="setStar(4)">⭐</button><button type="button" class="star-btn" onclick="setStar(5)">⭐</button></div></div>
+          <div class="form-group"><label class="form-label">🏅 Statut</label><div class="meteo-btns"><button type="button" class="meteo-btn" id="btn-trophy" onclick="toggleTrophy(this)">🏆 Trophée</button><button type="button" class="meteo-btn" id="btn-relache" onclick="toggleRelache(this)">↩️ Remis à l'eau</button></div></div>
+          <div class="form-group"><label class="form-label">📝 Notes</label><textarea class="form-textarea" id="f-notes" placeholder="Appâts, conditions, anecdotes…"></textarea></div>
+          <div class="form-group"><label class="form-label">📸 Photo</label><div class="photo-upload-area" onclick="document.getElementById('f-photo').click()"><input type="file" id="f-photo" accept="image/*" onchange="previewPhoto(event)"><div class="photo-upload-icon">📷</div><div class="photo-upload-text">Ajouter une photo</div><img class="photo-preview" id="photo-preview" alt="Aperçu photo"></div></div>
           <button class="btn-submit" onclick="saveEntry()">✅ Enregistrer la sortie</button>
         </div>
-
       </div>
     </div>
 
-    <!-- MAP -->
-    <div class="view" id="view-map">
-      <div class="map-container">
-        <div class="map-title">
-          <span>🗺️</span>
-          Mes spots de pêche
-        </div>
-        <div id="map"></div>
-        <div class="spots-stats" id="spots-stats"></div>
-      </div>
-    </div>
+    <div class="view" id="view-map"><div class="map-container"><div class="map-title"><span>🗺️</span> Mes spots de pêche</div><div id="map"></div><div class="spots-stats" id="spots-stats"></div></div></div>
 
-    <!-- STATS -->
-    <div class="view" id="view-stats">
-      <div class="stats-grid" id="stats-content"></div>
-    </div>
-
+    <div class="view" id="view-stats"><div class="stats-grid" id="stats-content"></div></div>
   </div>
 </div>
 
-<!-- MENU FLOTTANT MOBILE (FAB) -->
-<div class="fab-menu">
-  <button class="fab-button" onclick="toggleMenu()">
-    <span>🎣</span>
-  </button>
-</div>
-
-<!-- OVERLAY ET POPUP MENU -->
+<div class="fab-menu"><button class="fab-button" onclick="toggleMenu()"><span>🎣</span></button></div>
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 <div class="menu-popup" id="menuPopup">
-  <div class="menu-popup-header">
-    <div class="icon">🎣</div>
-    <h3>Carnet de Pêche</h3>
-  </div>
   <div class="menu-items">
-    <button class="menu-item" data-view="journal" onclick="switchViewMobile('journal')">
-      <span class="menu-icon">📖</span>
-      <span>Journal</span>
-    </button>
-    <button class="menu-item" data-view="ajouter" onclick="switchViewMobile('ajouter')">
-      <span class="menu-icon">➕</span>
-      <span>Ajouter une prise</span>
-    </button>
-    <button class="menu-item" data-view="map" onclick="switchViewMobile('map')">
-      <span class="menu-icon">🗺️</span>
-      <span>Carte des spots</span>
-    </button>
-    <button class="menu-item" data-view="stats" onclick="switchViewMobile('stats')">
-      <span class="menu-icon">📊</span>
-      <span>Statistiques</span>
-    </button>
-    <button class="menu-item" onclick="openCloudModalMobile()">
-      <span class="menu-icon">☁️</span>
-      <span>Cloud</span>
-    </button>
-    <button class="menu-item" onclick="exportDataMobile()">
-      <span class="menu-icon">📤</span>
-      <span>Exporter</span>
-    </button>
-    <button class="menu-item" onclick="importDataMobile()">
-      <span class="menu-icon">📥</span>
-      <span>Importer</span>
-    </button>
+    <button class="menu-item" onclick="switchViewMobile('journal')"><span class="menu-icon">📖</span> Journal</button>
+    <button class="menu-item" onclick="switchViewMobile('ajouter')"><span class="menu-icon">➕</span> Ajouter une prise</button>
+    <button class="menu-item" onclick="switchViewMobile('map')"><span class="menu-icon">🗺️</span> Carte des spots</button>
+    <button class="menu-item" onclick="switchViewMobile('stats')"><span class="menu-icon">📊</span> Statistiques</button>
+    <button class="menu-item" onclick="exportDataMobile()"><span class="menu-icon">📤</span> Exporter</button>
+    <button class="menu-item" onclick="importDataMobile()"><span class="menu-icon">📥</span> Importer</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- Leaflet JS pour la carte -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 let entries = JSON.parse(localStorage.getItem('peche-entries')||'[]');
@@ -1010,68 +423,7 @@ let currentFilter='tous', currentStars=0, selectedMeteo=[], isTrophy=false, isRe
 let map = null;
 let markers = [];
 
-const topbarTitles = {
-  journal:['Mes sorties','Journal de pêche'],
-  ajouter:['Nouvelle entrée','Ajouter une prise'],
-  map:['Carte des spots','Mes spots de pêche'],
-  stats:["Vue d'ensemble",'Statistiques']
-};
-
-// Fonctions de synchronisation cloud
-function openCloudModal() {
-  document.getElementById('cloudModal').classList.add('active');
-}
-
-function openCloudModalMobile() {
-  toggleMenu();
-  openCloudModal();
-}
-
-function closeCloudModal() {
-  document.getElementById('cloudModal').classList.remove('active');
-}
-
-function syncWithGoogle() {
-  const statusDiv = document.getElementById('syncStatus');
-  statusDiv.innerHTML = '<div class="sync-status">🔄 Synchronisation avec Google Drive en cours...</div>';
-  
-  setTimeout(() => {
-    try {
-      const data = JSON.stringify({ version: 1, lastSync: new Date().toISOString(), entries });
-      localStorage.setItem('google_drive_backup', data);
-      statusDiv.innerHTML = '<div class="sync-status success">✅ Données sauvegardées dans Google Drive (simulation).<br>Dans une version complète, vous seriez redirigé vers Google pour vous authentifier.</div>';
-      showToast('☁️ Données sauvegardées sur Google Drive');
-    } catch(e) {
-      statusDiv.innerHTML = '<div class="sync-status error">❌ Erreur lors de la synchronisation</div>';
-    }
-  }, 1000);
-}
-
-function syncWithICloud() {
-  const statusDiv = document.getElementById('syncStatus');
-  statusDiv.innerHTML = '<div class="sync-status">🔄 Synchronisation avec iCloud en cours...</div>';
-  
-  setTimeout(() => {
-    try {
-      const data = JSON.stringify({ version: 1, lastSync: new Date().toISOString(), entries });
-      localStorage.setItem('icloud_backup', data);
-      statusDiv.innerHTML = '<div class="sync-status success">✅ Données sauvegardées dans iCloud (simulation).<br>Dans une version complète, vous seriez connecté à votre compte iCloud.</div>';
-      showToast('☁️ Données sauvegardées sur iCloud');
-    } catch(e) {
-      statusDiv.innerHTML = '<div class="sync-status error">❌ Erreur lors de la synchronisation</div>';
-    }
-  }, 1000);
-}
-
-function checkCloudSync() {
-  const googleBackup = localStorage.getItem('google_drive_backup');
-  const icloudBackup = localStorage.getItem('icloud_backup');
-  
-  if (googleBackup || icloudBackup) {
-    const lastSync = new Date().toLocaleString();
-    showToast(`☁️ Dernière synchronisation: ${lastSync}`);
-  }
-}
+const topbarTitles = { journal:['Mes sorties','Journal de pêche'], ajouter:['Nouvelle entrée','Ajouter une prise'], map:['Carte des spots','Mes spots de pêche'], stats:["Vue d'ensemble",'Statistiques'] };
 
 function init(){
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
@@ -1079,17 +431,12 @@ function init(){
   if(dateInput) dateInput.value = now.toISOString().slice(0,16);
   renderJournal(); updateStats(); updateAllStats();
   initMap();
-  checkCloudSync();
 }
 
 function initMap() {
   const defaultCenter = [46.2276, 2.2137];
   map = L.map('map').setView(defaultCenter, 6);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
-    subdomains: 'abcd',
-    maxZoom: 19
-  }).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
   updateMapMarkers();
 }
 
@@ -1097,537 +444,104 @@ function updateMapMarkers() {
   if (!map) return;
   markers.forEach(marker => map.removeLayer(marker));
   markers = [];
-  
   const spotsWithCoords = entries.filter(e => e.lat && e.lng);
-  
   if (spotsWithCoords.length === 0) {
-    document.getElementById('spots-stats').innerHTML = `
-      <div class="spot-stat">
-        <div class="number">0</div>
-        <div class="label">Spots géolocalisés</div>
-      </div>
-      <div class="spot-stat">
-        <div class="label">Ajoutez des lieux avec la géolocalisation pour les voir sur la carte !</div>
-      </div>
-    `;
+    document.getElementById('spots-stats').innerHTML = `<div class="spot-stat"><div class="number">0</div><div class="label">Spots géolocalisés</div></div><div class="spot-stat"><div class="label">Ajoutez des lieux avec la géolocalisation pour les voir sur la carte !</div></div>`;
     return;
   }
-  
   const spotCount = {};
-  spotsWithCoords.forEach(e => {
-    const key = `${e.lat},${e.lng}`;
-    if (!spotCount[key]) {
-      spotCount[key] = { count: 0, especes: new Set(), lieu: e.lieu, lat: e.lat, lng: e.lng };
-    }
-    spotCount[key].count++;
-    if (e.espece) spotCount[key].especes.add(e.espece);
-  });
-  
-  Object.values(spotCount).forEach(spot => {
-    const popupContent = `
-      <div style="font-family:'DM Sans',sans-serif; min-width:180px;">
-        <strong style="font-size:14px; color:#1a3a4a;">📍 ${escapeHtml(spot.lieu || 'Spot sans nom')}</strong><br>
-        <span style="font-size:12px;">🎣 ${spot.count} prise(s)</span><br>
-        <span style="font-size:12px;">🐟 ${spot.especes.size} espèce(s) différentes</span><br>
-        <span style="font-size:11px; color:#8a9aa5;">${Array.from(spot.especes).slice(0,3).join(', ')}${spot.especes.size > 3 ? '...' : ''}</span>
-      </div>
-    `;
-    const marker = L.marker([spot.lat, spot.lng]).addTo(map);
-    marker.bindPopup(popupContent);
-    markers.push(marker);
-  });
-  
-  if (markers.length > 0) {
-    const group = L.featureGroup(markers);
-    map.fitBounds(group.getBounds().pad(0.2));
-  }
-  
-  const uniqueSpots = Object.keys(spotCount).length;
-  const totalCatches = spotsWithCoords.length;
-  const totalSpecies = new Set(spotsWithCoords.map(e => e.espece)).size;
-  
-  document.getElementById('spots-stats').innerHTML = `
-    <div class="spot-stat">
-      <div class="number">${uniqueSpots}</div>
-      <div class="label">Spots différents</div>
-    </div>
-    <div class="spot-stat">
-      <div class="number">${totalCatches}</div>
-      <div class="label">Prises géolocalisées</div>
-    </div>
-    <div class="spot-stat">
-      <div class="number">${totalSpecies}</div>
-      <div class="label">Espèces sur la carte</div>
-    </div>
-  `;
+  spotsWithCoords.forEach(e => { const key = `${e.lat},${e.lng}`; if (!spotCount[key]) { spotCount[key] = { count: 0, especes: new Set(), lieu: e.lieu, lat: e.lat, lng: e.lng }; } spotCount[key].count++; if (e.espece) spotCount[key].especes.add(e.espece); });
+  Object.values(spotCount).forEach(spot => { const marker = L.marker([spot.lat, spot.lng]).addTo(map); marker.bindPopup(`<div><strong>📍 ${escapeHtml(spot.lieu || 'Spot sans nom')}</strong><br>🎣 ${spot.count} prise(s)<br>🐟 ${spot.especes.size} espèce(s)</div>`); markers.push(marker); });
+  if (markers.length > 0) { const group = L.featureGroup(markers); map.fitBounds(group.getBounds().pad(0.2)); }
+  document.getElementById('spots-stats').innerHTML = `<div class="spot-stat"><div class="number">${Object.keys(spotCount).length}</div><div class="label">Spots différents</div></div><div class="spot-stat"><div class="number">${spotsWithCoords.length}</div><div class="label">Prises géolocalisées</div></div>`;
 }
 
 function getCurrentLocation() {
-  if (!navigator.geolocation) {
-    showToast('⚠️ Géolocalisation non supportée par votre navigateur');
-    return;
-  }
-  
+  if (!navigator.geolocation) { showToast('⚠️ Géolocalisation non supportée'); return; }
   showToast('📍 Recherche de votre position...');
-  
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      
-      document.getElementById('f-lat').value = lat;
-      document.getElementById('f-lng').value = lng;
-      
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
-        .then(response => response.json())
-        .then(data => {
-          let lieuName = '';
-          if (data.address) {
-            const parts = [];
-            if (data.address.waterway) parts.push(data.address.waterway);
-            if (data.address.river) parts.push(data.address.river);
-            if (data.address.lake) parts.push(data.address.lake);
-            if (data.address.city) parts.push(data.address.city);
-            if (data.address.town) parts.push(data.address.town);
-            if (data.address.village) parts.push(data.address.village);
-            if (parts.length > 0) lieuName = parts.join(', ');
-            else if (data.display_name) lieuName = data.display_name.split(',')[0];
-          }
-          if (lieuName) {
-            document.getElementById('f-lieu').value = lieuName;
-          }
-          showToast('📍 Position enregistrée !');
-        })
-        .catch(() => {
-          showToast('📍 Position enregistrée (nom non trouvé)');
-        });
-    },
-    (error) => {
-      let message = 'Impossible d\'obtenir la position';
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          message = '🔒 Permission de géolocalisation refusée';
-          break;
-        case error.POSITION_UNAVAILABLE:
-          message = '📡 Position non disponible';
-          break;
-        case error.TIMEOUT:
-          message = '⏱️ Délai d\'attente dépassé';
-          break;
-      }
-      showToast(message);
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    }
-  );
+  navigator.geolocation.getCurrentPosition((position) => {
+    document.getElementById('f-lat').value = position.coords.latitude;
+    document.getElementById('f-lng').value = position.coords.longitude;
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18`)
+      .then(r => r.json()).then(data => { if (data.display_name) document.getElementById('f-lieu').value = data.display_name.split(',')[0]; showToast('📍 Position enregistrée !'); }).catch(() => showToast('📍 Position enregistrée'));
+  }, () => showToast('Impossible d\'obtenir la position'), { enableHighAccuracy: true });
 }
 
-function toggleMenu() {
-  const overlay = document.getElementById('menuOverlay');
-  const popup = document.getElementById('menuPopup');
-  
-  if (overlay.classList.contains('active')) {
-    overlay.classList.remove('active');
-    popup.classList.remove('active');
-  } else {
-    overlay.classList.add('active');
-    popup.classList.add('active');
-  }
-}
-
-function switchViewMobile(name) {
-  toggleMenu();
-  switchView(name, null);
-}
-
-function exportDataMobile() {
-  toggleMenu();
-  exportData();
-}
-
-function importDataMobile() {
-  toggleMenu();
-  document.getElementById('import-file').click();
-}
+function toggleMenu() { const overlay = document.getElementById('menuOverlay'), popup = document.getElementById('menuPopup'); if (overlay.classList.contains('active')) { overlay.classList.remove('active'); popup.classList.remove('active'); } else { overlay.classList.add('active'); popup.classList.add('active'); } }
+function switchViewMobile(name) { toggleMenu(); switchView(name, null); }
+function exportDataMobile() { toggleMenu(); exportData(); }
+function importDataMobile() { toggleMenu(); document.getElementById('import-file').click(); }
 
 function switchView(name, btn){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  const targetView = document.getElementById('view-'+name);
-  if(targetView) targetView.classList.add('active');
-  
+  document.getElementById('view-'+name).classList.add('active');
   document.querySelectorAll('.sidebar .nav-item').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.sidebar .nav-item').forEach(b=>{
-    if(b.getAttribute('data-view') === name) b.classList.add('active');
-  });
-  
+  if(btn && btn.classList) btn.classList.add('active');
   const [sub,main] = topbarTitles[name];
-  const topbarTitle = document.getElementById('topbar-title');
-  if(topbarTitle) topbarTitle.innerHTML = `<small>${sub}</small>${main}`;
-  
-  if(name === 'map' && map) {
-    setTimeout(() => {
-      map.invalidateSize();
-      updateMapMarkers();
-    }, 100);
-  }
-  
+  document.getElementById('topbar-title').innerHTML = `<small>${sub}</small>${main}`;
+  if(name === 'map' && map) { setTimeout(() => { map.invalidateSize(); updateMapMarkers(); }, 100); }
   if(name === 'stats') updateStats();
 }
 
-function setFilter(f,btn){
-  currentFilter=f;
-  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  renderJournal();
-}
-
-function setStar(n){
-  currentStars=n;
-  document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('active',i<n));
-}
-
-function toggleMeteo(btn,val){
-  btn.classList.toggle('selected');
-  if(selectedMeteo.includes(val)){
-    selectedMeteo = selectedMeteo.filter(v=>v!==val);
-  } else {
-    selectedMeteo.push(val);
-  }
-}
-
-function toggleTrophy(btn){
-  isTrophy = !isTrophy;
-  btn.classList.toggle('selected', isTrophy);
-}
-
-function toggleRelache(btn){
-  isRelache = !isRelache;
-  btn.classList.toggle('selected', isRelache);
-}
+function setFilter(f,btn){ currentFilter=f; document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active')); btn.classList.add('active'); renderJournal(); }
+function setStar(n){ currentStars=n; document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('active',i<n)); }
+function toggleMeteo(btn,val){ btn.classList.toggle('selected'); if(selectedMeteo.includes(val)){ selectedMeteo = selectedMeteo.filter(v=>v!==val); } else { selectedMeteo.push(val); } }
+function toggleTrophy(btn){ isTrophy = !isTrophy; btn.classList.toggle('selected', isTrophy); }
+function toggleRelache(btn){ isRelache = !isRelache; btn.classList.toggle('selected', isRelache); }
 
 function previewPhoto(e){
-  const file=e.target.files[0]; 
-  if(!file) return;
+  const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=ev=>{
-    photoData=ev.target.result;
-    const preview = document.getElementById('photo-preview');
-    const uploadIcon = document.querySelector('.photo-upload-icon');
-    const uploadText = document.querySelector('.photo-upload-text');
-    if(preview){
-      preview.style.display='block';
-      preview.src=photoData;
-    }
-    if(uploadIcon) uploadIcon.style.display='none';
-    if(uploadText) uploadText.textContent = '✅ Photo ajoutée';
-  };
+  reader.onload=ev=>{ photoData=ev.target.result; document.getElementById('photo-preview').style.display='block'; document.getElementById('photo-preview').src=photoData; document.querySelector('.photo-upload-icon').style.display='none'; document.querySelector('.photo-upload-text').textContent='✅ Photo ajoutée'; };
   reader.readAsDataURL(file);
 }
 
 function saveEntry(){
   const espece=document.getElementById('f-espece').value;
   if(!espece){showToast('⚠️ Sélectionne une espèce !');return;}
-  
   let poids = document.getElementById('f-poids').value;
-  if(poids && !isNaN(poids)) {
-    poids = parseFloat(poids).toFixed(2);
-  }
-  
-  const entry={
-    id:Date.now(), 
-    date:document.getElementById('f-date').value, 
-    espece,
-    taille:document.getElementById('f-taille').value||null,
-    poids: poids || null,
-    lieu:document.getElementById('f-lieu').value,
-    lat:document.getElementById('f-lat').value||null,
-    lng:document.getElementById('f-lng').value||null,
-    technique:document.getElementById('f-technique').value,
-    meteo:[...selectedMeteo],
-    tempAir:document.getElementById('f-temp-air').value||null,
-    tempEau:document.getElementById('f-temp-eau').value||null,
-    lune:document.getElementById('f-lune').value,
-    stars:currentStars, 
-    trophy:isTrophy, 
-    relache:isRelache,
-    notes:document.getElementById('f-notes').value, 
-    photo:photoData
-  };
+  if(poids && !isNaN(poids)) poids = parseFloat(poids).toFixed(2);
+  const entry={ id:Date.now(), date:document.getElementById('f-date').value, espece, taille:document.getElementById('f-taille').value||null, poids: poids || null, lieu:document.getElementById('f-lieu').value, lat:document.getElementById('f-lat').value||null, lng:document.getElementById('f-lng').value||null, technique:document.getElementById('f-technique').value, meteo:[...selectedMeteo], tempAir:document.getElementById('f-temp-air').value||null, tempEau:document.getElementById('f-temp-eau').value||null, lune:document.getElementById('f-lune').value, stars:currentStars, trophy:isTrophy, relache:isRelache, notes:document.getElementById('f-notes').value, photo:photoData };
   entries.unshift(entry);
   localStorage.setItem('peche-entries',JSON.stringify(entries));
-  resetForm(); 
-  updateAllStats();
-  if(map) updateMapMarkers();
-  showToast('🎣 Sortie enregistrée !');
-  switchView('journal',null); 
-  renderJournal();
+  resetForm(); updateAllStats(); if(map) updateMapMarkers(); showToast('🎣 Sortie enregistrée !'); switchView('journal',null); renderJournal();
 }
 
 function resetForm(){
-  ['f-espece','f-taille','f-poids','f-lieu','f-technique','f-temp-air','f-temp-eau','f-lune','f-notes','f-lat','f-lng']
-    .forEach(id=>{
-      const el = document.getElementById(id);
-      if(el) el.value='';
-    });
+  ['f-espece','f-taille','f-poids','f-lieu','f-technique','f-temp-air','f-temp-eau','f-lune','f-notes','f-lat','f-lng'].forEach(id=>{ const el = document.getElementById(id); if(el) el.value=''; });
   document.querySelectorAll('.meteo-btn').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('active'));
-  const trophyBtn = document.getElementById('btn-trophy');
-  const relacheBtn = document.getElementById('btn-relache');
-  if(trophyBtn) trophyBtn.classList.remove('selected');
-  if(relacheBtn) relacheBtn.classList.remove('selected');
-  
-  const preview = document.getElementById('photo-preview');
-  const uploadIcon = document.querySelector('.photo-upload-icon');
-  const uploadText = document.querySelector('.photo-upload-text');
-  if(preview) {
-    preview.style.display='none';
-    preview.src='';
-  }
-  if(uploadIcon) uploadIcon.style.display='block';
-  if(uploadText) uploadText.textContent = 'Ajouter une photo';
-  
-  selectedMeteo=[];
-  currentStars=0;
-  isTrophy=false;
-  isRelache=false;
-  photoData=null;
-  
-  const now=new Date(); 
-  now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-  const dateInput = document.getElementById('f-date');
-  if(dateInput) dateInput.value = now.toISOString().slice(0,16);
+  document.getElementById('btn-trophy')?.classList.remove('selected');
+  document.getElementById('btn-relache')?.classList.remove('selected');
+  document.getElementById('photo-preview').style.display='none';
+  document.querySelector('.photo-upload-icon').style.display='block';
+  document.querySelector('.photo-upload-text').textContent='Ajouter une photo';
+  selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; photoData=null;
+  const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+  document.getElementById('f-date').value = now.toISOString().slice(0,16);
 }
 
-function deleteEntry(id){
-  if(!confirm('Supprimer cette entrée ?')) return;
-  entries=entries.filter(e=>e.id!==id);
-  localStorage.setItem('peche-entries',JSON.stringify(entries));
-  renderJournal(); 
-  updateAllStats();
-  if(map) updateMapMarkers();
-  showToast('🗑 Entrée supprimée');
-}
+function deleteEntry(id){ if(!confirm('Supprimer cette entrée ?')) return; entries=entries.filter(e=>e.id!==id); localStorage.setItem('peche-entries',JSON.stringify(entries)); renderJournal(); updateAllStats(); if(map) updateMapMarkers(); showToast('🗑 Entrée supprimée'); }
 
 function renderJournal(){
   const search=document.getElementById('search-input')?.value.toLowerCase() || '';
-  let filtered=entries.filter(e=>{
-    if(currentFilter==='trophy') return e.trophy;
-    const mF = currentFilter==='tous' || (e.espece && e.espece.includes(currentFilter));
-    const mS = !search || (e.espece && e.espece.toLowerCase().includes(search)) || (e.lieu && e.lieu.toLowerCase().includes(search));
-    return mF && mS;
-  });
-
+  let filtered=entries.filter(e=>{ if(currentFilter==='trophy') return e.trophy; const mF = currentFilter==='tous' || (e.espece && e.espece.includes(currentFilter)); const mS = !search || (e.espece && e.espece.toLowerCase().includes(search)) || (e.lieu && e.lieu.toLowerCase().includes(search)); return mF && mS; });
   const list=document.getElementById('journal-list');
-  if(!list) return;
-  
-  if(!filtered.length){
-    list.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">🎣</span><p>Aucune sortie enregistrée.<br>Ajoutez votre première prise !</p></div>`;
-    return;
-  }
-
+  if(!filtered.length){ list.innerHTML=`<div class="empty-state"><span class="icon">🎣</span><p>Aucune sortie enregistrée.<br>Ajoutez votre première prise !</p></div>`; return; }
   const isMobile=window.innerWidth<768;
-
-  list.innerHTML=filtered.map((e,idx)=>{
-    const date=e.date?new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
-    const heure=e.date?new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
-    const stars=e.stars?'⭐'.repeat(e.stars):'';
-    const tags=[]; 
-    if(e.technique) tags.push(e.technique); 
-    if(e.relache) tags.push("↩️ Remis à l'eau");
-    if(e.lat && e.lng) tags.push("📍 Géolocalisé");
-    return `
-      <div class="card-wrapper" style="animation-delay:${idx*0.04}s">
-        ${isMobile?`<div class="card-delete-bg" onclick="deleteEntry(${e.id})">🗑<span>Supprimer</span></div>`:''}
-        <div class="entry-card ${e.trophy?'trophy':''}" data-id="${e.id}">
-          <button class="btn-delete-desktop" onclick="deleteEntry(${e.id})">🗑 Supprimer</button>
-          <div class="entry-card-header">
-            <div>
-              <span class="entry-species">${escapeHtml(e.espece)}</span>
-              ${e.trophy?'<span class="photo-badge">🏆 Trophée</span>':''}
-            </div>
-            <div class="entry-date">${date}<br>${heure}</div>
-          </div>
-          <div class="entry-meta">
-            ${e.taille?`<div class="entry-meta-item"><span>📏</span>${e.taille} cm</div>`:''}
-            ${e.poids?`<div class="entry-meta-item"><span>⚖️</span>${formatPoids(e.poids)} kg</div>`:''}
-            ${e.lieu?`<div class="entry-meta-item"><span>📍</span>${escapeHtml(e.lieu)}</div>`:''}
-            ${e.meteo&&e.meteo.length?`<div class="entry-meta-item">${e.meteo.join(' ')}</div>`:''}
-          </div>
-          ${stars?`<div class="entry-stars">${stars}</div>`:''}
-          ${tags.length?`<div class="entry-tags">${tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>`:''}
-          ${e.notes?`<div class="entry-notes">"${escapeHtml(e.notes.slice(0,100))}${e.notes.length>100?'…':''}"</div>`:''}
-          ${e.photo?`<div style="margin-top:10px"><img src="${e.photo}" style="width:100%;height:130px;object-fit:cover;border-radius:10px" alt="Photo de prise"></div>`:''}
-        </div>
-      </div>`;
-  }).join('');
-
-  if(isMobile){
-    document.querySelectorAll('.card-wrapper').forEach(wrapper=>{
-      const card = wrapper.querySelector('.entry-card');
-      if(!card) return;
-      let startX = 0, currentX = 0, isDragging = false;
-      
-      card.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isDragging = true;
-        card.style.transition = 'none';
-      }, {passive: true});
-      
-      card.addEventListener('touchmove', (e) => {
-        if(!isDragging) return;
-        currentX = e.touches[0].clientX - startX;
-        if(currentX < 0) {
-          const translate = Math.max(-90, currentX);
-          card.style.transform = `translateX(${translate}px)`;
-        }
-      }, {passive: true});
-      
-      card.addEventListener('touchend', () => {
-        isDragging = false;
-        card.style.transition = 'transform 0.3s cubic-bezier(.2,.8,.3,1)';
-        if(currentX < -50) {
-          card.style.transform = 'translateX(-90px)';
-        } else {
-          card.style.transform = '';
-        }
-        currentX = 0;
-      });
-    });
-  }
+  list.innerHTML=filtered.map((e,idx)=>{ const date=e.date?new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):''; const heure=e.date?new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):''; const stars=e.stars?'⭐'.repeat(e.stars):''; const tags=[]; if(e.technique) tags.push(e.technique); if(e.relache) tags.push("↩️ Remis à l'eau"); if(e.lat && e.lng) tags.push("📍 Géolocalisé");
+    return `<div class="card-wrapper">${isMobile?`<div class="card-delete-bg" onclick="deleteEntry(${e.id})">🗑<span>Supprimer</span></div>`:''}<div class="entry-card ${e.trophy?'trophy':''}"><button class="btn-delete-desktop" onclick="deleteEntry(${e.id})">🗑 Supprimer</button><div class="entry-card-header"><div><span class="entry-species">${escapeHtml(e.espece)}</span>${e.trophy?'<span class="photo-badge">🏆 Trophée</span>':''}</div><div class="entry-date">${date}<br>${heure}</div></div><div class="entry-meta">${e.taille?`<div class="entry-meta-item"><span>📏</span>${e.taille} cm</div>`:''}${e.poids?`<div class="entry-meta-item"><span>⚖️</span>${e.poids} kg</div>`:''}${e.lieu?`<div class="entry-meta-item"><span>📍</span>${escapeHtml(e.lieu)}</div>`:''}${e.meteo&&e.meteo.length?`<div class="entry-meta-item">${e.meteo.join(' ')}</div>`:''}</div>${stars?`<div class="entry-stars">${stars}</div>`:''}${tags.length?`<div class="entry-tags">${tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>`:''}${e.notes?`<div class="entry-notes">"${escapeHtml(e.notes.slice(0,100))}${e.notes.length>100?'…':''}"</div>`:''}${e.photo?`<div><img src="${e.photo}" style="width:100%;height:130px;object-fit:cover;border-radius:10px"></div>`:''}</div></div>`; }).join('');
+  if(isMobile){ document.querySelectorAll('.card-wrapper').forEach(wrapper=>{ const card = wrapper.querySelector('.entry-card'); if(!card) return; let startX=0,currentX=0,isDragging=false; card.addEventListener('touchstart',e=>{ startX=e.touches[0].clientX; isDragging=true; card.style.transition='none'; },{passive:true}); card.addEventListener('touchmove',e=>{ if(!isDragging) return; currentX=e.touches[0].clientX-startX; if(currentX<0){ card.style.transform=`translateX(${Math.max(-90,currentX)}px)`; } },{passive:true}); card.addEventListener('touchend',()=>{ isDragging=false; card.style.transition='transform 0.3s'; if(currentX<-50) card.style.transform='translateX(-90px)'; else card.style.transform=''; currentX=0; }); }); }
 }
 
-function escapeHtml(str) {
-  if(!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if(m === '&') return '&amp;';
-    if(m === '<') return '&lt;';
-    if(m === '>') return '&gt;';
-    return m;
-  });
-}
+function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+function updateAllStats(){ const total=entries.length; const records=entries.filter(e=>e.poids); const rec=records.length?Math.max(...records.map(e=>parseFloat(e.poids))).toFixed(2)+' kg':'—'; const species=new Set(entries.map(e=>e.espece)).size; document.getElementById('m-total').textContent=total; document.getElementById('m-poissons').textContent=species; document.getElementById('m-record').textContent=rec; document.getElementById('s-total').textContent=total; document.getElementById('s-record').textContent=rec; }
+function updateStats(){ const el=document.getElementById('stats-content'); if(!entries.length){ el.innerHTML='<div class="empty-state"><span class="icon">📊</span><p>Pas encore de données.</p></div>'; return; } const sp={}; entries.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+1;}); const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]); const maxC=sorted[0]?sorted[0][1]:1; const wP=[...entries].filter(e=>e.poids).sort((a,b)=>parseFloat(b.poids)-parseFloat(a.poids)); const wT=[...entries].filter(e=>e.taille).sort((a,b)=>b.taille-a.taille); const lx={}; entries.forEach(e=>{if(e.lieu)lx[e.lieu]=(lx[e.lieu]||0)+1;}); const tL=Object.entries(lx).sort((a,b)=>b[1]-a[1])[0]; el.innerHTML=`<div class="stat-card"><div class="stat-card-title">🐟 Espèces capturées</div>${sorted.map(([s,c])=>`<div class="species-bar"><span class="species-name">${escapeHtml(s)}</span><div class="bar-track"><div class="bar-fill" style="width:${c/maxC*100}%"></div></div><span class="bar-count">${c}</span></div>`).join('')}</div>${wP.length?`<div class="stat-card"><div class="stat-card-title">🏆 Records</div><div class="record-item"><span class="record-icon">⚖️</span><div class="record-info"><div class="species">${escapeHtml(wP[0].espece)}</div><div class="detail">${escapeHtml(wP[0].lieu||'Lieu non précisé')}</div></div><span class="record-value">${wP[0].poids} kg</span></div>${wT[0]?`<div class="record-item"><span class="record-icon">📏</span><div class="record-info"><div class="species">${escapeHtml(wT[0].espece)}</div><div class="detail">${escapeHtml(wT[0].lieu||'Lieu non précisé')}</div></div><span class="record-value">${wT[0].taille} cm</span></div>`:''}</div>`:''}<div class="stat-card"><div class="stat-card-title">📋 Résumé</div><div class="record-item"><span class="record-icon">🎣</span><div class="record-info"><div class="species">Total sorties</div></div><span class="record-value">${entries.length}</span></div><div class="record-item"><span class="record-icon">🏆</span><div class="record-info"><div class="species">Trophées</div></div><span class="record-value">${entries.filter(e=>e.trophy).length}</span></div>${tL?`<div class="record-item"><span class="record-icon">📍</span><div class="record-info"><div class="species">Spot favori</div><div class="detail">${tL[1]} visite${tL[1]>1?'s':''}</div></div><span class="record-value" style="font-size:13px">${escapeHtml(tL[0])}</span></div>`:''}<div class="record-item"><span class="record-icon">↩️</span><div class="record-info"><div class="species">Remises à l'eau</div></div><span class="record-value">${entries.filter(e=>e.relache).length}</span></div></div>`; }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function exportData(){ if(!entries.length){ showToast('⚠️ Aucune donnée à exporter'); return; } const data = { version:1, exportDate: new Date().toISOString(), entries }; const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `carnet-peche-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); showToast(`📤 ${entries.length} sortie(s) exportée(s) !`); }
+function importData(event){ const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = ev => { try { const data = JSON.parse(ev.target.result); const imported = data.entries || data; if(!Array.isArray(imported)) throw new Error('Format invalide'); const existingIds = new Set(entries.map(e=>e.id)); const nouveaux = imported.filter(e=>e.id && !existingIds.has(e.id)); entries = [...nouveaux, ...entries]; localStorage.setItem('peche-entries', JSON.stringify(entries)); renderJournal(); updateAllStats(); if(map) updateMapMarkers(); if(document.getElementById('view-stats')?.classList.contains('active')) updateStats(); showToast(`📥 ${nouveaux.length} nouvelle(s) sortie(s) importée(s) !`); } catch(err) { showToast('❌ Fichier invalide'); } event.target.value = ''; }; reader.readAsText(file); }
 
-function formatPoids(poids){ 
-  if(!poids) return '';
-  return poids;
-}
-
-function updateAllStats(){
-  const total=entries.length;
-  const records=entries.filter(e=>e.poids);
-  const rec=records.length?formatPoids(Math.max(...records.map(e=>parseFloat(e.poids)))) + ' kg':'—';
-  const species=new Set(entries.map(e=>e.espece)).size;
-  
-  const mTotal = document.getElementById('m-total');
-  const mPoissons = document.getElementById('m-poissons');
-  const mRecord = document.getElementById('m-record');
-  const sTotal = document.getElementById('s-total');
-  const sRecord = document.getElementById('s-record');
-  
-  if(mTotal) mTotal.textContent = total;
-  if(mPoissons) mPoissons.textContent = species;
-  if(mRecord) mRecord.textContent = rec;
-  if(sTotal) sTotal.textContent = total;
-  if(sRecord) sRecord.textContent = rec;
-}
-
-function updateStats(){
-  const el=document.getElementById('stats-content');
-  if(!el) return;
-  
-  if(!entries.length){
-    el.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">📊</span><p>Pas encore de données.</p></div>`;
-    return;
-  }
-  const sp={};
-  entries.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+1;});
-  const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
-  const maxC=sorted[0]?sorted[0][1]:1;
-  const wP=[...entries].filter(e=>e.poids).sort((a,b)=>parseFloat(b.poids)-parseFloat(a.poids));
-  const wT=[...entries].filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
-  const lx={};
-  entries.forEach(e=>{if(e.lieu)lx[e.lieu]=(lx[e.lieu]||0)+1;});
-  const tL=Object.entries(lx).sort((a,b)=>b[1]-a[1])[0];
-  const spotsWithCoords = entries.filter(e=>e.lat && e.lng).length;
-
-  el.innerHTML=`
-    <div class="stat-card">
-      <div class="stat-card-title">🐟 Espèces capturées</div>
-      ${sorted.map(([s,c])=>`<div class="species-bar"><span class="species-name">${escapeHtml(s)}</span><div class="bar-track"><div class="bar-fill" style="width:${c/maxC*100}%"></div></div><span class="bar-count">${c}</span></div>`).join('')}
-    </div>
-    ${wP.length||wT.length?`
-    <div class="stat-card">
-      <div class="stat-card-title">🏆 Records</div>
-      ${wP[0]?`<div class="record-item"><span class="record-icon">⚖️</span><div class="record-info"><div class="species">${escapeHtml(wP[0].espece)}</div><div class="detail">${escapeHtml(wP[0].lieu||'Lieu non précisé')}</div></div><span class="record-value">${formatPoids(wP[0].poids)} kg</span></div>`:''}
-      ${wT[0]?`<div class="record-item"><span class="record-icon">📏</span><div class="record-info"><div class="species">${escapeHtml(wT[0].espece)}</div><div class="detail">${escapeHtml(wT[0].lieu||'Lieu non précisé')}</div></div><span class="record-value">${wT[0].taille} cm</span></div>`:''}
-    </div>`:''}
-    <div class="stat-card">
-      <div class="stat-card-title">📋 Résumé</div>
-      <div class="record-item"><span class="record-icon">🎣</span><div class="record-info"><div class="species">Total sorties</div></div><span class="record-value">${entries.length}</span></div>
-      <div class="record-item"><span class="record-icon">🗺️</span><div class="record-info"><div class="species">Spots géolocalisés</div></div><span class="record-value">${spotsWithCoords}</span></div>
-      <div class="record-item"><span class="record-icon">🏆</span><div class="record-info"><div class="species">Trophées</div></div><span class="record-value">${entries.filter(e=>e.trophy).length}</span></div>
-      ${tL?`<div class="record-item"><span class="record-icon">📍</span><div class="record-info"><div class="species">Spot favori</div><div class="detail">${tL[1]} visite${tL[1]>1?'s':''}</div></div><span class="record-value" style="font-size:13px;max-width:110px;text-align:right">${escapeHtml(tL[0])}</span></div>`:''}
-      <div class="record-item"><span class="record-icon">↩️</span><div class="record-info"><div class="species">Remises à l'eau</div></div><span class="record-value">${entries.filter(e=>e.relache).length}</span></div>
-    </div>`;
-}
-
-function showToast(msg){
-  const t=document.getElementById('toast');
-  if(!t) return;
-  t.textContent=msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
-}
-
-function exportData(){
-  if(!entries.length){ showToast('⚠️ Aucune donnée à exporter'); return; }
-  const data = { version:1, exportDate: new Date().toISOString(), entries };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const url  = URL.createObjectURL(blob);
-  const date = new Date().toISOString().slice(0,10);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.download = `carnet-peche-${date}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast(`📤 ${entries.length} sortie(s) exportée(s) !`);
-}
-
-function importData(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      const imported = data.entries || data;
-      if(!Array.isArray(imported)) throw new Error('Format invalide');
-      const existingIds = new Set(entries.map(e=>e.id));
-      const nouveaux = imported.filter(e=>e.id && !existingIds.has(e.id));
-      entries = [...nouveaux, ...entries];
-      localStorage.setItem('peche-entries', JSON.stringify(entries));
-      renderJournal(); 
-      updateAllStats();
-      if(map) updateMapMarkers();
-      if(document.getElementById('view-stats')?.classList.contains('active')) updateStats();
-      showToast(`📥 ${nouveaux.length} nouvelle(s) sortie(s) importée(s) !`);
-    } catch(err) {
-      showToast('❌ Fichier invalide');
-    }
-    event.target.value = '';
-  };
-  reader.readAsText(file);
-}
-
-let rt;
-window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{
-  renderJournal();
-  if(map) map.invalidateSize();
-  if(document.getElementById('view-stats')?.classList.contains('active')) updateStats();
-},200); });
-
+let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ renderJournal(); if(map) map.invalidateSize(); },200); });
 init();
 </script>
 </body>
