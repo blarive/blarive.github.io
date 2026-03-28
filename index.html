@@ -10,6 +10,23 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Carnet de Pêche</title>
+<style>
+  /* Bannière mise à jour */
+  .update-banner{
+    display:none;position:fixed;top:0;left:0;right:0;z-index:9999;
+    background:linear-gradient(135deg,#1b3a6b,#e8609a);
+    color:white;padding:12px 16px;
+    display:none;align-items:center;justify-content:space-between;gap:10px;
+    font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+    box-shadow:0 2px 12px rgba(0,0,0,0.2);
+  }
+  .update-banner.visible{display:flex;}
+  .update-banner-btn{
+    padding:7px 16px;background:white;color:#1b3a6b;border:none;border-radius:20px;
+    font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;
+    font-family:'DM Sans',sans-serif;flex-shrink:0;
+  }
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Leaflet.js pour la carte interactive -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
@@ -47,6 +64,14 @@ body.dark .menu-popup-item{background:#1a3060;}
 body.dark .menu-popup-small{background:#1a3060;color:#e0e8f4;}
 body.dark .bottom-nav{background:#0f2147;border-color:#1a3060;}
 body.dark .mob-stat{background:rgba(255,255,255,0.06);}
+/* Nav items dark mode — texte lisible */
+body.dark .nav-item{color:#a0b8d8;}
+body.dark .nav-item:hover{background:rgba(255,255,255,0.1);color:white;}
+body.dark .nav-item.active{background:var(--rose);color:white;}
+/* Nav items dark mode — texte lisible */
+body.dark .nav-item{color:#a0b8d8;}
+body.dark .nav-item:hover{background:rgba(255,255,255,0.1);color:white;}
+body.dark .nav-item.active{background:var(--rose);color:white;}
 
 /* ── SIDEBAR ─── */
 .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,var(--eau-profonde) 0%,var(--eau) 100%);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden;}
@@ -330,6 +355,12 @@ canvas.stat-chart{width:100%!important;height:100%!important;}
 </style>
 </head>
 <body>
+
+<!-- BANNIÈRE MISE À JOUR -->
+<div class="update-banner" id="update-banner">
+  <span>🆕 Une nouvelle version est disponible !</span>
+  <button class="update-banner-btn" onclick="applyUpdate()">Mettre à jour</button>
+</div>
 
 <!-- MOBILE HEADER -->
 <div class="mobile-header">
@@ -1513,6 +1544,90 @@ function showToast(msg){
 
 let rt;
 window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJournal,200); });
+
+// ════════════════════════════════════════════════════════
+//  SERVICE WORKER — version automatique, aucun fichier à modifier
+// ════════════════════════════════════════════════════════
+let swWaiting = null;
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      console.log('[App] SW enregistré');
+
+      // ── Calcul de la version automatique ──────────────
+      // On utilise la date de dernière modification de index.html
+      // GitHub met à jour ce header à chaque déploiement → version auto
+      let version = 'init';
+      try {
+        const resp = await fetch('./index.html', { method: 'HEAD', cache: 'no-store' });
+        const lastMod = resp.headers.get('last-modified');
+        if (lastMod) {
+          // Format : "Sat, 28 Mar 2026 14:32:00 GMT" → "20260328-1432"
+          const d = new Date(lastMod);
+          version = `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}-${String(d.getUTCHours()).padStart(2,'0')}${String(d.getUTCMinutes()).padStart(2,'0')}`;
+        }
+      } catch {}
+
+      console.log('[App] Version détectée :', version);
+
+      // Envoie la version au SW actif
+      if (reg.active) {
+        reg.active.postMessage({ type: 'SET_VERSION', version });
+      }
+
+      // SW en attente (déjà installé avant l'envoi de version)
+      if (reg.waiting) {
+        swWaiting = reg.waiting;
+        swWaiting.postMessage({ type: 'SET_VERSION', version });
+        showUpdateBanner();
+      }
+
+      // Nouveau SW trouvé pendant la session
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            swWaiting = newWorker;
+            swWaiting.postMessage({ type: 'SET_VERSION', version });
+            showUpdateBanner();
+          }
+        });
+      });
+
+      // Vérification périodique (toutes les 5 minutes si l'appli reste ouverte)
+      setInterval(() => reg.update(), 5 * 60 * 1000);
+
+    } catch (err) {
+      console.warn('[App] SW échec:', err);
+    }
+
+    // Le nouveau SW prend le contrôle → rechargement
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
+
+    // Message reçu du SW (UPDATE_READY)
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'UPDATE_READY') {
+        showUpdateBanner();
+      }
+    });
+  });
+}
+
+function showUpdateBanner() {
+  document.getElementById('update-banner').classList.add('visible');
+}
+
+function applyUpdate() {
+  if (swWaiting) {
+    swWaiting.postMessage('SKIP_WAITING');
+  } else {
+    window.location.reload();
+  }
+}
 
 init();
 </script>
