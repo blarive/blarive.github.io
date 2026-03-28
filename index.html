@@ -1,1265 +1,1092 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Pêche">
-<meta name="theme-color" content="#1b3a6b">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>Carnet de Pêche</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --eau: #1b3a6b;
-    --eau-profonde: #0f2147;
-    --eau-claire: #2e6db4;
-    --sable: #f7d6e8;
-    --mousse: #4a7c59;
-    --eclair: #e8609a;
-    --blanc: #fdf4f8;
-    --texte: #1a2035;
-    --gris: #8a96b0;
-    --rouge: #c0392b;
-    --rose: #e8609a;
-    --rose-clair: #fce4f0;
-    --bleu-clair: #e8f0fb;
-    --radius: 14px;
-    --sidebar-w: 240px;
-  }
+  <meta charset="UTF-8">
+  <title>Journal de pêche</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <meta name="theme-color" content="#0d1117">
 
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { height:100%; }
-
-  body {
-    font-family:'DM Sans',sans-serif;
-    background:#eef2f5;
-    color:var(--texte);
-    display:flex;
-    min-height:100vh;
-  }
-
-  /* ── SIDEBAR ─────────────────────────────── */
-  .sidebar {
-    width:var(--sidebar-w);
-    background:linear-gradient(180deg,var(--eau-profonde) 0%,var(--eau) 100%);
-    display:flex;
-    flex-direction:column;
-    flex-shrink:0;
-    position:fixed;
-    top:0;left:0;bottom:0;
-    z-index:100;
-    overflow:hidden;
-  }
-  .sidebar::after {
-    content:'';position:absolute;bottom:60px;left:-20%;
-    width:140%;height:100px;
-    background:rgba(232,96,154,0.15);border-radius:50%;filter:blur(30px);
-    animation:vague 7s ease-in-out infinite;pointer-events:none;
-  }
-  @keyframes vague{0%,100%{transform:translateX(0) scaleY(1)}50%{transform:translateX(4%) scaleY(1.2)}}
-
-  .sidebar-logo { padding:32px 24px 20px; position:relative; z-index:1; }
-  .sidebar-logo .icon { font-size:34px;display:block;margin-bottom:8px;filter:drop-shadow(0 2px 8px rgba(240,192,64,0.5)); }
-  .sidebar-logo h1 { font-family:'Playfair Display',serif;font-size:19px;color:var(--sable);line-height:1.2; }
-  .sidebar-logo p { font-size:10px;color:var(--gris);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px; }
-
-  .sidebar-stats { display:flex;flex-direction:column;gap:8px;padding:0 16px 20px;position:relative;z-index:1; }
-  .sidebar-stat { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center; }
-  .sidebar-stat .label { font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:0.8px; }
-  .sidebar-stat .num { font-family:'Playfair Display',serif;font-size:20px;color:var(--rose); }
-
-  .sidebar-nav { flex:1;padding:8px 12px;position:relative;z-index:1; }
-  .nav-item {
-    display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;cursor:pointer;
-    color:var(--gris);font-size:14px;font-weight:500;transition:all 0.2s;
-    border:none;background:none;width:100%;text-align:left;margin-bottom:4px;
-  }
-  .nav-item .nav-icon{font-size:20px;width:24px;text-align:center;}
-  .nav-item:hover{background:rgba(255,255,255,0.07);color:white;}
-  .nav-item.active{background:var(--rose);color:white;font-weight:700;}
-
-  /* ── APP BODY ────────────────────────────── */
-  .app-body { flex:1;margin-left:var(--sidebar-w);display:flex;flex-direction:column;min-height:100vh; }
-
-  /* ── TOP BAR ─────────────────────────────── */
-  .topbar {
-    background:white;border-bottom:1px solid #e0e6ea;
-    padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
-    position:sticky;top:0;z-index:50;
-  }
-  .topbar-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--eau-profonde);}
-  .topbar-title small{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--gris);font-weight:400;display:block;text-transform:uppercase;letter-spacing:1px;}
-  .btn-primary {
-    padding:9px 20px;background:linear-gradient(135deg,var(--eau-claire) 0%,var(--rose) 100%);
-    color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
-    font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
-    transition:opacity 0.15s,transform 0.15s;
-  }
-  .btn-primary:hover{opacity:0.9;} .btn-primary:active{transform:scale(0.97);}
-  .btn-secondary {
-    padding:9px 14px;background:white;color:var(--eau);
-    border:1.5px solid #c8d8f0;border-radius:10px;font-family:'DM Sans',sans-serif;
-    font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;
-  }
-  .btn-secondary:hover{background:var(--bleu-clair);}
-
-  /* ── PAGE CONTENT ────────────────────────── */
-  .page-content { flex:1;padding:24px 28px 40px;max-width:1100px; }
-  .view{display:none;} .view.active{display:block;}
-
-  /* ── JOURNAL ─────────────────────────────── */
-  .journal-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
-  .search-box{position:relative;flex:1;min-width:180px;}
-  .search-box input {
-    width:100%;padding:10px 14px 10px 36px;border:1.5px solid #ddd;border-radius:10px;
-    font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:white;color:var(--texte);transition:border-color 0.2s;
-  }
-  .search-box input:focus{border-color:var(--eau-claire);}
-  .search-box::before{content:'🔍';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;}
-
-  .filter-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
-  .filter-pill {
-    padding:6px 14px;border-radius:20px;border:1.5px solid #ddd;background:white;
-    font-size:12px;white-space:nowrap;cursor:pointer;color:var(--gris);
-    font-family:'DM Sans',sans-serif;transition:all 0.15s;flex-shrink:0;
-  }
-  .filter-pill.active{background:var(--eau-profonde);border-color:var(--eau-profonde);color:white;font-weight:600;}
-
-  .cards-grid{display:grid;grid-template-columns:1fr;gap:12px;}
-
-  /* ── CARD / SWIPE ────────────────────────── */
-  .card-wrapper{position:relative;border-radius:var(--radius);overflow:hidden;}
-  .card-delete-bg {
-    position:absolute;top:0;right:0;bottom:0;width:90px;
-    background:var(--rouge);display:flex;align-items:center;justify-content:center;
-    flex-direction:column;gap:4px;color:white;font-size:20px;cursor:pointer;border-radius:var(--radius);
-  }
-  .card-delete-bg span{font-size:10px;font-weight:600;}
-
-  .entry-card {
-    background:white;border-radius:var(--radius);padding:16px 18px;
-    border-left:4px solid var(--eau-claire);position:relative;
-    transition:transform 0.25s cubic-bezier(.2,.8,.3,1),box-shadow 0.2s;
-    will-change:transform;touch-action:pan-y;user-select:none;
-    box-shadow:0 1px 6px rgba(0,0,0,0.06);
-  }
-  .entry-card:hover{box-shadow:0 4px 18px rgba(0,0,0,0.1);}
-  .entry-card.swiping{transition:none;}
-  .entry-card.trophy{border-left-color:var(--rose);}
-  .entry-card.capot{border-left-color:#b0bcd8;background:#f8f9fd;}
-
-  .btn-delete-desktop {
-    display:none;position:absolute;top:12px;right:14px;
-    background:#fee;border:1.5px solid #fcc;color:var(--rouge);border-radius:8px;
-    padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;
-    font-family:'DM Sans',sans-serif;transition:background 0.15s;
-  }
-  .btn-delete-desktop:hover{background:var(--rouge);color:white;}
-
-  .entry-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-right:90px;}
-  .entry-species{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:var(--eau-profonde);}
-  .entry-date{font-size:11px;color:var(--gris);text-align:right;}
-  .entry-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
-  .entry-meta-item{display:flex;align-items:center;gap:4px;font-size:13px;color:#555;}
-  .entry-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
-  .tag{padding:3px 10px;border-radius:10px;font-size:11px;background:var(--bleu-clair);color:var(--eau-claire);font-weight:500;}
-  .tag.rose{background:var(--rose-clair);color:var(--rose);}
-  .entry-stars{font-size:13px;margin-top:4px;}
-  .entry-notes{font-size:13px;color:#666;margin-top:6px;font-style:italic;line-height:1.4;}
-  .photo-badge{display:inline-block;background:linear-gradient(135deg,var(--rose),#c0306a);color:white;padding:2px 9px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px;}
-
-  .empty-state{text-align:center;padding:56px 24px;color:var(--gris);}
-  .empty-state .icon{font-size:56px;margin-bottom:12px;display:block;opacity:0.4;}
-
-  /* ── FORM ────────────────────────────────── */
-  .form-layout{display:grid;grid-template-columns:1fr;gap:0;}
-  .form-card{background:white;border-radius:var(--radius);padding:24px;box-shadow:0 1px 6px rgba(0,0,0,0.06);margin-bottom:16px;}
-  .form-card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #eee;}
-  .form-group{margin-bottom:14px;}
-  .form-label{font-size:11px;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
-  .form-input,.form-select,.form-textarea {
-    width:100%;padding:11px 14px;border:1.5px solid #ddd;border-radius:10px;
-    font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texte);
-    background:#fafaf8;outline:none;transition:border-color 0.2s;appearance:none;
-  }
-  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--eau-claire);}
-  .form-textarea{resize:none;height:80px;}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-
-  .stars-input{display:flex;gap:6px;}
-  .star-btn{font-size:26px;background:none;border:none;cursor:pointer;filter:grayscale(1) opacity(0.3);transition:all 0.15s;padding:2px;}
-  .star-btn.active{filter:none;transform:scale(1.1);}
-
-  .meteo-btns{display:flex;gap:8px;flex-wrap:wrap;}
-  .meteo-btn{padding:8px 14px;border:1.5px solid #dde3f0;border-radius:20px;background:none;font-size:13px;cursor:pointer;transition:all 0.15s;color:var(--texte);font-family:'DM Sans',sans-serif;}
-  .meteo-btn.selected{border-color:var(--eau-claire);background:var(--bleu-clair);color:var(--eau-claire);font-weight:600;}
-  .meteo-btn.selected-rose{border-color:var(--rose);background:var(--rose-clair);color:var(--rose);font-weight:600;}
-
-  .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--eau-claire) 0%,var(--rose) 100%);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(46,109,180,0.25);transition:transform 0.15s;}
-  .btn-submit:active{transform:scale(0.98);}
-
-  /* ── PHOTO UPLOAD CORRIGÉ ────────────────────────────────── */
-  .photo-upload {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    border:2px dashed #c8d8f0;
-    border-radius:var(--radius);
-    padding:20px 16px;
-    cursor:pointer;
-    background:#f8faff;
-    transition:all 0.2s;
-    width:100%;
-    box-sizing:border-box;
-  }
-  .photo-upload:hover {
-    border-color:var(--eau-claire);
-    background:#f0f5ff;
-  }
-  .photo-upload input {
-    display:none;
-  }
-  .photo-upload .icon {
-    font-size:32px;
-    display:block;
-    margin-bottom:8px;
-    opacity:0.6;
-  }
-  .photo-upload p {
-    font-size:13px;
-    color:var(--gris);
-    text-align:center;
-    margin:0;
-  }
-  .photo-upload .photo-preview-container {
-    width:100%;
-    margin-top:12px;
-    display:none;
-  }
-  .photo-upload .photo-preview {
-    width:100%;
-    max-height:180px;
-    object-fit:cover;
-    border-radius:10px;
-    display:block;
-  }
-  .photo-upload.has-photo {
-    border-style:solid;
-    border-color:var(--mousse);
-    background:#f0f9f0;
-  }
-  .photo-upload.has-photo .icon,
-  .photo-upload.has-photo p {
-    display:none;
-  }
-  .photo-upload.has-photo .photo-preview-container {
-    display:block;
-  }
-  .photo-remove {
-    margin-top:8px;
-    padding:6px 12px;
-    background:#fee;
-    border:1px solid #fcc;
-    border-radius:20px;
-    font-size:11px;
-    color:var(--rouge);
-    cursor:pointer;
-    font-weight:600;
-    transition:all 0.15s;
-    width:auto;
-    display:inline-block;
-  }
-  .photo-remove:hover {
-    background:var(--rouge);
-    color:white;
-    border-color:var(--rouge);
-  }
-
-  /* capot section */
-  .capot-banner{display:none;background:var(--bleu-clair);border:1.5px solid #b8cef0;border-radius:12px;padding:14px 16px;margin-bottom:14px;color:var(--eau);font-size:14px;font-weight:500;text-align:center;}
-  .capot-banner.visible{display:block;}
-
-  /* ── STATS ───────────────────────────────── */
-  .stats-grid{display:grid;grid-template-columns:1fr;gap:14px;}
-  .stat-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
-  .stat-card-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:14px;font-weight:700;}
-  .species-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-  .species-name{font-size:14px;width:100px;flex-shrink:0;color:var(--texte);}
-  .bar-track{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;}
-  .bar-fill{height:100%;background:linear-gradient(90deg,var(--eau-claire) 0%,var(--rose) 100%);border-radius:4px;transition:width 0.5s ease;}
-  .bar-count{font-size:13px;color:var(--gris);min-width:20px;text-align:right;}
-  .record-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0;}
-  .record-item:last-child{border-bottom:none;}
-  .record-icon{font-size:26px;}
-  .record-info{flex:1;}
-  .record-info .species{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;}
-  .record-info .detail{font-size:12px;color:var(--gris);margin-top:2px;}
-  .record-value{font-family:'Playfair Display',serif;font-size:20px;color:var(--rose);}
-
-  /* ── MOBILE ONLY ─────────────────────────── */
-  .bottom-nav{display:none;}
-  .mobile-header{display:none;}
-  .mobile-stats-bar{display:none;}
-
-  /* ── TOAST ───────────────────────────────── */
-  .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--mousse);color:white;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:500;opacity:0;transition:all 0.3s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.15);}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-  @keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-  .card-wrapper{animation:slideUp 0.3s ease both;}
-
-  /* ══════════════════════════════════════════
-     TABLETTE (768–1024px)
-  ══════════════════════════════════════════ */
-  @media(min-width:768px){
-    .cards-grid{grid-template-columns:1fr 1fr;}
-    .stats-grid{grid-template-columns:1fr 1fr;}
-    .form-layout{grid-template-columns:1fr 1fr;gap:16px;}
-    .form-card.full{grid-column:1/-1;}
-    .btn-delete-desktop{display:block;}
-    .card-delete-bg{display:none;}
-  }
-
-  @media(min-width:1024px){
-    .cards-grid{grid-template-columns:1fr 1fr 1fr;}
-    .stats-grid{grid-template-columns:1fr 1fr 1fr;}
-    .page-content{padding:28px 36px 48px;}
-  }
-
-  /* ══════════════════════════════════════════
-     MOBILE (< 768px) - CORRIGÉ
-  ══════════════════════════════════════════ */
-  @media(max-width:767px){
-    body{display:block;background:var(--blanc);}
-    
-    body::before, body::after{display:none;}
-
-    .sidebar{display:none;}
-    .topbar{display:none;}
-
-    .mobile-header{
-      display:flex;align-items:center;justify-content:center;gap:8px;
-      position:sticky;top:0;left:0;right:0;z-index:50;
-      padding:12px 16px 8px;
-      background:linear-gradient(135deg,var(--eau-profonde) 0%,var(--eau) 100%);
+  <!-- ========================= -->
+  <!-- 🎨 BLOC 1 — STYLE COMPLET -->
+  <!-- ========================= -->
+  <style>
+    /* THEME SYSTEM */
+    :root {
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --bg-soft: #1f242d;
+      --text: #e6edf3;
+      --text-soft: #9ba3b4;
+      --accent: #2ea043;
+      --accent-soft: #238636;
+      --border: #30363d;
+      --tag-bg: #21262d;
+      --tag-border: #30363d;
+      --star: #f1c40f;
+      --panel-bg: #161b22;
+      --panel-shadow: rgba(0,0,0,0.45);
     }
-    .mobile-header .icon{font-size:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
-    .mobile-header h1{font-family:'Playfair Display',serif;font-size:18px;color:var(--sable);}
+    .light {
+      --bg: #f2f4f7;
+      --bg-card: #ffffff;
+      --bg-soft: #e9ecef;
+      --text: #1f2937;
+      --text-soft: #4b5563;
+      --accent: #0ea5e9;
+      --accent-soft: #0284c7;
+      --border: #d1d5db;
+      --tag-bg: #e5e7eb;
+      --tag-border: #d1d5db;
+      --star: #eab308;
+      --panel-bg: #ffffff;
+      --panel-shadow: rgba(0,0,0,0.15);
+    }
 
-    .mobile-stats-bar{
-      display:flex;gap:6px;
-      position:sticky;top:52px;left:0;right:0;padding:8px 12px;
-      background:var(--eau-profonde);
-      z-index:49;
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background .25s, color .25s;
     }
-    .mob-stat{flex:1;background:rgba(255,255,255,0.1);border-radius:8px;padding:6px 4px;text-align:center;}
-    .mob-stat .num{font-family:'Playfair Display',serif;font-size:15px;color:var(--rose);display:block;line-height:1.2;}
-    .mob-stat .label{font-size:9px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.5px;}
 
-    .app-body{
-      margin-left:0;background:var(--blanc);
-      min-height:calc(100vh - 100px);
+    header {
+      background: var(--bg-card);
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
     }
-    .page-content{padding:16px 12px 80px;}
-    .cards-grid{grid-template-columns:1fr;}
-    .stats-grid{grid-template-columns:1fr;}
-    .form-layout{grid-template-columns:1fr;}
-    .form-card{padding:16px;}
-    
-    .filter-pills{
-      display:flex;
-      gap:8px;
-      flex-wrap:nowrap;
-      overflow-x:auto;
-      margin-bottom:16px;
-      padding-bottom:8px;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:thin;
-    }
-    .filter-pill{
-      flex-shrink:0;
-      padding:8px 16px;
-      font-size:13px;
-      background:white;
-      border:1px solid #e0e6ea;
-    }
-    
-    .form-card:first-child{
-      margin-top:0;
-    }
-    .form-card-title{
-      font-size:13px;
-      margin-bottom:12px;
-    }
-    
-    .form-group{
-      margin-bottom:12px;
-    }
-    .form-input, .form-select, .form-textarea{
-      padding:10px 12px;
-      font-size:14px;
-    }
-    .form-row, .form-row-3{
-      gap:8px;
-    }
-    
-    .meteo-btns{
-      gap:6px;
-    }
-    .meteo-btn{
-      padding:6px 12px;
-      font-size:12px;
-    }
-    
-    /* Photo upload mobile - complètement visible */
-    .photo-upload {
-      padding:16px;
-    }
-    .photo-upload .icon {
-      font-size:28px;
-    }
-    .photo-upload p {
-      font-size:12px;
-    }
-    .photo-upload .photo-preview {
-      max-height:160px;
-    }
-    
-    .bottom-nav{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:fixed;
-      bottom:0;
-      left:0;
-      right:0;
-      background:transparent;
-      padding:0 0 max(12px, env(safe-area-inset-bottom)) 0;
-      z-index:100;
-      pointer-events:none;
-    }
-    .fab-menu-btn{
-      pointer-events:all;
-      width:56px;
-      height:56px;
-      background:linear-gradient(135deg,var(--eau-claire),var(--rose));
-      border-radius:50%;
-      border:none;
-      color:white;
-      font-size:24px;
-      cursor:pointer;
-      box-shadow:0 4px 16px rgba(46,109,180,0.4);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transition:transform 0.2s,box-shadow 0.2s;
-      margin-bottom:12px;
-    }
-    .fab-menu-btn:active{transform:scale(0.93);}
-    .fab-menu-btn.open{transform:rotate(45deg);}
+    header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+    header .actions-header { display: flex; gap: 10px; }
 
-    .toast{bottom:90px;}
-    .btn-delete-desktop{display:none;}
-  }
+    header button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    #themeToggle {
+      background: var(--bg-soft);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 999px;
+    }
 
-  /* ── POPUP MENU (mobile) ── */
-  .menu-overlay{
-    display:none;position:fixed;inset:0;
-    background:rgba(15,33,71,0.55);backdrop-filter:blur(4px);
-    z-index:200;align-items:flex-end;justify-content:center;
-    padding-bottom:90px;
-  }
-  .menu-overlay.open{display:flex;}
-  .menu-popup{
-    background:white;border-radius:24px;padding:8px 12px 12px;
-    width:calc(100% - 32px);max-width:360px;
-    box-shadow:0 16px 48px rgba(15,33,71,0.25);
-    animation:popupUp 0.25s cubic-bezier(.34,1.4,.64,1) both;
-  }
-  @keyframes popupUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-  .menu-popup-title{
-    font-size:11px;font-weight:700;text-transform:uppercase;
-    letter-spacing:1px;color:var(--gris);
-    text-align:center;padding:10px 0 8px;
-    border-bottom:1px solid #eee;margin-bottom:8px;
-  }
-  .menu-popup-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .menu-popup-item{
-    display:flex;flex-direction:column;align-items:center;gap:6px;
-    padding:14px 10px;border-radius:16px;border:none;background:#f4f7fd;
-    cursor:pointer;transition:background 0.15s,transform 0.1s;
-    font-family:'DM Sans',sans-serif;
-  }
-  .menu-popup-item:active{transform:scale(0.96);}
-  .menu-popup-item.active-view{background:var(--bleu-clair);border:1.5px solid var(--eau-claire);}
-  .menu-popup-item .mi-icon{font-size:26px;}
-  .menu-popup-item .mi-label{font-size:12px;font-weight:600;color:var(--texte);}
-  .menu-popup-item .mi-sub{font-size:10px;color:var(--gris);}
-  .menu-popup-divider{height:1px;background:#eee;margin:8px 0;}
-  .menu-popup-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .menu-popup-small{
-    display:flex;align-items:center;gap:8px;
-    padding:10px 14px;border-radius:12px;border:none;
-    background:#f8f9ff;cursor:pointer;
-    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--texte);
-    transition:background 0.15s;
-  }
-  .menu-popup-small:active{background:var(--bleu-clair);}
+    main { padding: 16px; max-width: 900px; margin: 0 auto; }
+    h2 { font-size: 16px; margin: 0 0 12px; font-weight: 600; }
 
-  /* ── GÉOLOCALISATION ── */
-  .geo-btn{
-    display:flex;align-items:center;gap:8px;
-    padding:10px 14px;border:1.5px solid #c8d8f0;border-radius:10px;
-    background:var(--bleu-clair);color:var(--eau-claire);
-    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
-    cursor:pointer;transition:all 0.15s;width:100%;margin-top:6px;
-  }
-  .geo-btn:hover{background:#d8eaff;}
+    .hidden { display: none; }
 
-  .spots-list{margin-top:6px;display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;}
-  .spot-chip{
-    display:flex;align-items:center;gap:8px;
-    padding:8px 12px;background:white;border:1.5px solid #dde8f5;
-    border-radius:10px;cursor:pointer;transition:border-color 0.15s;
-    font-size:13px;color:var(--texte);
-  }
-  .spot-chip:hover{border-color:var(--eau-claire);}
-  .spot-chip .spot-del{margin-left:auto;color:var(--gris);font-size:16px;background:none;border:none;cursor:pointer;padding:0 2px;}
+    /* CARDS */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px var(--panel-shadow);
+      cursor: pointer;
+    }
+    .card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .card-header h3 { margin: 0; font-size: 15px; font-weight: 600; }
+    .card-header span { font-size: 12px; color: var(--text-soft); }
+    .card-meta { font-size: 13px; color: var(--text-soft); margin-bottom: 6px; }
+    .stars { color: var(--star); }
 
-</style>
+    /* TAGS */
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      font-size: 11px;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    /* MINI GALERIE */
+    .mini-galerie { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .mini-photo {
+      width: 80px; height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    /* CARROUSEL */
+    .carousel {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 10px;
+    }
+    .carousel img {
+      width: 85%; max-width: 420px; height: 260px;
+      object-fit: cover;
+      border-radius: 12px;
+      scroll-snap-align: center;
+      border: 1px solid var(--border);
+    }
+
+    /* PANELS */
+    .panel {
+      position: fixed;
+      left: 0; right: 0;
+      bottom: -100%;
+      height: 85%;
+      background: var(--panel-bg);
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      box-shadow: 0 -4px 20px var(--panel-shadow);
+      transition: bottom .35s ease;
+      padding: 18px;
+      overflow-y: auto;
+      z-index: 999;
+    }
+    .panel.open { bottom: 0; }
+    .panel h2 { margin-top: 0; font-size: 18px; font-weight: 600; }
+
+    /* FORM */
+    input, select, textarea {
+      width: 100%; padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--text);
+      font-size: 14px;
+    }
+    textarea { min-height: 70px; }
+    label { font-size: 13px; margin-bottom: 4px; display: block; color: var(--text-soft); }
+    .row { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-secondary {
+      background: var(--bg-soft);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    /* FILTRES */
+    #filtersPanel {
+      background: var(--panel-bg);
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+    }
+    .filter-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 10px; }
+    .filter-actions { display: flex; gap: 10px; }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 16px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+    .toast.show { opacity: 1; }
+  </style>
 </head>
+
 <body>
 
-<!-- MOBILE HEADER -->
-<div class="mobile-header">
-  <span class="icon">🎣</span>
-  <h1>Carnet de Pêche</h1>
-</div>
-<div class="mobile-stats-bar">
-  <div class="mob-stat"><span class="num" id="m-total">0</span><span class="label">Sorties</span></div>
-  <div class="mob-stat"><span class="num" id="m-poissons">0</span><span class="label">Espèces</span></div>
-  <div class="mob-stat"><span class="num" id="m-record">—</span><span class="label">Record kg</span></div>
-</div>
+  <!-- ========================= -->
+  <!-- 🎨 BLOC 2 — HTML COMPLET -->
+  <!-- ========================= -->
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <span class="icon">🎣</span>
-    <h1>Carnet<br>de Pêche</h1>
-    <p>Journal du pêcheur</p>
-  </div>
-  <div class="sidebar-stats">
-    <div class="sidebar-stat"><span class="label">Sorties</span><span class="num" id="s-total">0</span></div>
-    <div class="sidebar-stat"><span class="label">Record</span><span class="num" id="s-record" style="font-size:14px">—</span></div>
-  </div>
-  <nav class="sidebar-nav">
-    <button class="nav-item active" onclick="switchView('journal',this)"><span class="nav-icon">📖</span> Journal</button>
-    <button class="nav-item" onclick="switchView('ajouter',this)"><span class="nav-icon">➕</span> Ajouter une prise</button>
-    <button class="nav-item" onclick="switchView('stats',this)"><span class="nav-icon">📊</span> Statistiques</button>
-    <button class="nav-item" onclick="switchView('spots',this)"><span class="nav-icon">📍</span> Mes Spots</button>
-    <div style="height:1px;background:rgba(255,255,255,0.1);margin:10px 4px"></div>
-    <button class="nav-item" onclick="exportData()"><span class="nav-icon">📤</span> Exporter</button>
-    <button class="nav-item" onclick="document.getElementById('import-file').click()"><span class="nav-icon">📥</span> Importer</button>
-    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
-  </nav>
-</aside>
+  <header>
+    <h1>Journal de pêche</h1>
 
-<!-- APP BODY -->
-<div class="app-body">
-
-  <div class="topbar">
-    <div class="topbar-title" id="topbar-title"><small>Mes sorties</small>Journal de pêche</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn-secondary" onclick="exportData()" title="Exporter sauvegarde">📤 Exporter</button>
-      <button class="btn-secondary" onclick="document.getElementById('import-file').click()" title="Importer sauvegarde">📥 Importer</button>
-      <button class="btn-primary" onclick="switchView('ajouter',null)">➕ Nouvelle prise</button>
+    <div class="actions-header">
+      <button id="themeToggle">🌙</button>
+      <button id="filtersToggle">Filtres</button>
+      <button id="toggleViewBtn">Nouvelle prise</button>
     </div>
-  </div>
+  </header>
 
-  <div class="page-content">
+  <main>
+
+    <!-- FILTRES -->
+    <section id="filtersPanel" class="hidden">
+      <h2>Filtres</h2>
+
+      <div class="filter-row">
+        <div>
+          <label>Espèce</label>
+          <select id="filterEspece"><option value="">Toutes</option></select>
+        </div>
+        <div>
+          <label>Lieu</label>
+          <select id="filterLieu"><option value="">Tous</option></select>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div>
+          <label>Trophée</label>
+          <select id="filterTrophy">
+            <option value="">Tous</option>
+            <option value="oui">Oui</option>
+            <option value="non">Non</option>
+          </select>
+        </div>
+        <div>
+          <label>Note minimum</label>
+          <select id="filterStars">
+            <option value="">Aucune</option>
+            <option value="1">⭐+</option>
+            <option value="2">⭐⭐+</option>
+            <option value="3">⭐⭐⭐+</option>
+            <option value="4">⭐⭐⭐⭐+</option>
+            <option value="5">⭐⭐⭐⭐⭐</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div>
+          <label>Date min</label>
+          <input type="date" id="filterDateMin">
+        </div>
+        <div>
+          <label>Date max</label>
+          <input type="date" id="filterDateMax">
+        </div>
+      </div>
+
+      <div>
+        <label>Météo (contient)</label>
+        <input type="text" id="filterMeteo">
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-primary" id="applyFilters">Appliquer</button>
+        <button class="btn-secondary" id="resetFilters">Réinitialiser</button>
+      </div>
+    </section>
 
     <!-- JOURNAL -->
-    <div class="view active" id="view-journal">
-      <div class="journal-toolbar">
-        <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="renderJournal()"></div>
-      </div>
-      <div class="filter-pills">
-        <button class="filter-pill active" onclick="setFilter('tous',this)">Toutes</button>
-        <button class="filter-pill" onclick="setFilter('Carpe',this)">🐟 Carpe</button>
-        <button class="filter-pill" onclick="setFilter('Brochet',this)">🦈 Brochet</button>
-        <button class="filter-pill" onclick="setFilter('Truite',this)">🐠 Truite</button>
-        <button class="filter-pill" onclick="setFilter('Sandre',this)">🐡 Sandre</button>
-        <button class="filter-pill" onclick="setFilter('Perche',this)">Perche</button>
-        <button class="filter-pill" onclick="setFilter('trophy',this)">🏆 Trophées</button>
-        <button class="filter-pill" onclick="setFilter('capot',this)">🚫 Capots</button>
-      </div>
-      <div class="cards-grid" id="journal-list"></div>
-    </div>
+    <section id="journalView">
+      <h2>Sorties</h2>
+      <div class="stats" id="stats"></div>
+      <div id="journalList"></div>
+    </section>
 
-    <!-- AJOUTER -->
-    <div class="view" id="view-ajouter">
-      <div class="form-layout">
+    <!-- FORMULAIRE -->
+    <section id="formView" class="hidden">
+      <h2>Ajouter une prise</h2>
 
-        <div class="form-card">
-          <div class="form-card-title">📋 Informations principales</div>
-          <div class="form-group">
-            <label class="form-label">📅 Date & Heure</label>
-            <input type="datetime-local" class="form-input" id="f-date">
+      <form id="entryForm">
+
+        <div class="row">
+          <div>
+            <label>Date</label>
+            <input type="date" id="date" required>
           </div>
-          <div class="form-group">
-            <label class="form-label">📋 Type de sortie</label>
-            <div class="meteo-btns">
-              <button class="meteo-btn" id="btn-capot" onclick="toggleCapot(this)">🚫 Capot (bredouille)</button>
-            </div>
+          <div>
+            <label>Lieu</label>
+            <input type="text" id="lieu" required>
           </div>
-          <div id="prise-fields">
-          <div class="form-group">
-            <label class="form-label">🐟 Espèce</label>
-            <select class="form-select" id="f-espece">
-              <option value="">— Sélectionner —</option>
-              <option>Carpe</option><option>Brochet</option><option>Truite fario</option>
-              <option>Truite arc-en-ciel</option><option>Sandre</option><option>Perche</option>
-              <option>Gardon</option><option>Rotengle</option><option>Tanche</option>
-              <option>Anguille</option><option>Black-bass</option><option>Silure</option>
-              <option>Barbeau</option><option>Chevesne</option><option>Ablette</option><option>Autre</option>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Espèce</label>
+            <input type="text" id="espece" required>
+          </div>
+          <div>
+            <label>Taille (cm)</label>
+            <input type="number" id="taille">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Poids (kg)</label>
+            <input type="number" id="poids" step="0.01">
+          </div>
+          <div>
+            <label>Technique</label>
+            <input type="text" id="technique">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Note</label>
+            <select id="stars">
+              <option value="1">⭐</option>
+              <option value="2">⭐⭐</option>
+              <option value="3" selected>⭐⭐⭐</option>
+              <option value="4">⭐⭐⭐⭐</option>
+              <option value="5">⭐⭐⭐⭐⭐</option>
             </select>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">📏 Taille (cm)</label>
-              <input type="number" class="form-input" id="f-taille" placeholder="ex. 45">
-            </div>
-            <div class="form-group">
-              <label class="form-label">⚖️ Poids (kg)</label>
-              <input type="number" class="form-input" id="f-poids" placeholder="ex. 1.2" step="0.001" min="0">
-            </div>
+          <div>
+            <label>Photo (URL)</label>
+            <input type="text" id="photo">
           </div>
-          <div class="form-group">
-            <label class="form-label">🎣 Technique</label>
-            <select class="form-select" id="f-technique">
-              <option value="">— Technique —</option>
-              <option>Carpe — Cheveu</option><option>Lancer — Cuillère</option>
-              <option>Lancer — Leurre souple</option><option>Lancer — Popper</option>
-              <option>Mouche sèche</option><option>Mouche noyée</option>
-              <option>Toc / Vairon</option><option>Feeder</option>
-              <option>Bolognaise</option><option>Pêche au coup</option>
-              <option>Pêche au posé</option><option>Pêche au vif</option><option>Autre</option>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Relâché ?</label>
+            <select id="relache">
+              <option value="oui">Oui</option>
+              <option value="non">Non</option>
             </select>
           </div>
-          </div><!-- /prise-fields -->
-          <div class="form-group">
-            <label class="form-label">📍 Lieu / Spot</label>
-            <input type="text" class="form-input" id="f-lieu" placeholder="Étang, rivière, lac…">
-            <button class="geo-btn" onclick="geoLocate()" id="geo-btn" type="button">
-              📡 Utiliser ma position GPS
-            </button>
-            <div id="spots-favoris-box" style="display:none;margin-top:10px">
-              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:6px">⭐ Spots enregistrés</div>
-              <div class="spots-list" id="spots-list"></div>
-            </div>
+          <div>
+            <label>Trophée ?</label>
+            <select id="trophy">
+              <option value="non">Non</option>
+              <option value="oui">Oui</option>
+            </select>
           </div>
         </div>
 
-        <div class="form-card">
-          <div class="form-card-title">🌤 Conditions & Notes</div>
-          <div class="form-group">
-            <label class="form-label">🌤 Météo</label>
-            <div class="meteo-btns">
-              <button class="meteo-btn" onclick="toggleMeteo(this,'☀️ Soleil')">☀️ Soleil</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'⛅ Nuageux')">⛅ Nuageux</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'🌧 Pluie')">🌧 Pluie</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'💨 Vent')">💨 Vent</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'🌫 Brume')">🌫 Brume</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'❄️ Froid')">❄️ Froid</button>
-            </div>
-          </div>
-          <div class="form-row-3">
-            <div class="form-group">
-              <label class="form-label">🌡 Air (°C)</label>
-              <input type="number" class="form-input" id="f-temp-air" placeholder="18">
-            </div>
-            <div class="form-group">
-              <label class="form-label">💧 Eau (°C)</label>
-              <input type="number" class="form-input" id="f-temp-eau" placeholder="14">
-            </div>
-            <div class="form-group">
-              <label class="form-label">🌙 Lune</label>
-              <select class="form-select" id="f-lune">
-                <option value="">—</option>
-                <option>🌑 NL</option><option>🌒 CC</option><option>🌓 PQ</option>
-                <option>🌔 GC</option><option>🌕 PL</option><option>🌖 GD</option>
-                <option>🌗 DQ</option><option>🌘 CD</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">⭐ Note de la sortie</label>
-            <div class="stars-input">
-              <button class="star-btn" onclick="setStar(1)">⭐</button>
-              <button class="star-btn" onclick="setStar(2)">⭐</button>
-              <button class="star-btn" onclick="setStar(3)">⭐</button>
-              <button class="star-btn" onclick="setStar(4)">⭐</button>
-              <button class="star-btn" onclick="setStar(5)">⭐</button>
-            </div>
-          </div>
-          <div class="form-group" id="statut-group">
-            <label class="form-label">🏅 Statut de la prise</label>
-            <div class="meteo-btns">
-              <button class="meteo-btn" id="btn-trophy" onclick="toggleTrophy(this)">🏆 Trophée</button>
-              <button class="meteo-btn" id="btn-relache" onclick="toggleRelache(this)">↩️ Remis à l'eau</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">📝 Notes</label>
-            <textarea class="form-textarea" id="f-notes" placeholder="Appâts, conditions, anecdotes…"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">📸 Photo</label>
-            <label class="photo-upload" id="photo-upload-label" for="f-photo">
-              <input type="file" id="f-photo" accept="image/*" onchange="previewPhoto(event)">
-              <span class="icon" id="photo-icon">📷</span>
-              <p id="photo-text">Ajouter une photo</p>
-              <div class="photo-preview-container" id="photo-preview-container">
-                <img class="photo-preview" id="photo-preview" alt="Aperçu de la photo">
-                <button type="button" class="photo-remove" onclick="removePhoto(event)">✕ Supprimer la photo</button>
-              </div>
-            </label>
-          </div>
-          <button class="btn-submit" onclick="saveEntry()">✅ Enregistrer la sortie</button>
+        <label>Notes</label>
+        <textarea id="notes"></textarea>
+
+        <label>Météo (séparée par virgules)</label>
+        <input type="text" id="meteo">
+
+        <div class="actions">
+          <button class="btn-primary" type="submit">Enregistrer</button>
+          <button class="btn-secondary" type="button" id="cancelBtn">Annuler</button>
         </div>
 
+      </form>
+    </section>
+
+  </main>
+
+  <!-- PANEL : FICHE DÉTAILLÉE -->
+  <div id="detailPanel" class="panel">
+    <h2>Détails de la sortie</h2>
+    <div id="detailContent"></div>
+
+    <div class="actions">
+      <button class="btn-primary" id="editSortieBtn">Modifier la sortie</button>
+      <button class="btn-secondary" id="deleteSortieBtn">Supprimer la sortie</button>
+      <button class="btn-secondary" id="closeDetail">Fermer</button>
+    </div>
+  </div>
+
+  <!-- PANEL : MODIF SORTIE -->
+  <div id="editSortiePanel" class="panel">
+    <h2>Modifier la sortie</h2>
+
+    <form id="editSortieForm">
+      <label>Lieu</label>
+      <input type="text" id="editSortieLieu">
+
+      <label>Note</label>
+      <select id="editSortieStars">
+        <option value="1">⭐</option>
+        <option value="2">⭐⭐</option>
+        <option value="3">⭐⭐⭐</option>
+        <option value="4">⭐⭐⭐⭐</option>
+        <option value="5">⭐⭐⭐⭐⭐</option>
+      </select>
+
+      <label>Météo (séparée par virgules)</label>
+      <input type="text" id="editSortieMeteo">
+
+      <div class="actions">
+        <button class="btn-primary" type="submit">Enregistrer</button>
+        <button class="btn-secondary" type="button" id="closeEditSortie">Annuler</button>
       </div>
-    </div>
-
-    <!-- STATS -->
-    <div class="view" id="view-stats">
-      <div class="stats-grid" id="stats-content"></div>
-    </div>
-
-    <!-- SPOTS -->
-    <div class="view" id="view-spots">
-      <div id="spots-page-content"></div>
-    </div>
-
+    </form>
   </div>
-</div>
 
-<!-- FAB MENU (mobile) -->
-<nav class="bottom-nav">
-  <button class="fab-menu-btn" id="fab-btn" onclick="toggleMenu()">☰</button>
-</nav>
+  <!-- PANEL : MODIF PRISE -->
+  <div id="editPrisePanel" class="panel">
+    <h2>Modifier la prise</h2>
 
-<!-- POPUP MENU -->
-<div class="menu-overlay" id="menu-overlay" onclick="closeMenuOnOverlay(event)">
-  <div class="menu-popup">
-    <div class="menu-popup-title">Navigation</div>
-    <div class="menu-popup-grid">
-      <button class="menu-popup-item" id="mpop-journal" onclick="popupNav('journal')">
-        <span class="mi-icon">📖</span>
-        <span class="mi-label">Journal</span>
-        <span class="mi-sub">Mes sorties</span>
-      </button>
-      <button class="menu-popup-item" id="mpop-ajouter" onclick="popupNav('ajouter')">
-        <span class="mi-icon">➕</span>
-        <span class="mi-label">Ajouter</span>
-        <span class="mi-sub">Nouvelle prise</span>
-      </button>
-      <button class="menu-popup-item" id="mpop-stats" onclick="popupNav('stats')">
-        <span class="mi-icon">📊</span>
-        <span class="mi-label">Statistiques</span>
-        <span class="mi-sub">Mes records</span>
-      </button>
-      <button class="menu-popup-item" id="mpop-spots" onclick="popupNav('spots')">
-        <span class="mi-icon">📍</span>
-        <span class="mi-label">Mes Spots</span>
-        <span class="mi-sub">Spots favoris</span>
-      </button>
-    </div>
-    <div class="menu-popup-divider"></div>
-    <div class="menu-popup-row">
-      <button class="menu-popup-small" onclick="exportData();closeMenu()">📤 Exporter</button>
-      <button class="menu-popup-small" onclick="document.getElementById('import-file').click();closeMenu()">📥 Importer</button>
-    </div>
+    <form id="editPriseForm">
+
+      <label>Espèce</label>
+      <input type="text" id="editPriseEspece">
+
+      <label>Taille (cm)</label>
+      <input type="number" id="editPriseTaille">
+
+      <label>Poids (kg)</label>
+      <input type="number" id="editPrisePoids" step="0.01">
+
+      <label>Technique</label>
+      <input type="text" id="editPriseTechnique">
+
+      <label>Photo (URL)</label>
+      <input type="text" id="editPrisePhoto">
+
+      <label>Relâché ?</label>
+      <select id="editPriseRelache">
+        <option value="oui">Oui</option>
+        <option value="non">Non</option>
+      </select>
+
+      <label>Trophée ?</label>
+      <select id="editPriseTrophy">
+        <option value="non">Non</option>
+        <option value="oui">Oui</option>
+      </select>
+
+      <label>Notes</label>
+      <textarea id="editPriseNotes"></textarea>
+
+      <div class="actions">
+        <button class="btn-primary" type="submit">Enregistrer</button>
+        <button class="btn-secondary" type="button" id="deletePriseBtn">Supprimer la prise</button>
+        <button class="btn-secondary" type="button" id="closeEditPrise">Annuler</button>
+      </div>
+
+    </form>
   </div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
 
-<script>
-let entries = JSON.parse(localStorage.getItem('peche-entries')||'[]');
-let currentFilter='tous', currentStars=0, selectedMeteo=[], isTrophy=false, isRelache=false, isCapot=false, photoData=null;
+  <!-- ========================= -->
+  <!-- 🎣 BLOC 3 — SCRIPT COMPLET -->
+  <!-- ========================= -->
+  <script>
+  let entries = [];
+  let currentSortie = null;
+  let currentPriseIndex = null;
 
-const topbarTitles = {
-  journal:['Mes sorties','Journal de pêche'],
-  ajouter:['Nouvelle entrée','Ajouter une prise'],
-  stats:["Vue d'ensemble",'Statistiques'],
-  spots:['Mes lieux','Spots favoris']
-};
-
-function init(){
-  const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-  document.getElementById('f-date').value=now.toISOString().slice(0,16);
-  renderJournal(); updateStats(); updateAllStats();
-  renderSpotsForm(); renderSpotsPage();
-}
-
-function switchView(name, btn){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-'+name).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(b=>{
-    const t=b.textContent.trim().toLowerCase();
-    if((name==='journal'&&t.includes('journal'))||(name==='ajouter'&&t.includes('ajouter'))||(name==='stats'&&t.includes('stat'))||(name==='spots'&&t.includes('spot')))
-      b.classList.add('active');
-  });
-  const titles=topbarTitles[name]||['',''];
-  document.getElementById('topbar-title').innerHTML=`<small>${titles[0]}</small>${titles[1]}`;
-  if(name==='stats') updateStats();
-  if(name==='spots') renderSpotsPage();
-}
-
-function setFilter(f,btn){
-  currentFilter=f;
-  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  renderJournal();
-}
-
-function setStar(n){
-  currentStars=n;
-  document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('active',i<n));
-}
-
-function toggleMeteo(btn,val){
-  btn.classList.toggle('selected');
-  selectedMeteo.includes(val)?selectedMeteo=selectedMeteo.filter(v=>v!==val):selectedMeteo.push(val);
-}
-function toggleTrophy(btn){isTrophy=!isTrophy;btn.classList.toggle('selected',isTrophy);}
-function toggleRelache(btn){isRelache=!isRelache;btn.classList.toggle('selected',isRelache);}
-
-function toggleCapot(btn){
-  isCapot=!isCapot;
-  btn.classList.toggle('selected-rose', isCapot);
-  btn.classList.toggle('selected', false);
-  const fields=document.getElementById('prise-fields');
-  const statutGroup=document.getElementById('statut-group');
-  fields.style.opacity = isCapot ? '0.35' : '1';
-  fields.style.pointerEvents = isCapot ? 'none' : '';
-  statutGroup.style.opacity = isCapot ? '0.35' : '1';
-  statutGroup.style.pointerEvents = isCapot ? 'none' : '';
-  if(isCapot){
-    document.getElementById('f-espece').value='';
-    document.getElementById('f-taille').value='';
-    document.getElementById('f-poids').value='';
-    document.getElementById('f-technique').value='';
-  }
-}
-
-function previewPhoto(e){
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    photoData=ev.target.result;
-    const container=document.getElementById('photo-preview-container');
-    const preview=document.getElementById('photo-preview');
-    const label=document.getElementById('photo-upload-label');
-    preview.src=photoData;
-    container.style.display='block';
-    label.classList.add('has-photo');
-  };
-  reader.readAsDataURL(file);
-}
-
-function removePhoto(e){
-  e.stopPropagation();
-  photoData=null;
-  const fileInput=document.getElementById('f-photo');
-  fileInput.value='';
-  const container=document.getElementById('photo-preview-container');
-  const preview=document.getElementById('photo-preview');
-  const label=document.getElementById('photo-upload-label');
-  container.style.display='none';
-  preview.src='';
-  label.classList.remove('has-photo');
-  showToast('🗑 Photo supprimée');
-}
-
-function saveEntry(){
-  const espece=document.getElementById('f-espece').value;
-  if(!isCapot && !espece){showToast('⚠️ Sélectionne une espèce !');return;}
-  const poidsVal=document.getElementById('f-poids').value;
-  const entry={
-    id:Date.now(),
-    date:document.getElementById('f-date').value,
-    espece: isCapot ? '🚫 Capot' : espece,
-    taille: isCapot ? null : (document.getElementById('f-taille').value||null),
-    poids:  isCapot ? null : (poidsVal ? parseFloat(poidsVal) : null),
-    lieu:document.getElementById('f-lieu').value,
-    technique: isCapot ? '' : document.getElementById('f-technique').value,
-    meteo:[...selectedMeteo],
-    tempAir:document.getElementById('f-temp-air').value||null,
-    tempEau:document.getElementById('f-temp-eau').value||null,
-    lune:document.getElementById('f-lune').value,
-    stars:currentStars, trophy:isCapot?false:isTrophy, relache:isCapot?false:isRelache,
-    capot:isCapot,
-    notes:document.getElementById('f-notes').value, photo:photoData
-  };
-  entries.unshift(entry);
-  localStorage.setItem('peche-entries',JSON.stringify(entries));
-  resetForm(); updateAllStats();
-  showToast(isCapot ? '😔 Capot enregistré…' : '🎣 Sortie enregistrée !');
-  switchView('journal',null); renderJournal();
-}
-
-function resetForm(){
-  ['f-espece','f-taille','f-poids','f-lieu','f-technique','f-temp-air','f-temp-eau','f-lune','f-notes']
-    .forEach(id=>document.getElementById(id).value='');
-  document.querySelectorAll('.meteo-btn').forEach(b=>{b.classList.remove('selected');b.classList.remove('selected-rose');});
-  document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('btn-trophy').classList.remove('selected');
-  document.getElementById('btn-relache').classList.remove('selected');
-  document.getElementById('btn-capot').classList.remove('selected-rose');
-  
-  // Reset photo
-  const container=document.getElementById('photo-preview-container');
-  const preview=document.getElementById('photo-preview');
-  const label=document.getElementById('photo-upload-label');
-  const fileInput=document.getElementById('f-photo');
-  container.style.display='none';
-  preview.src='';
-  label.classList.remove('has-photo');
-  fileInput.value='';
-  photoData=null;
-  
-  const fields=document.getElementById('prise-fields');
-  fields.style.opacity='1'; fields.style.pointerEvents='';
-  const sg=document.getElementById('statut-group');
-  sg.style.opacity='1'; sg.style.pointerEvents='';
-  selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false;
-  const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-  document.getElementById('f-date').value=now.toISOString().slice(0,16);
-}
-
-function deleteEntry(id){
-  if(!confirm('Supprimer cette entrée ?')) return;
-  entries=entries.filter(e=>e.id!==id);
-  localStorage.setItem('peche-entries',JSON.stringify(entries));
-  renderJournal(); updateAllStats();
-  showToast('🗑 Entrée supprimée');
-}
-
-function renderJournal(){
-  const search=document.getElementById('search-input').value.toLowerCase();
-  let filtered=entries.filter(e=>{
-    if(currentFilter==='trophy') return e.trophy;
-    if(currentFilter==='capot') return e.capot;
-    const mF=currentFilter==='tous'||(e.espece&&e.espece.includes(currentFilter));
-    const mS=!search||(e.espece&&e.espece.toLowerCase().includes(search))||(e.lieu&&e.lieu.toLowerCase().includes(search));
-    return mF&&mS;
-  });
-
-  const list=document.getElementById('journal-list');
-  if(!filtered.length){
-    list.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">🎣</span><p>Aucune sortie enregistrée.<br>Ajoutez votre première prise !</p></div>`;
-    return;
+  /* UTILITAIRES */
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2000);
   }
 
-  const isMobile=window.innerWidth<768;
+  function formatDate(d) {
+    return new Date(d).toLocaleDateString("fr-FR");
+  }
 
-  list.innerHTML=filtered.map((e,idx)=>{
-    const date=e.date?new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
-    const heure=e.date?new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
-    const stars=e.stars?'⭐'.repeat(e.stars):'';
-    const tags=[];
-    if(e.technique) tags.push(e.technique);
-    if(e.relache) tags.push("↩️ Remis à l'eau");
-    const cardClass=e.capot?'capot':(e.trophy?'trophy':'');
-    return `
-      <div class="card-wrapper" style="animation-delay:${idx*0.04}s">
-        ${isMobile?`<div class="card-delete-bg" onclick="deleteEntry(${e.id})">🗑<span>Supprimer</span></div>`:''}
-        <div class="entry-card ${cardClass}" data-id="${e.id}">
-          <button class="btn-delete-desktop" onclick="deleteEntry(${e.id})">🗑 Supprimer</button>
-          <div class="entry-card-header">
-            <div>
-              <span class="entry-species">${e.espece||'—'}</span>
-              ${e.trophy?'<span class="photo-badge">🏆 Trophée</span>':''}
-              ${e.capot?'<span class="photo-badge" style="background:linear-gradient(135deg,#7a8fb0,#4a6080)">🚫 Capot</span>':''}
-            </div>
-            <div class="entry-date">${date}<br>${heure}</div>
-          </div>
-          <div class="entry-meta">
-            ${e.taille?`<div class="entry-meta-item"><span>📏</span>${e.taille} cm</div>`:''}
-            ${e.poids!=null?`<div class="entry-meta-item"><span>⚖️</span>${formatPoids(e.poids)}</div>`:''}
-            ${e.lieu?`<div class="entry-meta-item"><span>📍</span>${e.lieu}</div>`:''}
-            ${e.meteo&&e.meteo.length?`<div class="entry-meta-item">${e.meteo.join(' ')}</div>`:''}
-          </div>
-          ${stars?`<div class="entry-stars">${stars}</div>`:''}
-          ${tags.length?`<div class="entry-tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>`:''}
-          ${e.notes?`<div class="entry-notes">"${e.notes.slice(0,100)}${e.notes.length>100?'…':''}"</div>`:''}
-          ${e.photo?`<div style="margin-top:10px"><img src="${e.photo}" style="width:100%;height:130px;object-fit:cover;border-radius:10px"></div>`:''}
-        </div>
-      </div>`;
-  }).join('');
+  /* THEME */
+  function applyTheme() {
+    const theme = localStorage.getItem("theme") || "dark";
+    document.body.classList.toggle("light", theme === "light");
+    document.getElementById("themeToggle").textContent =
+      theme === "light" ? "🌙" : "☀️";
+  }
 
-  if(isMobile){
-    document.querySelectorAll('.entry-card').forEach(card=>{
-      let sx=0,cx=0,d=false;
-      card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;d=true;card.classList.add('swiping');},{passive:true});
-      card.addEventListener('touchmove',e=>{
-        if(!d)return; cx=Math.min(0,Math.max(e.touches[0].clientX-sx,-120));
-        card.style.transform=`translateX(${cx}px)`;
-      },{passive:true});
-      card.addEventListener('touchend',()=>{
-        d=false;card.classList.remove('swiping');
-        card.style.transform=cx<-80?'translateX(-90px)':'';cx=0;
-      });
+  function toggleTheme() {
+    const current = localStorage.getItem("theme") || "dark";
+    const next = current === "dark" ? "light" : "dark";
+    localStorage.setItem("theme", next);
+    applyTheme();
+  }
+
+  /* STORAGE */
+  function loadEntries() {
+    const raw = localStorage.getItem("peche-entries-v2");
+    entries = raw ? JSON.parse(raw) : [];
+  }
+
+  function saveEntries() {
+    localStorage.setItem("peche-entries-v2", JSON.stringify(entries));
+  }
+
+  /* STATS */
+  function updateStats() {
+    const statsEl = document.getElementById("stats");
+    const sorties = entries.length;
+    let prises = 0;
+    let trophies = 0;
+
+    entries.forEach(e => {
+      prises += e.prises.length;
+      trophies += e.prises.filter(p => p.trophy === "oui").length;
+    });
+
+    statsEl.textContent =
+      `${sorties} sortie${sorties > 1 ? "s" : ""} · ` +
+      `${prises} prise${prises > 1 ? "s" : ""}` +
+      (trophies ? ` · ${trophies} trophée${trophies > 1 ? "s" : ""}` : "");
+  }
+
+  /* FILTRES */
+  const filters = {
+    espece: "",
+    lieu: "",
+    trophy: "",
+    stars: "",
+    dateMin: "",
+    dateMax: "",
+    meteo: ""
+  };
+
+  function applyFiltersToEntries() {
+    return entries.filter(e => {
+      const date = new Date(e.date);
+
+      if (filters.stars) {
+        if ((e.stars || 0) < Number(filters.stars)) return false;
+      }
+
+      if (filters.dateMin) {
+        if (date < new Date(filters.dateMin)) return false;
+      }
+      if (filters.dateMax) {
+        if (date > new Date(filters.dateMax)) return false;
+      }
+
+      if (filters.meteo) {
+        const m = filters.meteo.toLowerCase();
+        const has = (e.meteo || []).some(tag =>
+          tag.toLowerCase().includes(m)
+        );
+        if (!has) return false;
+      }
+
+      let prises = e.prises;
+
+      if (filters.espece) {
+        prises = prises.filter(p => p.espece === filters.espece);
+        if (!prises.length) return false;
+      }
+
+      if (filters.lieu) {
+        if (e.lieu !== filters.lieu) return false;
+      }
+
+      if (filters.trophy) {
+        const hasTrophy = e.prises.some(p => p.trophy === filters.trophy);
+        if (!hasTrophy) return false;
+      }
+
+      return true;
     });
   }
-}
 
-function formatPoids(kg){
-  if(kg==null) return '';
-  const val = kg > 100 ? kg/1000 : kg;
-  return val < 1 ? (val*1000).toFixed(0)+' g' : val.toFixed(3).replace(/\.?0+$/,'')+' kg';
-}
+  function populateFilterOptions() {
+    const especeSet = new Set();
+    const lieuSet = new Set();
 
-function updateAllStats(){
-  const total=entries.length;
-  const records=entries.filter(e=>e.poids!=null&&!e.capot);
-  const recKg = records.length ? Math.max(...records.map(e=>e.poids>100?e.poids/1000:e.poids)) : null;
-  const rec = recKg!=null ? formatPoids(recKg) : '—';
-  const species=new Set(entries.filter(e=>!e.capot).map(e=>e.espece)).size;
-  ['m-total','m-poissons'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.textContent=i===0?total:species;});
-  const mr=document.getElementById('m-record');if(mr)mr.textContent=rec;
-  const st=document.getElementById('s-total');if(st)st.textContent=total;
-  const sr=document.getElementById('s-record');if(sr)sr.textContent=rec;
-}
+    entries.forEach(e => {
+      lieuSet.add(e.lieu);
+      e.prises.forEach(p => especeSet.add(p.espece));
+    });
 
-function updateStats(){
-  const el=document.getElementById('stats-content');
-  if(!entries.length){
-    el.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">📊</span><p>Pas encore de données.</p></div>`;
-    return;
+    const especeSelect = document.getElementById("filterEspece");
+    const lieuSelect = document.getElementById("filterLieu");
+
+    especeSelect.innerHTML = '<option value="">Toutes</option>';
+    lieuSelect.innerHTML = '<option value="">Tous</option>';
+
+    Array.from(especeSet).sort().forEach(es => {
+      const opt = document.createElement("option");
+      opt.value = es;
+      opt.textContent = es;
+      especeSelect.appendChild(opt);
+    });
+
+    Array.from(lieuSet).sort().forEach(l => {
+      const opt = document.createElement("option");
+      opt.value = l;
+      opt.textContent = l;
+      lieuSelect.appendChild(opt);
+    });
   }
-  const prises=entries.filter(e=>!e.capot);
-  const capots=entries.filter(e=>e.capot);
-  const sp={};prises.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+1;});
-  const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
-  const maxC=sorted.length?sorted[0][1]:1;
-  const wP=[...prises].filter(e=>e.poids!=null).sort((a,b)=>{
-    const ka=a.poids>100?a.poids/1000:a.poids;
-    const kb=b.poids>100?b.poids/1000:b.poids;
-    return kb-ka;
-  });
-  const wT=[...prises].filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
-  const lx={};entries.forEach(e=>{if(e.lieu)lx[e.lieu]=(lx[e.lieu]||0)+1;});
-  const tL=Object.entries(lx).sort((a,b)=>b[1]-a[1])[0];
 
-  el.innerHTML=`
-    ${sorted.length?`
-    <div class="stat-card">
-      <div class="stat-card-title">🐟 Espèces capturées</div>
-      ${sorted.map(([s,c])=>`<div class="species-bar"><span class="species-name">${s}</span><div class="bar-track"><div class="bar-fill" style="width:${c/maxC*100}%"></div></div><span class="bar-count">${c}</span></div>`).join('')}
-    </div>`:''}
-    ${wP.length||wT.length?`
-    <div class="stat-card">
-      <div class="stat-card-title">🏆 Records</div>
-      ${wP[0]?`<div class="record-item"><span class="record-icon">⚖️</span><div class="record-info"><div class="species">${wP[0].espece}</div><div class="detail">${wP[0].lieu||'Lieu non précisé'}</div></div><span class="record-value">${formatPoids(wP[0].poids>100?wP[0].poids/1000:wP[0].poids)}</span></div>`:''}
-      ${wT[0]?`<div class="record-item"><span class="record-icon">📏</span><div class="record-info"><div class="species">${wT[0].espece}</div><div class="detail">${wT[0].lieu||'Lieu non précisé'}</div></div><span class="record-value">${wT[0].taille} cm</span></div>`:''}
-    </div>`:''}
-    <div class="stat-card">
-      <div class="stat-card-title">📋 Résumé</div>
-      <div class="record-item"><span class="record-icon">🎣</span><div class="record-info"><div class="species">Total sorties</div></div><span class="record-value">${entries.length}</span></div>
-      <div class="record-item"><span class="record-icon">🐟</span><div class="record-info"><div class="species">Sorties avec prise</div></div><span class="record-value">${prises.length}</span></div>
-      <div class="record-item"><span class="record-icon">🚫</span><div class="record-info"><div class="species">Capots (bredouille)</div></div><span class="record-value">${capots.length}</span></div>
-      <div class="record-item"><span class="record-icon">🏆</span><div class="record-info"><div class="species">Trophées</div></div><span class="record-value">${prises.filter(e=>e.trophy).length}</span></div>
-      ${tL?`<div class="record-item"><span class="record-icon">📍</span><div class="record-info"><div class="species">Spot favori</div><div class="detail">${tL[1]} visite${tL[1]>1?'s':''}</div></div><span class="record-value" style="font-size:13px;max-width:110px;text-align:right">${tL[0]}</span></div>`:''}
-      <div class="record-item"><span class="record-icon">↩️</span><div class="record-info"><div class="species">Remises à l'eau</div></div><span class="record-value">${prises.filter(e=>e.relache).length}</span></div>
-    </div>`;
-}
+  /* RENDU JOURNAL */
+  function renderJournal() {
+    const list = document.getElementById("journalList");
+    list.innerHTML = "";
 
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
-}
+    const filtered = applyFiltersToEntries();
 
-let menuOpen=false;
-function toggleMenu(){
-  menuOpen=!menuOpen;
-  document.getElementById('menu-overlay').classList.toggle('open',menuOpen);
-  document.getElementById('fab-btn').classList.toggle('open',menuOpen);
-  document.getElementById('fab-btn').textContent=menuOpen?'✕':'☰';
-}
-function closeMenu(){
-  menuOpen=false;
-  document.getElementById('menu-overlay').classList.remove('open');
-  document.getElementById('fab-btn').classList.remove('open');
-  document.getElementById('fab-btn').textContent='☰';
-}
-function closeMenuOnOverlay(e){
-  if(e.target===document.getElementById('menu-overlay')) closeMenu();
-}
-function popupNav(name){
-  closeMenu();
-  switchView(name,null);
-  document.querySelectorAll('.menu-popup-item').forEach(b=>b.classList.remove('active-view'));
-  const el=document.getElementById('mpop-'+name);
-  if(el) el.classList.add('active-view');
-}
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-let spots = JSON.parse(localStorage.getItem('peche-spots')||'[]');
+    filtered.forEach(entry => {
+      const card = document.createElement("div");
+      card.className = "card";
 
-function geoLocate(){
-  const btn=document.getElementById('geo-btn');
-  if(!navigator.geolocation){showToast('❌ GPS non disponible');return;}
-  btn.textContent='📡 Localisation…';
-  btn.disabled=true;
-  navigator.geolocation.getCurrentPosition(
-    pos=>{
-      const {latitude:lat,longitude:lng}=pos.coords;
-      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
-        .then(r=>r.json())
-        .then(data=>{
-          const addr=data.address||{};
-          const nom=addr.leisure||addr.water||addr.natural||addr.village||addr.town||addr.city||addr.hamlet||`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-          document.getElementById('f-lieu').value=nom;
-          btn.textContent='✅ Position obtenue';
-          btn.disabled=false;
-          if(!spots.find(s=>s.nom===nom)){
-            if(confirm(`📍 Enregistrer "${nom}" comme spot favori ?`)){
-              spots.unshift({id:Date.now(),nom,lat,lng});
-              localStorage.setItem('peche-spots',JSON.stringify(spots));
-              renderSpotsForm();
-              renderSpotsPage();
-              showToast('⭐ Spot enregistré !');
-            }
-          }
-        })
-        .catch(()=>{
-          const nom=`${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-          document.getElementById('f-lieu').value=nom;
-          btn.textContent='📡 Utiliser ma position GPS';
-          btn.disabled=false;
-        });
-    },
-    err=>{
-      btn.textContent='📡 Utiliser ma position GPS';
-      btn.disabled=false;
-      showToast('❌ Impossible d\'obtenir la position');
-    },
-    {timeout:10000,enableHighAccuracy:true}
-  );
-}
+      const photos = entry.prises
+        .map(p => p.photo)
+        .filter(p => p && p.trim() !== "");
 
-function renderSpotsForm(){
-  const box=document.getElementById('spots-favoris-box');
-  const list=document.getElementById('spots-list');
-  if(!spots.length){box.style.display='none';return;}
-  box.style.display='block';
-  list.innerHTML=spots.map(s=>`
-    <div class="spot-chip" onclick="useSpot('${s.nom.replace(/'/g,"\\'")}')">
-      📍 <span style="flex:1">${s.nom}</span>
-      <button class="spot-del" onclick="deleteSpot(${s.id},event)" title="Supprimer">✕</button>
-    </div>`).join('');
-}
+      card.innerHTML = `
+        <div class="card-header">
+          <h3>${entry.lieu}</h3>
+          <span>${formatDate(entry.date)}</span>
+        </div>
+        <div class="card-meta">
+          ${entry.prises.length} prise${entry.prises.length > 1 ? "s" : ""}
+          · <span class="stars">${"⭐".repeat(entry.stars || 0)}</span>
+        </div>
+        ${
+          entry.meteo.length
+            ? `<div class="card-meta">
+                 ${entry.meteo.map(m => `<span class="tag">${m}</span>`).join("")}
+               </div>`
+            : ""
+        }
+        ${
+          photos.length
+            ? `<div class="mini-galerie">
+                 ${photos
+                   .map(src => `<img src="${src}" class="mini-photo">`)
+                   .join("")}
+               </div>`
+            : ""
+        }
+      `;
 
-function useSpot(nom){
-  document.getElementById('f-lieu').value=nom;
-  showToast(`📍 Spot sélectionné : ${nom}`);
-}
+      card.addEventListener("click", () => openDetail(entry.id));
+      list.appendChild(card);
+    });
 
-function deleteSpot(id,e){
-  e.stopPropagation();
-  spots=spots.filter(s=>s.id!==id);
-  localStorage.setItem('peche-spots',JSON.stringify(spots));
-  renderSpotsForm();
-  renderSpotsPage();
-}
-
-function renderSpotsPage(){
-  const el=document.getElementById('spots-page-content');
-  if(!el) return;
-  if(!spots.length){
-    el.innerHTML=`
-      <div class="empty-state">
-        <span class="icon">📍</span>
-        <p>Aucun spot enregistré.<br>Utilisez le GPS lors d'une sortie pour<br>enregistrer vos spots favoris !</p>
-      </div>`;
-    return;
+    updateStats();
+    populateFilterOptions();
   }
-  el.innerHTML=`
-    <p style="font-family:'Playfair Display',serif;font-size:20px;color:var(--eau-profonde);margin-bottom:16px">
-      <small style="font-family:'DM Sans',sans-serif;font-size:11px;color:var(--gris);font-weight:400;display:block;text-transform:uppercase;letter-spacing:1px">Mes lieux</small>
-      Spots favoris
-    </p>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      ${spots.map(s=>{
-        const sorties=entries.filter(e=>e.lieu===s.nom).length;
-        const mapsUrl=`https://maps.google.com/?q=${s.lat},${s.lng}`;
-        return `
-        <div style="background:white;border-radius:14px;padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,0.07);border-left:4px solid var(--eau-claire);display:flex;align-items:center;gap:12px">
-          <span style="font-size:28px">📍</span>
-          <div style="flex:1">
-            <div style="font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:var(--eau-profonde)">${s.nom}</div>
-            <div style="font-size:12px;color:var(--gris);margin-top:3px">${sorties} sortie${sorties>1?'s':''} enregistrée${sorties>1?'s':''}</div>
-            <div style="font-size:11px;color:#aab;margin-top:2px">${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-            <a href="${mapsUrl}" target="_blank" style="font-size:11px;color:var(--eau-claire);font-weight:600;text-decoration:none;padding:4px 10px;background:var(--bleu-clair);border-radius:8px">🗺 Maps</a>
-            <button onclick="deleteSpot(${s.id},event)" style="font-size:11px;color:var(--rouge);background:#fee;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600">✕ Suppr.</button>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-}
 
-function exportData(){
-  if(!entries.length){ showToast('⚠️ Aucune donnée à exporter'); return; }
-  const data = { version:1, exportDate: new Date().toISOString(), entries };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const url  = URL.createObjectURL(blob);
-  const date = new Date().toISOString().slice(0,10);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.download = `carnet-peche-${date}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast(`📤 ${entries.length} sortie(s) exportée(s) !`);
-}
+  /* FORMULAIRE AJOUT */
+  function resetForm() {
+    const form = document.getElementById("entryForm");
+    form.reset();
+    document.getElementById("date").valueAsDate = new Date();
+  }
 
-function importData(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      const imported = data.entries || data;
-      if(!Array.isArray(imported)) throw new Error('Format invalide');
-      const existingIds = new Set(entries.map(e=>e.id));
-      const nouveaux = imported.filter(e=>!existingIds.has(e.id));
-      entries = [...nouveaux, ...entries];
-      localStorage.setItem('peche-entries', JSON.stringify(entries));
-      renderJournal(); updateAllStats();
-      showToast(`📥 ${nouveaux.length} nouvelle(s) sortie(s) importée(s) !`);
-    } catch(err) {
-      showToast('❌ Fichier invalide');
+  function saveEntry(e) {
+    e.preventDefault();
+
+    const date = document.getElementById("date").value;
+    const lieu = document.getElementById("lieu").value.trim();
+    const espece = document.getElementById("espece").value.trim();
+    const taille = document.getElementById("taille").value;
+    const poids = document.getElementById("poids").value;
+    const technique = document.getElementById("technique").value.trim();
+    const stars = Number(document.getElementById("stars").value);
+    const photo = document.getElementById("photo").value.trim();
+    const relache = document.getElementById("relache").value;
+    const trophy = document.getElementById("trophy").value;
+    const notes = document.getElementById("notes").value.trim();
+    const meteo = document
+      .getElementById("meteo")
+      .value.split(",")
+      .map(m => m.trim())
+      .filter(Boolean);
+
+    if (!date || !lieu || !espece) {
+      showToast("Date, lieu et espèce obligatoires");
+      return;
     }
-    event.target.value = '';
-  };
-  reader.readAsText(file);
-}
 
-let rt;
-window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJournal,200); });
+    const dateISO = new Date(date).toISOString();
+    const jour = dateISO.split("T")[0];
 
-init();
-</script>
+    const prise = {
+      espece,
+      taille: taille ? Number(taille) : null,
+      poids: poids ? Number(poids) : null,
+      technique,
+      trophy,
+      relache,
+      notes,
+      photo
+    };
+
+    let sortie = entries.find(
+      e => e.date.startsWith(jour) && e.lieu === lieu
+    );
+
+    if (sortie) {
+      sortie.prises.push(prise);
+      sortie.stars = Math.max(sortie.stars || 0, stars);
+      sortie.meteo = [...new Set([...(sortie.meteo || []), ...meteo])];
+      saveEntries();
+      showToast("Prise ajoutée 🎣");
+    } else {
+      entries.unshift({
+        id: Date.now(),
+        date: dateISO,
+        lieu,
+        stars,
+        meteo,
+        prises: [prise]
+      });
+      saveEntries();
+      showToast("Sortie enregistrée 🎣");
+    }
+
+    resetForm();
+    switchView("journal");
+    renderJournal();
+  }
+
+  /* VUES */
+  function switchView(view) {
+    const journal = document.getElementById("journalView");
+    const form = document.getElementById("formView");
+    const btn = document.getElementById("toggleViewBtn");
+
+    if (view === "form") {
+      journal.classList.add("hidden");
+      form.classList.remove("hidden");
+      btn.textContent = "Voir le journal";
+    } else {
+      journal.classList.remove("hidden");
+      form.classList.add("hidden");
+      btn.textContent = "Nouvelle prise";
+    }
+  }
+
+  /* DETAIL */
+  function openDetail(id) {
+    currentSortie = entries.find(e => e.id === id);
+    if (!currentSortie) return;
+
+    const container = document.getElementById("detailContent");
+
+    const photos = currentSortie.prises
+      .map(p => p.photo)
+      .filter(p => p && p.trim() !== "");
+
+    const prisesHTML = currentSortie.prises
+      .map(
+        (p, idx) => `
+      <div class="card" style="cursor: default; margin-bottom:8px;">
+        <div class="card-meta">
+          <strong>${p.espece}</strong>
+          ${
+            p.trophy === "oui"
+              ? '<span class="tag" style="margin-left:6px;">Trophée</span>'
+              : ""
+          }
+        </div>
+        <div class="card-meta">
+          ${
+            p.taille
+              ? `${p.taille} cm`
+              : ""
+          } ${
+          p.poids
+            ? (p.taille ? " · " : "") + `${p.poids} kg`
+            : ""
+        }
+        </div>
+        ${
+          p.technique
+            ? `<div class="card-meta">Technique : ${p.technique}</div>`
+            : ""
+        }
+        <div class="card-meta">
+          Relâché : ${p.relache === "oui" ? "Oui" : "Non"}
+        </div>
+        ${
+          p.notes
+            ? `<div class="card-meta">Notes : ${p.notes}</div>`
+            : ""
+        }
+        <button class="btn-secondary" style="margin-top:6px;"
+          onclick="openEditPrise(${currentSortie.id}, ${idx}); event.stopPropagation();">
+          Modifier cette prise
+        </button>
+      </div>
+    `
+      )
+      .join("");
+
+    container.innerHTML = `
+      ${
+        photos.length
+          ? `<div class="carousel">
+               ${photos
+                 .map(src => `<img src="${src}" alt="prise">`)
+                 .join("")}
+             </div>`
+          : ""
+      }
+      <div class="card-meta">
+        <strong>${currentSortie.lieu}</strong> · ${formatDate(
+      currentSortie.date
+    )}
+      </div>
+      <div class="card-meta">
+        ${currentSortie.prises.length} prise${
+      currentSortie.prises.length > 1 ? "s" : ""
+    } ·
+        <span class="stars">${"⭐".repeat(currentSortie.stars || 0)}</span>
+      </div>
+      ${
+        currentSortie.meteo.length
+          ? `<div class="card-meta">
+               ${currentSortie.meteo
+                 .map(m => `<span class="tag">${m}</span>`)
+                 .join("")}
+             </div>`
+          : ""
+      }
+      <h3>Prises</h3>
+      ${prisesHTML || "<p>Aucune prise.</p>"}
+    `;
+
+    document.getElementById("detailPanel").classList.add("open");
+  }
+
+  function closeDetail() {
+    document.getElementById("detailPanel").classList.remove("open");
+    currentSortie = null;
+  }
+
+  /* EDIT SORTIE */
+  function openEditSortie() {
+    if (!currentSortie) return;
+    document.getElementById("editSortieLieu").value = currentSortie.lieu;
+    document.getElementById("editSortieStars").value = currentSortie.stars || 0;
+    document.getElementById("editSortieMeteo").value =
+      (currentSortie.meteo || []).join(", ");
+    document.getElementById("editSortiePanel").classList.add("open");
+  }
+
+  function closeEditSortie() {
+    document.getElementById("editSortiePanel").classList.remove("open");
+  }
+
+  function submitEditSortie(e) {
+    e.preventDefault();
+    if (!currentSortie) return;
+
+    currentSortie.lieu =
+      document.getElementById("editSortieLieu").value.trim() ||
+      currentSortie.lieu;
+    currentSortie.stars = Number(
+      document.getElementById("editSortieStars").value
+    );
+    const meteoRaw = document
+      .getElementById("editSortieMeteo")
+      .value.split(",")
+      .map(m => m.trim())
+      .filter(Boolean);
+    currentSortie.meteo = meteoRaw;
+
+    saveEntries();
+    showToast("Sortie modifiée");
+    closeEditSortie();
+    renderJournal();
+    openDetail(currentSortie.id);
+  }
+
+  function deleteSortie() {
+    if (!currentSortie) return;
+    if (!confirm("Supprimer cette sortie ?")) return;
+    entries = entries.filter(e => e.id !== currentSortie.id);
+    saveEntries();
+    showToast("Sortie supprimée");
+    closeDetail();
+    renderJournal();
+  }
+
+  /* EDIT PRISE */
+  function openEditPrise(sortieId, index) {
+    currentSortie = entries.find(e => e.id === sortieId);
+    if (!currentSortie) return;
+    currentPriseIndex = index;
+    const p = currentSortie.prises[index];
+
+    document.getElementById("editPriseEspece").value = p.espece || "";
+    document.getElementById("editPriseTaille").value = p.taille || "";
+    document.getElementById("editPrisePoids").value = p.poids || "";
+    document.getElementById("editPriseTechnique").value = p.technique || "";
+    document.getElementById("editPrisePhoto").value = p.photo || "";
+    document.getElementById("editPriseRelache").value = p.relache || "oui";
+    document.getElementById("editPriseTrophy").value = p.trophy || "non";
+    document.getElementById("editPriseNotes").value = p.notes || "";
+
+    document.getElementById("editPrisePanel").classList.add("open");
+  }
+
+  function closeEditPrise() {
+    document.getElementById("editPrisePanel").classList.remove("open");
+    currentPriseIndex = null;
+  }
+
+  function submitEditPrise(e) {
+    e.preventDefault();
+    if (!currentSortie || currentPriseIndex === null) return;
+
+    const p = currentSortie.prises[currentPriseIndex];
+
+    p.espece = document.getElementById("editPriseEspece").value.trim();
+    p.taille = document.getElementById("editPriseTaille").value
+      ? Number(document.getElementById("editPriseTaille").value)
+      : null;
+    p.poids = document.getElementById("editPrisePoids").value
+      ? Number(document.getElementById("editPrisePoids").value)
+      : null;
+    p.technique = document
+      .getElementById("editPriseTechnique")
+      .value.trim();
+    p.photo = document.getElementById("editPrisePhoto").value.trim();
+    p.relache = document.getElementById("editPriseRelache").value;
+    p.trophy = document.getElementById("editPriseTrophy").value;
+    p.notes = document.getElementById("editPriseNotes").value.trim();
+
+    saveEntries();
+    showToast("Prise modifiée");
+    closeEditPrise();
+    renderJournal();
+    openDetail(currentSortie.id);
+  }
+
+  function deletePrise() {
+    if (!currentSortie || currentPriseIndex === null) return;
+    if (!confirm("Supprimer cette prise ?")) return;
+
+    currentSortie.prises.splice(currentPriseIndex, 1);
+
+    if (!currentSortie.prises.length) {
+      entries = entries.filter(e => e.id !== currentSortie.id);
+      closeDetail();
+    }
+
+    saveEntries();
+    showToast("Prise supprimée");
+    closeEditPrise();
+    renderJournal();
+    if (currentSortie.prises.length) openDetail(currentSortie.id);
+  }
+
+  /* INIT */
+  document.addEventListener("DOMContentLoaded", () => {
+    applyTheme();
+    loadEntries();
+    renderJournal();
+    resetForm();
+
+    document
+      .getElementById("themeToggle")
+      .addEventListener("click", toggleTheme);
+
+    document
+      .getElementById("entryForm")
+      .addEventListener("submit", saveEntry);
+
+    document
+      .getElementById("toggleViewBtn")
+      .addEventListener("click", () => {
+        const formView = document.getElementById("formView");
+        switchView(formView.classList.contains("hidden") ? "form" : "journal");
+      });
+
+    document
+      .getElementById("cancelBtn")
+      .addEventListener("click", () => {
+        resetForm();
+        switchView("journal");
+      });
+
+    document
+      .getElementById("filtersToggle")
+      .addEventListener("click", () => {
+        document
+          .getElementById("filtersPanel")
+          .classList.toggle("hidden");
+      });
+
+    document
+      .getElementById("applyFilters")
+      .addEventListener("click", () => {
+        filters.espece = document.getElementById("filterEspece").value;
+        filters.lieu = document.getElementById("filterLieu").value;
+        filters.trophy = document.getElementById("filterTrophy").value;
+        filters.stars = document.getElementById("filterStars").value;
+        filters.dateMin = document.getElementById("filterDateMin").value;
+        filters.dateMax = document.getElementById("filterDateMax").value;
+        filters.meteo = document.getElementById("filterMeteo").value.trim();
+        renderJournal();
+      });
+
+    document
+      .getElementById("resetFilters")
+      .addEventListener("click", () => {
+        Object.keys(filters).forEach(k => (filters[k] = ""));
+        document.getElementById("filterEspece").value = "";
+        document.getElementById("filterLieu").value = "";
+        document.getElementById("filterTrophy").value = "";
+        document.getElementById("filterStars").value = "";
+        document.getElementById("filterDateMin").value = "";
+        document.getElementById("filterDateMax").value = "";
+        document.getElementById("filterMeteo").value = "";
+        renderJournal();
+      });
+
+    document
+      .getElementById("closeDetail")
+      .addEventListener("click", closeDetail);
+
+    document
+      .getElementById("editSortieBtn")
+      .addEventListener("click", openEditSortie);
+
+    document
+      .getElementById("deleteSortieBtn")
+      .addEventListener("click", deleteSortie);
+
+    document
+      .getElementById("editSortieForm")
+      .addEventListener("submit", submitEditSortie);
+
+    document
+      .getElementById("closeEditSortie")
+      .addEventListener("click", closeEditSortie);
+
+    document
+      .getElementById("editPriseForm")
+      .addEventListener("submit", submitEditPrise);
+
+    document
+      .getElementById("closeEditPrise")
+      .addEventListener("click", closeEditPrise);
+
+    document
+      .getElementById("deletePriseBtn")
+      .addEventListener("click", deletePrise);
+  });
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+    }
+  </script>
+
 </body>
 </html>
+
+
+
