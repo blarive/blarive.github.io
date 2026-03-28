@@ -1,24 +1,23 @@
 {
-  "name": "Carnet de Pêche",
-  "short_name": "Pêche 🎣",
-  "description": "Mon journal de pêche personnel",
-  "start_url": "./index.html",
+  "name": "Journal de pêche",
+  "short_name": "Pêche",
+  "description": "Ton journal de pêche moderne, offline et installable.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0d2231",
-  "theme_color": "#1a3a4a",
-  "orientation": "portrait-primary",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
