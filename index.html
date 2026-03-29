@@ -14,7 +14,7 @@
   /* Bannière mise à jour — désactivée (rechargement automatique) */
   .update-banner{ display:none !important; }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
 <!-- Leaflet.js pour la carte interactive -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -485,7 +485,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 <!-- BANNIÈRE MISE À JOUR -->
 <div class="update-banner" id="update-banner">
   <span>🆕 Une nouvelle version est disponible !</span>
-  <button class="update-banner-btn" onclick="applyUpdate()">Mettre à jour</button>
+  <button type="button" class="update-banner-btn" onclick="applyUpdate()">Mettre à jour</button>
 </div>
 
 <!-- MOBILE HEADER -->
@@ -511,18 +511,18 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
     <div class="sidebar-stat"><span class="label">Record</span><span class="num" id="s-record" style="font-size:14px">—</span></div>
   </div>
   <nav class="sidebar-nav">
-    <button class="nav-item active" onclick="switchView('journal',this)"><span class="nav-icon">📖</span> Journal</button>
-    <button class="nav-item" onclick="switchView('ajouter',this)"><span class="nav-icon">➕</span> Ajouter une prise</button>
-    <button class="nav-item" onclick="switchView('stats',this)"><span class="nav-icon">📊</span> Statistiques</button>
-    <button class="nav-item" onclick="switchView('spots',this)"><span class="nav-icon">📍</span> Mes Spots</button>
-    <button class="nav-item" onclick="switchView('appats',this)"><span class="nav-icon">🪱</span> Carnet d'appâts</button>
-    <button class="nav-item" onclick="switchView('rapport',this)"><span class="nav-icon">📄</span> Rapport & Export</button>
+    <button type="button" class="nav-item active" onclick="switchView('journal',this)"><span class="nav-icon">📖</span> Journal</button>
+    <button type="button" class="nav-item" onclick="switchView('ajouter',this)"><span class="nav-icon">➕</span> Ajouter une prise</button>
+    <button type="button" class="nav-item" onclick="switchView('stats',this)"><span class="nav-icon">📊</span> Statistiques</button>
+    <button type="button" class="nav-item" onclick="switchView('spots',this)"><span class="nav-icon">📍</span> Mes Spots</button>
+    <button type="button" class="nav-item" onclick="switchView('appats',this)"><span class="nav-icon">🪱</span> Carnet d'appâts</button>
+    <button type="button" class="nav-item" onclick="switchView('rapport',this)"><span class="nav-icon">📄</span> Rapport & Export</button>
     <div style="height:1px;background:rgba(255,255,255,0.1);margin:10px 4px"></div>
-    <button class="nav-item" onclick="exportData()"><span class="nav-icon">📤</span> Exporter</button>
-    <button class="nav-item" onclick="document.getElementById('import-file').click()"><span class="nav-icon">📥</span> Importer</button>
-    <button class="nav-item" onclick="switchView('parametres',this)"><span class="nav-icon">⚙️</span> Paramètres</button>
-    <button class="nav-item" onclick="toggleDarkMode()"><span class="nav-icon" id="dark-icon">🌙</span> <span id="dark-label">Mode sombre</span></button>
-    <button class="nav-item" onclick="openInfo()" style="opacity:0.75"><span class="nav-icon">ℹ️</span> À propos</button>
+    <button type="button" class="nav-item" onclick="exportData()"><span class="nav-icon">📤</span> Exporter</button>
+    <button type="button" class="nav-item" onclick="document.getElementById('import-file').click()"><span class="nav-icon">📥</span> Importer</button>
+    <button type="button" class="nav-item" onclick="switchView('parametres',this)"><span class="nav-icon">⚙️</span> Paramètres</button>
+    <button type="button" class="nav-item" onclick="toggleDarkMode()"><span class="nav-icon" id="dark-icon">🌙</span> <span id="dark-label">Mode sombre</span></button>
+    <button type="button" class="nav-item" onclick="openInfo()" style="opacity:0.75"><span class="nav-icon">ℹ️</span> À propos</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
   </nav>
 </aside>
@@ -532,11 +532,11 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
   <div class="topbar">
     <div class="topbar-title" id="topbar-title"><small>Mes sorties</small>Journal de pêche</div>
     <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn-secondary" onclick="toggleDarkMode()" id="dark-btn" title="Mode sombre">🌙</button>
-      <button class="btn-secondary" onclick="exportData()">📤 Exporter</button>
-      <button class="btn-secondary" onclick="document.getElementById('import-file').click()">📥 Importer</button>
-      <button class="btn-secondary" onclick="openInfo()" title="Informations" style="opacity:0.7">ℹ️</button>
-      <button class="btn-primary" onclick="switchView('ajouter',null)">➕ Nouvelle prise</button>
+      <button type="button" class="btn-secondary" onclick="toggleDarkMode()" id="dark-btn" title="Mode sombre">🌙</button>
+      <button type="button" class="btn-secondary" onclick="exportData()">📤 Exporter</button>
+      <button type="button" class="btn-secondary" onclick="document.getElementById('import-file').click()">📥 Importer</button>
+      <button type="button" class="btn-secondary" onclick="openInfo()" title="Informations" style="opacity:0.7">ℹ️</button>
+      <button type="button" class="btn-primary" onclick="switchView('ajouter',null)">➕ Nouvelle prise</button>
     </div>
   </div>
 
@@ -548,14 +548,14 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
         <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="renderJournal()"></div>
       </div>
       <div class="filter-pills">
-        <button class="filter-pill active" onclick="setFilter('tous',this)">Toutes</button>
-        <button class="filter-pill" onclick="setFilter('Carpe',this)">🐟 Carpe</button>
-        <button class="filter-pill" onclick="setFilter('Brochet',this)">🦈 Brochet</button>
-        <button class="filter-pill" onclick="setFilter('Truite',this)">🐠 Truite</button>
-        <button class="filter-pill" onclick="setFilter('Sandre',this)">🐡 Sandre</button>
-        <button class="filter-pill" onclick="setFilter('Perche',this)">Perche</button>
-        <button class="filter-pill" onclick="setFilter('trophy',this)">🏆 Trophées</button>
-        <button class="filter-pill" onclick="setFilter('capot',this)">🚫 Capots</button>
+        <button type="button" class="filter-pill active" onclick="setFilter('tous',this)">Toutes</button>
+        <button type="button" class="filter-pill" onclick="setFilter('Carpe',this)">🐟 Carpe</button>
+        <button type="button" class="filter-pill" onclick="setFilter('Brochet',this)">🦈 Brochet</button>
+        <button type="button" class="filter-pill" onclick="setFilter('Truite',this)">🐠 Truite</button>
+        <button type="button" class="filter-pill" onclick="setFilter('Sandre',this)">🐡 Sandre</button>
+        <button type="button" class="filter-pill" onclick="setFilter('Perche',this)">Perche</button>
+        <button type="button" class="filter-pill" onclick="setFilter('trophy',this)">🏆 Trophées</button>
+        <button type="button" class="filter-pill" onclick="setFilter('capot',this)">🚫 Capots</button>
       </div>
       <div class="cards-grid" id="journal-list"></div>
     </div>
@@ -576,7 +576,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
           <div class="form-group">
             <label class="form-label">📋 Type de sortie</label>
             <div class="meteo-btns">
-              <button class="meteo-btn" id="btn-capot" onclick="toggleCapot(this)">🚫 Capot (bredouille)</button>
+              <button type="button" class="meteo-btn" id="btn-capot" onclick="toggleCapot(this)">🚫 Capot (bredouille)</button>
             </div>
           </div>
           <div id="prise-fields">
@@ -644,12 +644,12 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
           <div class="form-group">
             <label class="form-label">🌤 Météo</label>
             <div class="meteo-btns">
-              <button class="meteo-btn" onclick="toggleMeteo(this,'☀️ Soleil')">☀️ Soleil</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'⛅ Nuageux')">⛅ Nuageux</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'🌧 Pluie')">🌧 Pluie</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'💨 Vent')">💨 Vent</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'🌫 Brume')">🌫 Brume</button>
-              <button class="meteo-btn" onclick="toggleMeteo(this,'❄️ Froid')">❄️ Froid</button>
+              <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'☀️ Soleil')">☀️ Soleil</button>
+              <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'⛅ Nuageux')">⛅ Nuageux</button>
+              <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'🌧 Pluie')">🌧 Pluie</button>
+              <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'💨 Vent')">💨 Vent</button>
+              <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'🌫 Brume')">🌫 Brume</button>
+              <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'❄️ Froid')">❄️ Froid</button>
             </div>
           </div>
           <div class="form-row-3">
@@ -674,18 +674,18 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
           <div class="form-group">
             <label class="form-label">⭐ Note de la sortie</label>
             <div class="stars-input">
-              <button class="star-btn" onclick="setStar(1)">⭐</button>
-              <button class="star-btn" onclick="setStar(2)">⭐</button>
-              <button class="star-btn" onclick="setStar(3)">⭐</button>
-              <button class="star-btn" onclick="setStar(4)">⭐</button>
-              <button class="star-btn" onclick="setStar(5)">⭐</button>
+              <button type="button" class="star-btn" onclick="setStar(1)">⭐</button>
+              <button type="button" class="star-btn" onclick="setStar(2)">⭐</button>
+              <button type="button" class="star-btn" onclick="setStar(3)">⭐</button>
+              <button type="button" class="star-btn" onclick="setStar(4)">⭐</button>
+              <button type="button" class="star-btn" onclick="setStar(5)">⭐</button>
             </div>
           </div>
           <div class="form-group" id="statut-group">
             <label class="form-label">🏅 Statut de la prise</label>
             <div class="meteo-btns">
-              <button class="meteo-btn" id="btn-trophy" onclick="toggleTrophy(this)">🏆 Trophée</button>
-              <button class="meteo-btn" id="btn-relache" onclick="toggleRelache(this)">↩️ Remis à l'eau</button>
+              <button type="button" class="meteo-btn" id="btn-trophy" onclick="toggleTrophy(this)">🏆 Trophée</button>
+              <button type="button" class="meteo-btn" id="btn-relache" onclick="toggleRelache(this)">↩️ Remis à l'eau</button>
             </div>
           </div>
           <div class="form-group">
@@ -704,7 +704,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
               </div>
             </label>
           </div>
-          <button class="btn-submit" onclick="saveEntry()">✅ Enregistrer la sortie</button>
+          <button type="button" class="btn-submit" onclick="saveEntry()">✅ Enregistrer la sortie</button>
         </div>
       </div>
     </div>
@@ -739,7 +739,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 
 <!-- FAB MENU (mobile) -->
 <nav class="bottom-nav">
-  <button class="fab-menu-btn" id="fab-btn" onclick="toggleMenu()">☰</button>
+  <button type="button" class="fab-menu-btn" id="fab-btn" onclick="toggleMenu()">☰</button>
 </nav>
 
 <!-- POPUP MENU -->
@@ -747,31 +747,31 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
   <div class="menu-popup">
     <div class="menu-popup-title">Navigation</div>
     <div class="menu-popup-grid">
-      <button class="menu-popup-item" id="mpop-journal" onclick="popupNav('journal')">
+      <button type="button" class="menu-popup-item" id="mpop-journal" onclick="popupNav('journal')">
         <span class="mi-icon">📖</span><span class="mi-label">Journal</span><span class="mi-sub">Mes sorties</span>
       </button>
-      <button class="menu-popup-item" id="mpop-ajouter" onclick="popupNav('ajouter')">
+      <button type="button" class="menu-popup-item" id="mpop-ajouter" onclick="popupNav('ajouter')">
         <span class="mi-icon">➕</span><span class="mi-label">Ajouter</span><span class="mi-sub">Nouvelle prise</span>
       </button>
-      <button class="menu-popup-item" id="mpop-stats" onclick="popupNav('stats')">
+      <button type="button" class="menu-popup-item" id="mpop-stats" onclick="popupNav('stats')">
         <span class="mi-icon">📊</span><span class="mi-label">Statistiques</span><span class="mi-sub">Mes records</span>
       </button>
-      <button class="menu-popup-item" id="mpop-spots" onclick="popupNav('spots')">
+      <button type="button" class="menu-popup-item" id="mpop-spots" onclick="popupNav('spots')">
         <span class="mi-icon">📍</span><span class="mi-label">Mes Spots</span><span class="mi-sub">Carte & favoris</span>
       </button>
-      <button class="menu-popup-item" id="mpop-appats" onclick="popupNav('appats')">
+      <button type="button" class="menu-popup-item" id="mpop-appats" onclick="popupNav('appats')">
         <span class="mi-icon">🪱</span><span class="mi-label">Appâts</span><span class="mi-sub">Carnet d'appâts</span>
       </button>
-      <button class="menu-popup-item" id="mpop-rapport" onclick="popupNav('rapport')">
+      <button type="button" class="menu-popup-item" id="mpop-rapport" onclick="popupNav('rapport')">
         <span class="mi-icon">📄</span><span class="mi-label">Rapport</span><span class="mi-sub">Export PDF/image</span>
       </button>
     </div>
     <div class="menu-popup-divider"></div>
     <div class="menu-popup-row">
-      <button class="menu-popup-small" onclick="exportData();closeMenu()">📤 Exporter</button>
-      <button class="menu-popup-small" onclick="document.getElementById('import-file').click();closeMenu()">📥 Importer</button>
-      <button class="menu-popup-small" onclick="toggleDarkMode();closeMenu()" style="grid-column:1/-1">🌙 Mode sombre</button>
-      <button class="menu-popup-small" onclick="openInfo();closeMenu()" style="grid-column:1/-1;opacity:0.75">ℹ️ À propos</button>
+      <button type="button" class="menu-popup-small" onclick="exportData();closeMenu()">📤 Exporter</button>
+      <button type="button" class="menu-popup-small" onclick="document.getElementById('import-file').click();closeMenu()">📥 Importer</button>
+      <button type="button" class="menu-popup-small" onclick="toggleDarkMode();closeMenu()" style="grid-column:1/-1">🌙 Mode sombre</button>
+      <button type="button" class="menu-popup-small" onclick="openInfo();closeMenu()" style="grid-column:1/-1;opacity:0.75">ℹ️ À propos</button>
     </div>
   </div>
 </div>
@@ -851,8 +851,8 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
       <textarea class="form-textarea" id="edit-notes" placeholder="Notes, observations…"></textarea>
     </div>
     <div style="display:flex;gap:10px;margin-top:6px">
-      <button class="btn-submit" onclick="saveEditEntry()" style="flex:1">💾 Enregistrer</button>
-      <button onclick="closeEdit()" style="flex:0 0 auto;padding:14px 20px;border:1.5px solid #ddd;border-radius:12px;background:none;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--gris)">Annuler</button>
+      <button type="button" class="btn-submit" onclick="saveEditEntry()" style="flex:1">💾 Enregistrer</button>
+      <button type="button" onclick="closeEdit()" style="flex:0 0 auto;padding:14px 20px;border:1.5px solid #ddd;border-radius:12px;background:none;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--gris)">Annuler</button>
     </div>
   </div>
 </div>
@@ -863,28 +863,28 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
     <h3>📤 Exporter / Rapport</h3>
     <p>Choisissez le format d'export pour votre carnet de pêche</p>
     <div class="export-btns">
-      <button class="export-btn pdf" onclick="exportPDF()">
+      <button type="button" class="export-btn pdf" onclick="exportPDF()">
         <span class="eb-icon">📄</span>
         <span class="eb-text">
           <span class="eb-title">Rapport PDF saison</span>
           <span class="eb-sub">Bilan complet — stats, records, sorties</span>
         </span>
       </button>
-      <button class="export-btn img" onclick="exportFicheImage()">
+      <button type="button" class="export-btn img" onclick="exportFicheImage()">
         <span class="eb-icon">🖼</span>
         <span class="eb-text">
           <span class="eb-title">Fiche image (dernière sortie)</span>
           <span class="eb-sub">Image à partager sur WhatsApp, Instagram…</span>
         </span>
       </button>
-      <button class="export-btn csv" onclick="exportCSV()">
+      <button type="button" class="export-btn csv" onclick="exportCSV()">
         <span class="eb-icon">📊</span>
         <span class="eb-text">
           <span class="eb-title">Export CSV</span>
           <span class="eb-sub">Ouvrir dans Excel ou Google Sheets</span>
         </span>
       </button>
-      <button class="export-btn" style="background:linear-gradient(135deg,#1b3a6b,#2e6db4)" onclick="exportData();closeExport()">
+      <button type="button" class="export-btn" style="background:linear-gradient(135deg,#1b3a6b,#2e6db4)" onclick="exportData();closeExport()">
         <span class="eb-icon">💾</span>
         <span class="eb-text">
           <span class="eb-title">Sauvegarde JSON</span>
@@ -892,7 +892,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
         </span>
       </button>
     </div>
-    <button class="export-cancel" onclick="closeExport()">Annuler</button>
+    <button type="button" class="export-cancel" onclick="closeExport()">Annuler</button>
   </div>
 </div>
 
@@ -909,7 +909,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
     <div class="info-divider"></div>
     <div class="info-author" id="info-author-name">Bruno LARIVE</div>
     <div class="info-copy">© Copyright 2026 — Tous droits réservés</div>
-    <button class="btn-info-close" onclick="closeInfo()">Fermer</button>
+    <button type="button" class="btn-info-close" onclick="closeInfo()">Fermer</button>
   </div>
 </div>
 
@@ -927,8 +927,8 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
     <div id="sc-notes" style="font-size:12px;color:#666;font-style:italic;margin-bottom:12px;display:none"></div>
     <div style="font-size:10px;color:var(--gris);text-align:center;margin-bottom:8px">🎣 Carnet de Pêche</div>
     <div class="share-card-footer">
-      <button class="btn-share copy" onclick="copyShareText()">📋 Copier le texte</button>
-      <button class="btn-share close" onclick="closeShareBtn()">Fermer</button>
+      <button type="button" class="btn-share copy" onclick="copyShareText()">📋 Copier le texte</button>
+      <button type="button" class="btn-share close" onclick="closeShareBtn()">Fermer</button>
     </div>
   </div>
 </div>
@@ -1263,8 +1263,8 @@ function renderJournal(){
             ${tags.length?`<div class="prise-badges" style="margin-top:4px">${tags.map(t=>`<span style="font-size:10px;background:var(--bleu-clair);color:var(--eau-claire);padding:2px 7px;border-radius:8px;font-weight:500">${t}</span>`).join('')}</div>`:''}
             ${e.notes?`<div class="prise-notes">"${e.notes.slice(0,80)}${e.notes.length>80?'…':''}"</div>`:''}
           </div>
-          <button class="prise-edit-btn" onclick="openEditEntry(${e.id})" title="Modifier cette prise">✏️</button>
-          <button class="prise-del-btn" onclick="deleteEntry(${e.id})" title="Supprimer cette prise">🗑</button>
+          <button type="button" class="prise-edit-btn" onclick="openEditEntry(${e.id})" title="Modifier cette prise">✏️</button>
+          <button type="button" class="prise-del-btn" onclick="deleteEntry(${e.id})" title="Supprimer cette prise">🗑</button>
         </div>`;
     }).join('');
 
@@ -1272,8 +1272,8 @@ function renderJournal(){
     const keyEsc=key.replace(/"/g,'&quot;');
 
     // Sur desktop : bouton supprimer toute la sortie
-    const deleteSortieBtn=`<button onclick="deleteSortie([${ids.join(',')}])" style="font-size:11px;color:var(--rouge);background:#fee;border:1px solid #fcc;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif">🗑 Sortie</button>`;
-    const shareBtn=nbPrises>0?`<button onclick="openShareSortie([${ids.join(',')}])" style="font-size:11px;color:var(--eau-claire);background:var(--bleu-clair);border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif">📤 Partager</button>`:'';
+    const deleteSortieBtn=`<button type="button" onclick="deleteSortie([${ids.join(',')}])" style="font-size:11px;color:var(--rouge);background:#fee;border:1px solid #fcc;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif">🗑 Sortie</button>`;
+    const shareBtn=nbPrises>0?`<button type="button" onclick="openShareSortie([${ids.join(',')}])" style="font-size:11px;color:var(--eau-claire);background:var(--bleu-clair);border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif">📤 Partager</button>`:'';
 
     if(isMobile){
       return `
@@ -1477,7 +1477,7 @@ function updateStats(){
 
     <div class="stat-card">
       <div class="stat-card-title">📅 Sorties par mois (12 mois)</div>
-      <div class="chart-wrap"><canvas id="chart-mois"></canvas></div>
+      <div class="chart-wrap"><canvas id="chart-mois" width="600" height="180"></canvas></div>
     </div>
 
     ${sorted.length?`
@@ -1522,7 +1522,7 @@ function updateStats(){
 
     <div class="stat-card">
       <div class="stat-card-title">🎯 Taux de réussite par mois</div>
-      <div class="chart-wrap"><canvas id="chart-taux"></canvas></div>
+      <div class="chart-wrap"><canvas id="chart-taux" width="600" height="180"></canvas></div>
     </div>`;
 
   setTimeout(()=>{
@@ -1707,7 +1707,7 @@ function renderAppatsPage(){
       <div class="stat-card-title">➕ Ajouter un appât</div>
       <div style="display:flex;gap:8px">
         <input type="text" id="new-appat-name" class="form-input" placeholder="Nom de l'appât…" style="flex:1">
-        <button onclick="addAppat()" style="padding:10px 16px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Ajouter</button>
+        <button type="button" onclick="addAppat()" style="padding:10px 16px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Ajouter</button>
       </div>
     </div>
     <div class="stat-card">
@@ -1722,7 +1722,7 @@ function renderAppatsPage(){
               <div class="appat-list-nom">${a.nom}</div>
               <div style="font-size:11px;color:var(--gris);margin-top:2px">Utilisé ${uses} fois${uses>0?' dans le carnet':''}</div>
             </div>
-            <button onclick="deleteAppat(${a.id})" style="font-size:11px;color:var(--rouge);background:#fee;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600">✕</button>
+            <button type="button" onclick="deleteAppat(${a.id})" style="font-size:11px;color:var(--rouge);background:#fee;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600">✕</button>
           </div>`;
         }).join('')}
       </div>
@@ -1806,7 +1806,7 @@ function renderSpotsForm(){
   list.innerHTML=spots.map(s=>`
     <div class="spot-chip" onclick="useSpot('${s.nom.replace(/'/g,"\\'")}')">
       📍 <span style="flex:1">${s.nom}</span>
-      <button class="spot-del" onclick="deleteSpot(${s.id},event)">✕</button>
+      <button type="button" class="spot-del" onclick="deleteSpot(${s.id},event)">✕</button>
     </div>`).join('');
 }
 function useSpot(nom){ document.getElementById('f-lieu').value=nom; showToast(`📍 ${nom}`); }
@@ -1879,7 +1879,7 @@ function renderSpotsPage(){
       <div class="stat-card-title">➕ Ajouter un spot manuellement</div>
       <div style="display:flex;gap:8px">
         <input type="text" id="new-spot-name" class="form-input" placeholder="Nom du spot…" style="flex:1">
-        <button onclick="addManualSpot()" style="padding:10px 16px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Ajouter</button>
+        <button type="button" onclick="addManualSpot()" style="padding:10px 16px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Ajouter</button>
       </div>
     </div>`;
 
@@ -1929,7 +1929,7 @@ function renderSpotsPage(){
               </div>
               <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
                 ${hasCoords?`<a href="https://maps.google.com/?q=${s.lat},${s.lng}" target="_blank" style="font-size:11px;color:var(--eau-claire);font-weight:600;text-decoration:none;padding:4px 10px;background:white;border-radius:8px">🗺 Maps</a>`:''}
-                <button onclick="deleteSpot(${s.id},event)" style="font-size:11px;color:var(--rouge);background:#fee;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600">✕</button>
+                <button type="button" onclick="deleteSpot(${s.id},event)" style="font-size:11px;color:var(--rouge);background:#fee;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600">✕</button>
               </div>
             </div>
             ${meteoHtml}
@@ -2070,7 +2070,7 @@ function renderParametresPage(){
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <input type="text" id="param-nom" class="form-input" value="${nom}" placeholder="Prénom NOM" style="flex:1">
-        <button onclick="saveNom()" style="padding:10px 18px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Enregistrer</button>
+        <button type="button" onclick="saveNom()" style="padding:10px 18px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Enregistrer</button>
       </div>
       <div style="margin-top:12px;padding:12px;background:var(--bleu-clair);border-radius:10px;font-size:12px;color:var(--eau-claire)">
         Aperçu : <strong>${nom}</strong> — Carnet de Pêche Personnel
@@ -2082,7 +2082,7 @@ function renderParametresPage(){
         <div class="settings-label">Mode sombre
           <span class="settings-sub">Suit automatiquement les préférences du téléphone</span>
         </div>
-        <button onclick="toggleDarkMode();renderParametresPage()" style="padding:8px 16px;background:var(--bleu-clair);color:var(--eau-claire);border:none;border-radius:20px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px">
+        <button type="button" onclick="toggleDarkMode();renderParametresPage()" style="padding:8px 16px;background:var(--bleu-clair);color:var(--eau-claire);border:none;border-radius:20px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px">
           ${document.body.classList.contains('dark')?'☀️ Mode clair':'🌙 Mode sombre'}
         </button>
       </div>
@@ -2093,7 +2093,7 @@ function renderParametresPage(){
         <div class="settings-label">Réinitialiser toutes les données
           <span class="settings-sub">Supprime sorties, spots et appâts — irréversible</span>
         </div>
-        <button onclick="resetAllData()" style="padding:8px 14px;background:#fee;color:var(--rouge);border:1px solid #fcc;border-radius:20px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;white-space:nowrap">
+        <button type="button" onclick="resetAllData()" style="padding:8px 14px;background:#fee;color:var(--rouge);border:1px solid #fcc;border-radius:20px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;white-space:nowrap">
           🗑 Réinitialiser
         </button>
       </div>
@@ -2140,19 +2140,19 @@ function renderRapportPage(){
         <strong style="color:var(--texte)">${nbSorties} sortie${nbSorties>1?'s':''}</strong> — <strong style="color:var(--texte)">${prises.length} prise${prises.length>1?'s':''}</strong> enregistrées
       </p>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button class="export-btn pdf" onclick="exportPDF()" style="border-radius:12px">
+        <button type="button" class="export-btn pdf" onclick="exportPDF()" style="border-radius:12px">
           <span class="eb-icon">📄</span>
           <span class="eb-text"><span class="eb-title">Rapport PDF saison ${annee}</span><span class="eb-sub">Bilan complet avec stats et records</span></span>
         </button>
-        <button class="export-btn img" onclick="exportFicheImage()" style="border-radius:12px">
+        <button type="button" class="export-btn img" onclick="exportFicheImage()" style="border-radius:12px">
           <span class="eb-icon">🖼</span>
           <span class="eb-text"><span class="eb-title">Fiche image (dernière sortie)</span><span class="eb-sub">Image à partager sur WhatsApp…</span></span>
         </button>
-        <button class="export-btn csv" onclick="exportCSV()" style="border-radius:12px">
+        <button type="button" class="export-btn csv" onclick="exportCSV()" style="border-radius:12px">
           <span class="eb-icon">📊</span>
           <span class="eb-text"><span class="eb-title">Export CSV</span><span class="eb-sub">Ouvrir dans Excel ou Google Sheets</span></span>
         </button>
-        <button class="export-btn" style="background:linear-gradient(135deg,#1b3a6b,#2e6db4);border-radius:12px" onclick="exportData()">
+        <button type="button" class="export-btn" style="background:linear-gradient(135deg,#1b3a6b,#2e6db4);border-radius:12px" onclick="exportData()">
           <span class="eb-icon">💾</span>
           <span class="eb-text"><span class="eb-title">Sauvegarde JSON</span><span class="eb-sub">Backup complet — spots inclus</span></span>
         </button>
