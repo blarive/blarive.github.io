@@ -2201,7 +2201,7 @@ let rt;
 window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJournal,200); });
 
 // ════════════════════════════════════════════════════════
-//  SERVICE WORKER — version automatique, aucun fichier à modifier
+//  SERVICE WORKER — mise à jour uniquement si nouvelle version
 // ════════════════════════════════════════════════════════
 let swWaiting = null;
 
@@ -2209,64 +2209,86 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
       const reg = await navigator.serviceWorker.register('./sw.js');
-      console.log('[App] SW enregistré');
 
-      // ── Calcul de la version automatique ──────────────
-      // On utilise la date de dernière modification de index.html
-      // GitHub met à jour ce header à chaque déploiement → version auto
+      // ── Détection de la version via Last-Modified ──────
       let version = 'init';
       try {
         const resp = await fetch('./index.html', { method: 'HEAD', cache: 'no-store' });
         const lastMod = resp.headers.get('last-modified');
         if (lastMod) {
-          // Format : "Sat, 28 Mar 2026 14:32:00 GMT" → "20260328-1432"
           const d = new Date(lastMod);
           version = `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}-${String(d.getUTCHours()).padStart(2,'0')}${String(d.getUTCMinutes()).padStart(2,'0')}`;
         }
       } catch {}
 
-      console.log('[App] Version détectée :', version);
+      // ── Comparaison avec la version déjà connue ────────
+      // On stocke la dernière version active dans localStorage
+      // La bannière ne s'affiche QUE si la version change vraiment
+      const knownVersion = localStorage.getItem('app-version');
 
-      // Envoie la version au SW actif
-      if (reg.active) {
-        reg.active.postMessage({ type: 'SET_VERSION', version });
+      if (version !== 'init' && knownVersion && version !== knownVersion) {
+        // Nouvelle version détectée → on la mémorise et on informe le SW
+        localStorage.setItem('app-version', version);
+        console.log('[App] Nouvelle version :', version, '(ancienne :', knownVersion, ')');
+        if (reg.active) reg.active.postMessage({ type: 'SET_VERSION', version });
+      } else if (!knownVersion && version !== 'init') {
+        // Première installation — on mémorise silencieusement, pas de bannière
+        localStorage.setItem('app-version', version);
+        if (reg.active) reg.active.postMessage({ type: 'SET_VERSION', version });
+        console.log('[App] Version initiale enregistrée :', version);
+      } else {
+        // Même version — on informe le SW sans afficher de bannière
+        if (reg.active) reg.active.postMessage({ type: 'SET_VERSION', version });
+        console.log('[App] Version inchangée :', version);
       }
 
-      // SW en attente (déjà installé avant l'envoi de version)
+      // SW en attente : seulement si c'est vraiment une nouvelle version
       if (reg.waiting) {
         swWaiting = reg.waiting;
         swWaiting.postMessage({ type: 'SET_VERSION', version });
-        showUpdateBanner();
+        // N'afficher la bannière que si la version a réellement changé
+        if (knownVersion && version !== knownVersion) {
+          showUpdateBanner();
+        } else if (!knownVersion) {
+          // Première fois : on active silencieusement sans bannière
+          swWaiting.postMessage('SKIP_WAITING');
+        }
       }
 
-      // Nouveau SW trouvé pendant la session
+      // Nouveau SW installé pendant la session
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             swWaiting = newWorker;
             swWaiting.postMessage({ type: 'SET_VERSION', version });
-            showUpdateBanner();
+            // Afficher uniquement si vraie mise à jour
+            const currentKnown = localStorage.getItem('app-version');
+            if (version !== 'init' && currentKnown && version !== currentKnown) {
+              showUpdateBanner();
+            }
           }
         });
       });
 
-      // Vérification périodique (toutes les 5 minutes si l'appli reste ouverte)
-      setInterval(() => reg.update(), 5 * 60 * 1000);
+      // Vérification périodique toutes les 10 minutes
+      setInterval(() => reg.update(), 10 * 60 * 1000);
 
     } catch (err) {
       console.warn('[App] SW échec:', err);
     }
 
-    // Le nouveau SW prend le contrôle → rechargement
+    // Nouveau SW actif → rechargement de la page
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       window.location.reload();
     });
 
-    // Message reçu du SW (UPDATE_READY)
+    // Message UPDATE_READY envoyé par le SW
     navigator.serviceWorker.addEventListener('message', event => {
       if (event.data && event.data.type === 'UPDATE_READY') {
-        showUpdateBanner();
+        const currentKnown = localStorage.getItem('app-version');
+        // Double vérification côté app avant d'afficher
+        if (currentKnown) showUpdateBanner();
       }
     });
   });
