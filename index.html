@@ -2441,45 +2441,67 @@ let rt;
 window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJournal,200); });
 
 // ════════════════════════════════════════════════════════
-//  SERVICE WORKER — mise à jour automatique
+//  SERVICE WORKER — version par date de déploiement
+//  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
+const BUILD_DATE = '20260330'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./sw.js');
+      // L'URL versionnée force Chrome à recharger sw.js si BUILD_DATE change
+      const swUrl = `./sw.js?v=${BUILD_DATE}`;
+      const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' });
 
-      // Si un SW en attente existe → l'activer tout de suite silencieusement
+      // Envoyer la version au SW pour qu'il purge l'ancien cache
+      const sendVersion = (worker) => {
+        if (worker) worker.postMessage({ type: 'SET_VERSION', version: BUILD_DATE });
+      };
+
+      sendVersion(reg.active);
+      sendVersion(reg.waiting);
+
+      // SW en attente → activer immédiatement
       if (reg.waiting) {
         reg.waiting.postMessage('SKIP_WAITING');
       }
 
-      // Nouveau SW installé en arrière-plan
+      // Nouveau SW installé en arrière-plan → activer immédiatement
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed') {
-            // Activer immédiatement
+            sendVersion(newWorker);
             newWorker.postMessage('SKIP_WAITING');
           }
         });
       });
 
-      // Vérifier les mises à jour toutes les 2 minutes
+      // Forcer la vérification toutes les 2 minutes
       setInterval(() => reg.update(), 2 * 60 * 1000);
+
+      console.log(`[App] SW enregistré — Build ${BUILD_DATE}`);
 
     } catch (err) {
       console.warn('[App] SW échec:', err);
     }
 
-    // Quand le nouveau SW prend le contrôle → rechargement automatique
+    // Nouveau SW actif → rechargement automatique de la page
     navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('[App] Nouveau SW actif — rechargement');
       window.location.reload();
+    });
+
+    // Message RELOAD envoyé par le SW quand version change
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'RELOAD') {
+        console.log('[App] SW demande rechargement — nouvelle version');
+        window.location.reload();
+      }
     });
   });
 }
 
-// Bannière de mise à jour : plus utilisée (rechargement auto)
-// Conservée au cas où pour compatibilité
 function showUpdateBanner() {}
 function applyUpdate() { window.location.reload(); }
 
