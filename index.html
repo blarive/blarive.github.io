@@ -344,6 +344,12 @@ canvas.stat-chart{width:100%!important;height:100%!important;}
 
 /* ── CARTE LEAFLET ─── */
 #map-container{width:100%;height:400px;border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.1);}
+/* Forcer la carte Leaflet sous le menu popup (z-index 200) */
+#map-container .leaflet-pane,
+#map-container .leaflet-control,
+#map-container .leaflet-top,
+#map-container .leaflet-bottom{z-index:1 !important;}
+#map-container{isolation:isolate;}
 .leaflet-popup-content-wrapper{border-radius:12px!important;font-family:'DM Sans',sans-serif;}
 .map-spot-popup{font-size:13px;min-width:140px;}
 .map-spot-popup strong{font-family:'Playfair Display',serif;font-size:15px;display:block;margin-bottom:4px;}
@@ -458,7 +464,7 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
 }
 
 /* ── POPUP MENU ─── */
-.menu-overlay{display:none;position:fixed;inset:0;background:rgba(15,33,71,0.55);backdrop-filter:blur(4px);z-index:200;align-items:flex-end;justify-content:center;padding-bottom:90px;}
+.menu-overlay{display:none;position:fixed;inset:0;background:rgba(15,33,71,0.55);backdrop-filter:blur(4px);z-index:1000;align-items:flex-end;justify-content:center;padding-bottom:90px;}
 .menu-overlay.open{display:flex;}
 .menu-popup{background:white;border-radius:24px;padding:8px 12px 12px;width:calc(100% - 32px);max-width:360px;box-shadow:0 16px 48px rgba(15,33,71,0.25);animation:popupUp 0.25s cubic-bezier(.34,1.4,.64,1) both;}
 @keyframes popupUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
@@ -770,6 +776,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
     <div class="menu-popup-row">
       <button type="button" class="menu-popup-small" onclick="exportData();closeMenu()">📤 Exporter</button>
       <button type="button" class="menu-popup-small" onclick="document.getElementById('import-file').click();closeMenu()">📥 Importer</button>
+      <button type="button" class="menu-popup-small" onclick="popupNav('parametres')" style="grid-column:1/-1">⚙️ Paramètres</button>
       <button type="button" class="menu-popup-small" onclick="toggleDarkMode();closeMenu()" style="grid-column:1/-1">🌙 Mode sombre</button>
       <button type="button" class="menu-popup-small" onclick="openInfo();closeMenu()" style="grid-column:1/-1;opacity:0.75">ℹ️ À propos</button>
     </div>
@@ -970,9 +977,7 @@ function init(){
   renderJournal(); updateStats(); updateAllStats();
   renderSpotsForm(); renderSpotsPage();
   renderAppatsForm();
-  // Charger le nom personnalisé
-  const authorEl=document.getElementById('info-author-name');
-  if(authorEl) authorEl.textContent=getPecheurNom();
+  // À propos : nom fixe (Bruno LARIVE), pas de mise à jour dynamique
 }
 
 // ════════════════════════════════════════════════════════
@@ -2065,7 +2070,7 @@ function renderParametresPage(){
       <div class="stat-card-title">👤 Identité du pêcheur</div>
       <div class="settings-row">
         <div class="settings-label">Votre nom
-          <span class="settings-sub">Affiché dans les rapports et fiches de partage</span>
+          <span class="settings-sub">Utilisé dans les rapports PDF et fiches image exportées</span>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
@@ -2104,11 +2109,9 @@ function saveNom(){
   const nom=(document.getElementById('param-nom')?.value||'').trim();
   if(!nom){showToast('⚠️ Entrez votre nom');return;}
   localStorage.setItem('pecheur-nom',nom);
-  // Mise à jour de la modale À propos
-  const authorEl=document.querySelector('.info-author');
-  if(authorEl) authorEl.textContent=nom;
+  // NE PAS modifier À propos — le nom dans À propos reste celui du code
   renderParametresPage();
-  showToast('✅ Nom enregistré !');
+  showToast('✅ Nom enregistré pour les rapports !');
 }
 
 function resetAllData(){
