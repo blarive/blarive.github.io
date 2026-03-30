@@ -50,11 +50,11 @@ body.dark .bar-track{background:#1a3060;}
 body.dark .menu-popup-item{background:#1a3060;}
 body.dark .menu-popup-small{background:#1a3060;color:#e0e8f4;}
 body.dark .bottom-nav{background:#0f2147;border-color:#1a3060;}
-body.dark .mob-stat{background:rgba(255,255,255,0.06);}
-/* Nav items dark mode — texte lisible */
-body.dark .nav-item{color:#a0b8d8;}
-body.dark .nav-item:hover{background:rgba(255,255,255,0.1);color:white;}
-body.dark .nav-item.active{background:var(--rose);color:white;}
+/* Correction mobile stats bar en mode sombre — texte blanc */
+body.dark .mobile-stats-bar{background:var(--eau-profonde);}
+body.dark .mob-stat{background:rgba(255,255,255,0.1);}
+body.dark .mob-stat .num{color:white;font-weight:700;}
+body.dark .mob-stat .label{color:rgba(255,255,255,0.8);}
 /* Nav items dark mode — texte lisible */
 body.dark .nav-item{color:#a0b8d8;}
 body.dark .nav-item:hover{background:rgba(255,255,255,0.1);color:white;}
@@ -440,7 +440,7 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .mobile-header h1{font-family:'Playfair Display',serif;font-size:18px;color:var(--sable);}
   .mobile-stats-bar{display:flex;gap:6px;position:sticky;top:52px;left:0;right:0;padding:8px 12px;background:var(--eau-profonde);z-index:49;}
   .mob-stat{flex:1;background:rgba(255,255,255,0.1);border-radius:8px;padding:6px 4px;text-align:center;}
-  .mob-stat .num{font-family:'Playfair Display',serif;font-size:15px;color:var(--rose);display:block;line-height:1.2;}
+  .mob-stat .num{font-family:'Playfair Display',serif;font-size:15px;color:white;display:block;line-height:1.2;font-weight:700;}
   .mob-stat .label{font-size:9px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.5px;}
   .app-body{margin-left:0;background:var(--blanc);min-height:calc(100vh - 100px);}
   body.dark .app-body{background:#0a1628;}
@@ -977,7 +977,6 @@ function init(){
   renderJournal(); updateStats(); updateAllStats();
   renderSpotsForm(); renderSpotsPage();
   renderAppatsForm();
-  // À propos : nom fixe (Bruno LARIVE), pas de mise à jour dynamique
 }
 
 // ════════════════════════════════════════════════════════
@@ -2109,7 +2108,6 @@ function saveNom(){
   const nom=(document.getElementById('param-nom')?.value||'').trim();
   if(!nom){showToast('⚠️ Entrez votre nom');return;}
   localStorage.setItem('pecheur-nom',nom);
-  // NE PAS modifier À propos — le nom dans À propos reste celui du code
   renderParametresPage();
   showToast('✅ Nom enregistré pour les rapports !');
 }
@@ -2351,14 +2349,15 @@ function exportPDF(){
     <div class="stat-box"><span class="val">${records[0]?formatPoids(records[0].poids>100?records[0].poids/1000:records[0].poids):'—'}</span><span class="lbl">Record</span></div>
   </div>
   ${sortedSp.length?`<h2>🐟 Espèces capturées</h2>
-  <table><tr><th>Espèce</th><th>Nb prises</th><th>% du total</th></tr>
-  ${sortedSp.map(([s,c])=>`<tr><td>${s}</td><td>${c}</td><td>${Math.round(c/prises.length*100)}%</td></tr>`).join('')}
+  <table>
+    <thead><tr><th>Espèce</th><th>Nb prises</th><th>% du total</th></tr></thead>
+    <tbody>${sortedSp.map(([s,c])=>`<tr><td>${s}</td><td>${c}</td><td>${Math.round(c/prises.length*100)}%</td></tr>`).join('')}</tbody>
   </table>`:''}
   ${spotFavori?`<h2>📍 Spot favori : ${spotFavori[0]} (${spotFavori[1]} sortie${spotFavori[1]>1?'s':''})</h2>`:''}
   <h2>📖 Journal des sorties (20 dernières)</h2>
   <table>
-    <tr><th>Date</th><th>Lieu</th><th>Espèces</th><th>Prises</th><th>Meilleur poids</th><th>Météo</th></tr>
-    ${groups.map(g=>{
+    <thead><tr><th>Date</th><th>Lieu</th><th>Espèces</th><th>Prises</th><th>Meilleur poids</th><th>Météo</th></tr></thead>
+    <tbody>${groups.map(g=>{
       const ref=g[0];
       const pr=g.filter(e=>!e.capot);
       const ww=pr.filter(e=>e.poids!=null).sort((a,b)=>(b.poids>100?b.poids/1000:b.poids)-(a.poids>100?a.poids/1000:a.poids));
@@ -2371,7 +2370,7 @@ function exportPDF(){
         <td>${ww[0]?formatPoids(ww[0].poids>100?ww[0].poids/1000:ww[0].poids):'—'}</td>
         <td>${meteo}</td>
       </tr>`;
-    }).join('')}
+    }).join('')}</tbody>
   </table>
   <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.0</div>
   </body></html>`;
