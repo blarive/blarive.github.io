@@ -30,34 +30,81 @@
 html,body{height:100%;}
 body{font-family:'DM Sans',sans-serif;background:#eef2f5;color:var(--texte);display:flex;min-height:100vh;}
 
-/* ── DARK MODE ─── */
+/* ── DARK MODE — bloc unique et autoritaire ─── */
 body.dark{background:#0a1628;color:#e0e8f4;}
 body.dark .app-body{background:#0a1628;}
 body.dark .topbar{background:#0f2147;border-color:#1a3060;}
 body.dark .topbar-title{color:#e0e8f4;}
-body.dark .form-card,body.dark .stat-card,body.dark .entry-card,body.dark .menu-popup{background:#0f2147;color:#e0e8f4;}
-body.dark .form-input,body.dark .form-select,body.dark .form-textarea{background:#1a3060;border-color:#2a4080;color:#e0e8f4;}
 body.dark .page-content{background:#0a1628;}
-body.dark .filter-pill{background:#0f2147;border-color:#2a4080;color:#8a96b0;}
-body.dark .filter-pill.active{background:var(--rose);border-color:var(--rose);color:white;}
-body.dark .entry-card{background:#0f2147;box-shadow:0 1px 6px rgba(0,0,0,0.3);}
+body.dark .form-card,body.dark .stat-card,body.dark .menu-popup{background:#0f2147;color:#e0e8f4;}
+body.dark .entry-card{background:#0f2147;box-shadow:0 1px 6px rgba(0,0,0,0.3);color:#e0e8f4;}
 body.dark .entry-card.capot{background:#0d1e3a;}
 body.dark .entry-species{color:#d0e0f8;}
+body.dark .form-input,body.dark .form-select,body.dark .form-textarea{background:#1a3060;border-color:#2a4080;color:#e0e8f4;}
+body.dark .filter-pill{background:#0f2147;border-color:#2a4080;color:#8a96b0;}
+body.dark .filter-pill.active{background:var(--rose);border-color:var(--rose);color:white;}
 body.dark .search-box input{background:#0f2147;border-color:#2a4080;color:#e0e8f4;}
 body.dark .stat-card{background:#0f2147;}
 body.dark .record-item{border-color:#1a3060;}
 body.dark .bar-track{background:#1a3060;}
 body.dark .menu-popup-item{background:#1a3060;}
+body.dark .menu-popup-item .mi-label{color:white;font-weight:700;}
+body.dark .menu-popup-item .mi-sub{color:#8a96b0;}
+body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--rose);}
 body.dark .menu-popup-small{background:#1a3060;color:#e0e8f4;}
-/* mob-stat dark handled in mobile media query */
-/* Nav items dark mode — texte lisible */
+/* Nav sidebar */
 body.dark .nav-item{color:#a0b8d8;}
 body.dark .nav-item:hover{background:rgba(255,255,255,0.1);color:white;}
 body.dark .nav-item.active{background:var(--rose);color:white;}
-/* Nav items dark mode — texte lisible */
-body.dark .nav-item{color:#a0b8d8;}
-body.dark .nav-item:hover{background:rgba(255,255,255,0.1);color:white;}
-body.dark .nav-item.active{background:var(--rose);color:white;}
+/* Stats mobiles — fond bleu foncé, textes blancs */
+body.dark .mobile-stats-bar{background:var(--eau-profonde);}
+body.dark .mob-stat{background:rgba(255,255,255,0.08);}
+body.dark .mob-stat .num{color:var(--rose);}
+body.dark .mob-stat .label{color:white;opacity:1;}
+/* Stat sidebar sur desktop */
+body.dark .sidebar-stat .num{color:var(--rose);}
+body.dark .sidebar-stat .label{color:#8a96b0;}
+/* Sortie cards */
+body.dark .sortie-card{background:#0f2147;}
+body.dark .sortie-card.is-capot{background:#0d1e3a;}
+body.dark .sortie-date-line{color:#d0e0f8;}
+body.dark .prise-species{color:#d0e0f8;}
+body.dark .prise-val{color:#8a96b0;}
+body.dark .prise-row{border-color:#1a3060;}
+body.dark .prises-list{border-color:#1a3060;}
+/* Appâts */
+body.dark .appat-tag{background:#1a3060;color:white;border-color:#2a4080;}
+body.dark .appat-tag.selected{background:var(--eau-claire);color:white;}
+body.dark .appat-list-row{border-color:#1a3060;}
+body.dark .appat-list-nom{color:white;}
+/* Meteo btns */
+body.dark .meteo-btn{color:white;border-color:#2a4080;}
+body.dark .meteo-btn.selected{background:rgba(46,109,180,0.3);color:#90c0ff;border-color:var(--eau-claire);}
+body.dark .meteo-btn.selected-rose{background:rgba(232,96,154,0.25);color:#ffaacc;border-color:var(--rose);}
+/* Modales */
+body.dark .edit-modal{background:#0f2147;color:#e0e8f4;}
+body.dark .edit-modal-handle{background:#2a4080;}
+body.dark .edit-modal h3{color:#d0e0f8;}
+body.dark .export-modal{background:#0f2147;color:#e0e8f4;}
+body.dark .export-modal h3{color:#d0e0f8;}
+body.dark .export-cancel{background:#1a3060;color:#8a96b0;}
+body.dark .info-modal{background:#0f2147;color:#e0e8f4;}
+body.dark .info-modal h2{color:#d0e0f8;}
+body.dark .info-modal .info-divider{background:#1a3060;}
+body.dark .info-author{color:#e0e8f4;}
+/* Divers */
+body.dark .species-name{color:#e0e8f4;}
+body.dark .cmp-label{color:#e0e8f4;}
+body.dark .pie-legend-item{color:#e0e8f4;}
+body.dark .settings-label{color:#e0e8f4;}
+body.dark .settings-row{border-color:#1a3060;}
+body.dark .spot-chip{background:#1a3060;border-color:#2a4080;color:white;}
+body.dark .meteo-spot-row{border-color:#1a3060;}
+body.dark .sortie-chip{background:#1a3060;}
+body.dark .sortie-header:hover{background:rgba(255,255,255,0.04);}
+body.dark .record-info .species{color:#e0e8f4;}
+body.dark .entry-notes{color:#8a96b0;}
+body.dark .entry-meta-item{color:#a0b8d8;}
 
 /* ── SIDEBAR ─── */
 .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,var(--eau-profonde) 0%,var(--eau) 100%);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden;}
@@ -440,11 +487,7 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .mobile-stats-bar{display:flex;gap:6px;position:sticky;top:52px;left:0;right:0;padding:8px 12px;background:var(--eau-profonde);z-index:49;}
   .mob-stat{flex:1;background:rgba(255,255,255,0.1);border-radius:8px;padding:6px 4px;text-align:center;}
   .mob-stat .num{font-family:'Playfair Display',serif;font-size:15px;color:var(--rose);display:block;line-height:1.2;}
-  .mob-stat .label{font-size:9px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.5px;}
-  body.dark .mobile-stats-bar{background:var(--eau-profonde);}
-  body.dark .mob-stat{background:rgba(255,255,255,0.08);}
-  body.dark .mob-stat .num{color:var(--rose);}
-  body.dark .mob-stat .label{color:rgba(255,255,255,0.85);}
+  .mob-stat .label{font-size:9px;color:white;text-transform:uppercase;letter-spacing:0.5px;}
   .app-body{margin-left:0;background:var(--blanc);min-height:calc(100vh - 100px);}
   body.dark .app-body{background:#0a1628;}
   .page-content{padding:16px 12px 90px;}
@@ -2447,7 +2490,7 @@ window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJou
 //  SERVICE WORKER — version par date de déploiement
 //  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
-const BUILD_DATE = '20260331'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+const BUILD_DATE = '20260330'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
