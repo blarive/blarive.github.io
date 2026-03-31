@@ -49,8 +49,7 @@ body.dark .record-item{border-color:#1a3060;}
 body.dark .bar-track{background:#1a3060;}
 body.dark .menu-popup-item{background:#1a3060;}
 body.dark .menu-popup-small{background:#1a3060;color:#e0e8f4;}
-body.dark .bottom-nav{background:#0f2147;border-color:#1a3060;}
-body.dark .mob-stat{background:rgba(255,255,255,0.06);}
+/* mob-stat dark handled in mobile media query */
 /* Nav items dark mode — texte lisible */
 body.dark .nav-item{color:#a0b8d8;}
 body.dark .nav-item:hover{background:rgba(255,255,255,0.1);color:white;}
@@ -442,6 +441,10 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .mob-stat{flex:1;background:rgba(255,255,255,0.1);border-radius:8px;padding:6px 4px;text-align:center;}
   .mob-stat .num{font-family:'Playfair Display',serif;font-size:15px;color:var(--rose);display:block;line-height:1.2;}
   .mob-stat .label{font-size:9px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.5px;}
+  body.dark .mobile-stats-bar{background:var(--eau-profonde);}
+  body.dark .mob-stat{background:rgba(255,255,255,0.08);}
+  body.dark .mob-stat .num{color:var(--rose);}
+  body.dark .mob-stat .label{color:rgba(255,255,255,0.85);}
   .app-body{margin-left:0;background:var(--blanc);min-height:calc(100vh - 100px);}
   body.dark .app-body{background:#0a1628;}
   .page-content{padding:16px 12px 90px;}
@@ -2444,7 +2447,7 @@ window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJou
 //  SERVICE WORKER — version par date de déploiement
 //  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
-const BUILD_DATE = '20260330'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+const BUILD_DATE = '20260331'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
