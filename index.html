@@ -32,6 +32,13 @@ body{font-family:'DM Sans',sans-serif;background:#eef2f5;color:var(--texte);disp
 
 /* ── DARK MODE — bloc unique et autoritaire ─── */
 body.dark{background:#0a1628;color:#e0e8f4;}
+/* Redéfinition des variables CSS en dark mode — résout tous les color:var(--texte) inline */
+body.dark{
+  --texte:#e0e8f4;
+  --gris:#8a96b0;
+  --blanc:#0a1628;
+  --bleu-clair:#1a3060;
+}
 body.dark .app-body{background:#0a1628;}
 body.dark .topbar{background:#0f2147;border-color:#1a3060;}
 body.dark .topbar-title{color:#e0e8f4;}
@@ -2490,7 +2497,7 @@ window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJou
 //  SERVICE WORKER — version par date de déploiement
 //  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
-const BUILD_DATE = '20260330'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+const BUILD_DATE = '20260401'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
