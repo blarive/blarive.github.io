@@ -2192,7 +2192,8 @@ function renderRapportPage(){
     <div class="stat-card" style="margin-bottom:14px">
       <div class="stat-card-title">📄 Rapport & Export</div>
       <p style="font-size:13px;color:var(--gris);margin-bottom:20px;line-height:1.6">
-        Exportez votre carnet de pêche en différents formats.
+        Exportez votre carnet de pêche en différents formats.<br>
+        <strong style="color:var(--texte)">${nbSorties} sortie${nbSorties>1?'s':''}</strong> — <strong style="color:var(--texte)">${prises.length} prise${prises.length>1?'s':''}</strong> enregistrées
       </p>
       <div style="display:flex;flex-direction:column;gap:10px">
         <button type="button" class="export-btn pdf" onclick="exportPDF()" style="border-radius:12px">
@@ -2496,7 +2497,7 @@ window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJou
 //  SERVICE WORKER — version par date de déploiement
 //  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
-const BUILD_DATE = '20260330'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+const BUILD_DATE = '20260401'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
