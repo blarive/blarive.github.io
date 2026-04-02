@@ -501,7 +501,7 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   body.dark .app-body{background:#0a1628;}
   .page-content{padding:16px 12px 90px;}
   .cards-grid{grid-template-columns:1fr;}
-  .stats-grid{grid-template-columns:1fr !important;gap:12px;}
+  .stats-grid{grid-template-columns:1fr;}
   .form-layout{grid-template-columns:1fr;}
   .form-card{padding:16px;}
   .form-card-title{font-size:13px;margin-bottom:12px;}
@@ -516,34 +516,6 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .fab-menu-btn.open{transform:rotate(45deg);}
   .toast{bottom:90px;}
   .btn-delete-desktop{display:none;}
-
-  /* ===== STATS RESPONSIVE ===== */
-  .stat-card{padding:14px !important;margin-bottom:12px;}
-  .stat-card-title{font-size:12px !important;margin-bottom:12px !important;}
-  .chart-wrap{height:160px !important;overflow-x:auto;overflow-y:hidden;}
-  .chart-wrap canvas{min-width:500px;height:150px !important;}
-  .pie-wrap{flex-direction:column !important;align-items:center !important;gap:16px !important;}
-  .pie-canvas-wrap{width:160px;height:160px;margin:0 auto;}
-  .pie-legend{width:100% !important;flex-direction:row !important;flex-wrap:wrap !important;justify-content:center;gap:10px !important;}
-  .pie-legend-item{min-width:100px;font-size:11px;}
-  .record-item{flex-wrap:wrap;gap:8px;}
-  .record-icon{font-size:22px;}
-  .record-value{font-size:18px !important;}
-  .record-info .species{font-size:13px;}
-  .record-info .detail{font-size:10px;}
-  .species-bar{flex-wrap:wrap;gap:8px;}
-  .species-name{width:auto !important;min-width:80px;font-size:12px;}
-  .bar-track{flex:2;min-width:120px;}
-  .bar-count{font-size:11px;}
-  .cmp-year-header{justify-content:center !important;gap:12px;}
-  .cmp-year-badge{font-size:10px;padding:4px 12px;}
-  .cmp-row{font-size:12px;flex-wrap:wrap;gap:4px;}
-  .cmp-label{min-width:80px;}
-  .cmp-val{font-size:13px !important;}
-  .export-btn{padding:12px 14px !important;font-size:13px !important;}
-  .export-btn .eb-icon{font-size:20px;}
-  .export-btn .eb-title{font-size:13px;}
-  .export-btn .eb-sub{font-size:10px;}
 }
 
 /* ── POPUP MENU ─── */
@@ -634,7 +606,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
     <!-- JOURNAL -->
     <div class="view active" id="view-journal">
       <div class="journal-toolbar">
-        <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="debouncedRenderJournal()"></div>
+        <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="renderJournal()"></div>
       </div>
       <div class="filter-pills">
         <button type="button" class="filter-pill active" onclick="setFilter('tous',this)">Toutes</button>
@@ -1002,7 +974,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
   <div class="info-modal">
     <div class="info-logo">🎣</div>
     <h2>Carnet de Pêche</h2>
-    <span class="info-version">Version V 1.2</span>
+    <span class="info-version">Version V 1.1</span>
     <div class="info-desc">Application personnelle de suivi<br>des sorties et prises de pêche</div>
     <div class="info-divider"></div>
     <div class="info-author" id="info-author-name">Bruno LARIVE</div>
@@ -1035,23 +1007,14 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 
 <script>
 // ════════════════════════════════════════════════════════
-//  OPTIMISATIONS DE PERFORMANCE AJOUTÉES
+//  STATE
 // ════════════════════════════════════════════════════════
-// 1. Debounce sur la recherche (évite de recalculer à chaque frappe)
-// 2. Cache des calculs lourds (groupes, stats)
-// 3. Limite d'affichage à 50 sorties (scroll infini à venir si besoin)
-// 4. Mise en cache des groupes déjà calculés
-// ════════════════════════════════════════════════════════
-
 let entries = JSON.parse(localStorage.getItem('peche-entries')||'[]');
 let spots   = JSON.parse(localStorage.getItem('peche-spots')||'[]');
 let currentFilter='tous', currentStars=0, selectedMeteo=[];
-let isTrophy=false, isRelache=false, isCapot=false, photoData=null;
+let isTrophy=false, isRelache=false, isCapot=false;
+let currentPhotos = []; // Tableau de photos compressées (base64)
 let leafletMap=null, mapMarkers=[];
-let renderTimeout = null;
-let cachedGroups = null;
-let cachedFilter = null;
-let cachedSearch = null;
 
 const topbarTitles={
   journal:['Mes sorties','Journal de pêche'],
@@ -1067,6 +1030,7 @@ const topbarTitles={
 //  INIT
 // ════════════════════════════════════════════════════════
 function init(){
+  // Dark mode auto
   if(localStorage.getItem('dark')==='1'||
      (localStorage.getItem('dark')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
     document.body.classList.add('dark');
@@ -1083,7 +1047,7 @@ function init(){
 // ════════════════════════════════════════════════════════
 //  COMPRESSION D'IMAGE
 // ════════════════════════════════════════════════════════
-function compressImage(file, maxWidth=1024, quality=0.7) {
+function compressImage(file, maxWidth=1200, quality=0.7) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -1092,14 +1056,18 @@ function compressImage(file, maxWidth=1024, quality=0.7) {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
+        
         if (width > maxWidth) {
           height = (height * maxWidth) / width;
           width = maxWidth;
         }
+        
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
+        
+        // Compression en JPEG pour réduire la taille
         const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
         resolve(compressedDataUrl);
       };
@@ -1114,8 +1082,6 @@ function compressImage(file, maxWidth=1024, quality=0.7) {
 // ════════════════════════════════════════════════════════
 //  MULTI-PHOTO GESTION
 // ════════════════════════════════════════════════════════
-let currentPhotos = [];
-
 function addPhotoInput() {
   if (currentPhotos.length >= 3) {
     showToast('⚠️ Maximum 3 photos par prise');
@@ -1127,15 +1093,19 @@ function addPhotoInput() {
 async function handlePhotoSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
+  
   if (!file.type.startsWith('image/')) {
     showToast('❌ Veuillez sélectionner une image');
     return;
   }
+  
   if (currentPhotos.length >= 3) {
     showToast('⚠️ Maximum 3 photos par prise');
     return;
   }
+  
   showToast('📸 Compression en cours...');
+  
   try {
     const compressed = await compressImage(file, 1024, 0.7);
     currentPhotos.push(compressed);
@@ -1145,6 +1115,7 @@ async function handlePhotoSelect(event) {
     console.error(err);
     showToast('❌ Erreur lors de la compression');
   }
+  
   event.target.value = '';
 }
 
@@ -1152,7 +1123,9 @@ function updatePhotoThumbList() {
   const container = document.getElementById('photo-thumb-list');
   const counter = document.getElementById('photo-count');
   const addBtn = document.getElementById('photo-add-btn');
+  
   if (!container) return;
+  
   if (counter) counter.textContent = currentPhotos.length;
   if (addBtn) {
     if (currentPhotos.length >= 3) {
@@ -1161,6 +1134,7 @@ function updatePhotoThumbList() {
       addBtn.classList.remove('disabled');
     }
   }
+  
   container.innerHTML = currentPhotos.map((photo, idx) => `
     <div class="photo-thumb-item">
       <img src="${photo}" alt="Photo ${idx+1}">
@@ -1222,18 +1196,7 @@ function setFilter(f,btn){
   currentFilter=f;
   document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
-  // Invalider le cache car le filtre a changé
-  cachedGroups = null;
   renderJournal();
-}
-
-// ── DEBOUNCE POUR LA RECHERCHE (optimisation performance) ──
-function debouncedRenderJournal() {
-  if (renderTimeout) clearTimeout(renderTimeout);
-  renderTimeout = setTimeout(() => {
-    cachedGroups = null; // invalider le cache car recherche changée
-    renderJournal();
-  }, 300);
 }
 
 // ── POPUP MENU ──
@@ -1260,6 +1223,7 @@ function popupNav(name){
 // ════════════════════════════════════════════════════════
 //  FORM
 // ════════════════════════════════════════════════════════
+// ── Gestion "Autre" espèce ──────────────────────────────
 function toggleAutreEspece(selectId, inputId){
   const sel=document.getElementById(selectId);
   const inp=document.getElementById(inputId);
@@ -1327,13 +1291,11 @@ function saveEntry(){
     lune:document.getElementById('f-lune').value,
     stars:currentStars, trophy:isCapot?false:isTrophy, relache:isCapot?false:isRelache,
     capot:isCapot, notes:document.getElementById('f-notes').value, 
-    photos: [...currentPhotos]
+    photos: [...currentPhotos] // Stocker les photos compressées
   };
   entries.unshift(entry);
   localStorage.setItem('peche-entries',JSON.stringify(entries));
   resetForm(); updateAllStats();
-  // Invalider le cache
-  cachedGroups = null;
   showToast(isCapot?'😔 Capot enregistré…':'🎣 Sortie enregistrée !');
   switchView('journal'); renderJournal();
 }
@@ -1352,7 +1314,7 @@ function resetForm(){
   sg.style.opacity='1'; sg.style.pointerEvents='';
   const gb=document.getElementById('geo-btn');
   if(gb){gb.textContent='📡 Utiliser ma position GPS';gb.disabled=false;}
-  selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false; 
+  selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false;
   resetPhotos(); // Réinitialiser les photos
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('f-date').value=now.toISOString().slice(0,16);
@@ -1361,19 +1323,24 @@ function resetForm(){
 // ════════════════════════════════════════════════════════
 //  JOURNAL — regroupement par jour + lieu
 // ════════════════════════════════════════════════════════
+
+// Clé de regroupement : jour (YYYY-MM-DD) + lieu
 function sortieKey(e){
   const jour=e.date?e.date.slice(0,10):'sans-date';
   const lieu=e.lieu||'sans-lieu';
   return `${jour}||${lieu}`;
 }
 
+// Grouper les entrées filtrées en sorties
 function groupEnSorties(filtered){
   const map=new Map();
+  // On parcourt dans l'ordre déjà trié (plus récent en premier)
   filtered.forEach(e=>{
     const k=sortieKey(e);
     if(!map.has(k)) map.set(k,[]);
     map.get(k).push(e);
   });
+  // Retourner tableau de groupes triés par date desc (première prise du groupe)
   return [...map.values()].sort((a,b)=>{
     const da=a[0].date||''; const db=b[0].date||'';
     return db.localeCompare(da);
@@ -1384,7 +1351,6 @@ function deleteEntry(id){
   if(!confirm('Supprimer cette prise ?')) return;
   entries=entries.filter(e=>e.id!==id);
   localStorage.setItem('peche-entries',JSON.stringify(entries));
-  cachedGroups = null;
   renderJournal(); updateAllStats();
   showToast('🗑 Prise supprimée');
 }
@@ -1394,7 +1360,6 @@ function deleteSortie(ids){
   const set=new Set(ids);
   entries=entries.filter(e=>!set.has(e.id));
   localStorage.setItem('peche-entries',JSON.stringify(entries));
-  cachedGroups = null;
   renderJournal(); updateAllStats();
   showToast('🗑 Sortie supprimée');
 }
@@ -1404,14 +1369,8 @@ function toggleSortie(key){
   if(card) card.classList.toggle('open');
 }
 
-function viewFullImage(src) {
-  const imgWindow = window.open();
-  imgWindow.document.write(`<img src="${src}" style="max-width:100%;height:auto;margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh">`);
-}
-
 function renderJournal(){
   const search=document.getElementById('search-input').value.toLowerCase();
-  
   let filtered=entries.filter(e=>{
     if(currentFilter==='trophy') return e.trophy;
     if(currentFilter==='capot') return e.capot;
@@ -1428,44 +1387,42 @@ function renderJournal(){
 
   const isMobile=window.innerWidth<768;
   const sorties=groupEnSorties(filtered);
-  
-  // OPTIMISATION: Limite à 50 sorties affichées pour les performances
-  // Les sorties plus anciennes sont conservées mais non affichées
-  // (charge infinie possible si besoin)
-  const maxDisplayed = 50;
-  const visibleSorties = sorties.slice(0, maxDisplayed);
-  
-  if (sorties.length > maxDisplayed) {
-    console.log(`[Performance] ${sorties.length} sorties totales, affichage limité à ${maxDisplayed}`);
-  }
 
-  list.innerHTML=visibleSorties.map((prises,idx)=>{
-    const ref=prises[0];
+  list.innerHTML=sorties.map((prises,idx)=>{
+    const ref=prises[0]; // Première prise du groupe pour les infos générales
     const ids=prises.map(e=>e.id);
     const key=sortieKey(ref);
     const jour=ref.date?new Date(ref.date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
     const heureDeb=ref.date?new Date(ref.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
 
+    // Heure de fin = heureFin de la dernière prise ou de n'importe laquelle qui l'a
     const avecFin=prises.filter(e=>e.heureFin);
     const heureFin=avecFin.length?avecFin[avecFin.length-1].heureFin:'';
     const duree=heureFin&&ref.date?calcDuree(ref.date,heureFin):'';
 
+    // Météo unique du groupe
     const allMeteo=[...new Set(prises.flatMap(e=>e.meteo||[]))];
+    // Note : meilleure note de la sortie
     const maxStars=Math.max(...prises.map(e=>e.stars||0));
+    // Prises hors capot
     const prisesReelles=prises.filter(e=>!e.capot);
     const nbPrises=prisesReelles.length;
     const isCapotSortie=prises.every(e=>e.capot);
     const hasTrophy=prises.some(e=>e.trophy);
 
+    // Meilleure prise (poids max)
     const avecPoids=prisesReelles.filter(e=>e.poids!=null).sort((a,b)=>{
       const ka=a.poids>100?a.poids/1000:a.poids, kb=b.poids>100?b.poids/1000:b.poids; return kb-ka;
     });
+    const meilleureEspece=avecPoids[0]?.espece||(prisesReelles[0]?.espece||'Capot');
     const meilleurPoids=avecPoids[0]?.poids!=null?formatPoids(avecPoids[0].poids>100?avecPoids[0].poids/1000:avecPoids[0].poids):'';
 
+    // Espèces résumé
     const especesCount={};
     prisesReelles.forEach(e=>{ especesCount[e.espece]=(especesCount[e.espece]||0)+1; });
     const especesSummary=Object.entries(especesCount).map(([sp,n])=>n>1?`${n}× ${sp}`:sp).join(', ');
 
+    // Cartes des prises individuelles
     const prisesHTML=prises.map(e=>{
       const h=e.date?new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
       const tags=[];
@@ -1475,9 +1432,10 @@ function renderJournal(){
       if(e.relache) tags.push("↩️ R.à l'eau");
       if(e.trophy) tags.push('🏆 Trophée');
       
+      // Photos miniatures
       const photosHtml = e.photos && e.photos.length ? `
         <div class="prise-photo-grid">
-          ${e.photos.slice(0,3).map(p => `<img class="prise-photo-mini" src="${p}" alt="photo" onclick="event.stopPropagation();viewFullImage('${p.replace(/'/g, "\\'")}')">`).join('')}
+          ${e.photos.slice(0,3).map(p => `<img class="prise-photo-mini" src="${p}" alt="photo" onclick="event.stopPropagation();viewFullImage('${p}')">`).join('')}
         </div>
       ` : '';
       
@@ -1504,6 +1462,7 @@ function renderJournal(){
     const cardClass=`sortie-card${hasTrophy?' has-trophy':''}${isCapotSortie?' is-capot':''}`;
     const keyEsc=key.replace(/"/g,'&quot;');
 
+    // Sur desktop : bouton supprimer toute la sortie
     const deleteSortieBtn=`<button type="button" onclick="deleteSortie([${ids.join(',')}])" style="font-size:11px;color:var(--rouge);background:#fee;border:1px solid #fcc;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif">🗑 Sortie</button>`;
     const shareBtn=nbPrises>0?`<button type="button" onclick="openShareSortie([${ids.join(',')}])" style="font-size:11px;color:var(--eau-claire);background:var(--bleu-clair);border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif">📤 Partager</button>`:'';
 
@@ -1567,6 +1526,7 @@ function renderJournal(){
     }
   }).join('');
 
+  // Swipe mobile sur les cartes sortie
   if(isMobile){
     document.querySelectorAll('.sortie-card').forEach(card=>{
       let sx=0,cx=0,d=false;
@@ -1586,6 +1546,11 @@ function renderJournal(){
       });
     });
   }
+}
+
+function viewFullImage(src) {
+  const imgWindow = window.open();
+  imgWindow.document.write(`<img src="${src}" style="max-width:100%;height:auto;margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh">`);
 }
 
 function calcDuree(dateStr, heureFin){
@@ -1608,28 +1573,20 @@ function formatPoids(kg){
 }
 
 // ════════════════════════════════════════════════════════
-//  STATS & GRAPHIQUES (versions optimisées avec cache)
+//  STATS & GRAPHIQUES
 // ════════════════════════════════════════════════════════
-let cachedStats = null;
-let statsDirty = true;
-
-function markStatsDirty() {
-  statsDirty = true;
-  cachedStats = null;
-}
-
 function updateAllStats(){
   const nbSorties=new Set(entries.map(sortieKey)).size;
   const prises=entries.filter(e=>!e.capot);
   const records=prises.filter(e=>e.poids!=null);
   const recKg=records.length?Math.max(...records.map(e=>e.poids>100?e.poids/1000:e.poids)):null;
   const rec=recKg!=null?formatPoids(recKg):'—';
+  const species=new Set(prises.map(e=>e.espece)).size;
   const mTotal=document.getElementById('m-total'); if(mTotal) mTotal.textContent=nbSorties;
   const mPoissons=document.getElementById('m-poissons'); if(mPoissons) mPoissons.textContent=prises.length;
   const mr=document.getElementById('m-record'); if(mr) mr.textContent=rec;
   const st=document.getElementById('s-total'); if(st) st.textContent=nbSorties;
   const sr=document.getElementById('s-record'); if(sr) sr.textContent=rec;
-  markStatsDirty();
 }
 
 function updateStats(){
@@ -1638,8 +1595,8 @@ function updateStats(){
     el.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">📊</span><p>Pas encore de données.</p></div>`;
     return;
   }
-  
   const prises=entries.filter(e=>!e.capot);
+  const capots=entries.filter(e=>e.capot);
   const nbSorties=new Set(entries.map(sortieKey)).size;
   const nbSortiesAvecPrise=new Set(prises.map(sortieKey)).size;
   const allKeys=new Set(entries.map(sortieKey));
@@ -1647,23 +1604,28 @@ function updateStats(){
   const capotOnlyKeys=[...allKeys].filter(k=>!priseKeys.has(k));
   const tauxReussite=nbSorties?Math.round(nbSortiesAvecPrise/nbSorties*100):0;
 
+  // Espèces pour barres + camembert
   const sp={};prises.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+(e.nbPoissons||1);});
   const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
   const totalPoissons=Object.values(sp).reduce((a,b)=>a+b,0);
   const maxC=sorted.length?sorted[0][1]:1;
 
+  // Records
   const wP=[...prises].filter(e=>e.poids!=null).sort((a,b)=>{
     const ka=a.poids>100?a.poids/1000:a.poids, kb=b.poids>100?b.poids/1000:b.poids; return kb-ka;
   });
   const wT=[...prises].filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
 
+  // Spot favori
   const lx={};entries.forEach(e=>{if(e.lieu)lx[e.lieu]=(lx[e.lieu]||0)+1;});
   const tL=Object.entries(lx).sort((a,b)=>b[1]-a[1])[0];
 
+  // Meilleure heure
   const heures=prises.filter(e=>e.date).map(e=>new Date(e.date).getHours());
   const hCount={}; heures.forEach(h=>hCount[h]=(hCount[h]||0)+1);
   const bestH=Object.entries(hCount).sort((a,b)=>b[1]-a[1])[0];
 
+  // ── Meilleure saison (par trimestre)
   const saisons={printemps:0,ete:0,automne:0,hiver:0};
   const saisonNames={printemps:'🌸 Printemps',ete:'☀️ Été',automne:'🍂 Automne',hiver:'❄️ Hiver'};
   prises.filter(e=>e.date).forEach(e=>{
@@ -1675,6 +1637,7 @@ function updateStats(){
   });
   const bestSaison=Object.entries(saisons).sort((a,b)=>b[1]-a[1])[0];
 
+  // ── Comparaison N vs N-1
   const now=new Date();
   const yearN=now.getFullYear(), yearN1=yearN-1;
   const entriesN=entries.filter(e=>e.date&&e.date.startsWith(String(yearN)));
@@ -1688,7 +1651,9 @@ function updateStats(){
   const tauxN1=sortiesN1?Math.round(new Set(prisesN1.map(sortieKey)).size/sortiesN1*100):0;
   function arrow(n,p){return n>p?'<span class="cmp-arrow up">▲</span>':n<p?'<span class="cmp-arrow down">▼</span>':'<span class="cmp-arrow eq">═</span>';}
 
+  // Couleurs camembert
   const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
+
   const moisData=getMoisData();
 
   el.innerHTML=`
@@ -1760,7 +1725,6 @@ function updateStats(){
     drawTauxChart(moisData);
     if(sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
   }, 50);
-  statsDirty = false;
 }
 
 function getMoisData(){
@@ -1771,6 +1735,7 @@ function getMoisData(){
     const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     const label=d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});
     const mEntries=entries.filter(e=>e.date&&e.date.startsWith(key));
+    // Compter les sorties (groupes), pas les prises
     const mSorties=new Set(mEntries.map(sortieKey)).size;
     const mPriseKeys=new Set(mEntries.filter(e=>!e.capot).map(sortieKey));
     const mTotal=mSorties;
@@ -1793,12 +1758,14 @@ function drawMoisChart(data){
   const isDark=document.body.classList.contains('dark');
   const textCol=isDark?'#8a96b0':'#8a96b0';
   const gridCol=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  // grille
   for(let i=0;i<=4;i++){
     const y=pad.t+ch*(1-i/4);
     ctx.strokeStyle=gridCol; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
     if(i>0){ctx.fillStyle=textCol;ctx.font='10px DM Sans';ctx.textAlign='right';ctx.fillText(Math.round(maxVal*i/4),pad.l-4,y+3);}
   }
+  // barres
   data.forEach((d,i)=>{
     const x=pad.l+i*gap+gap/2-bw/2;
     const h=d.total?(d.total/maxVal)*ch:0;
@@ -1809,6 +1776,7 @@ function drawMoisChart(data){
     ctx.beginPath();
     ctx.roundRect?ctx.roundRect(x,y,bw,h,4):ctx.rect(x,y,bw,h);
     ctx.fill();
+    // label mois
     ctx.fillStyle=textCol; ctx.font='9px DM Sans'; ctx.textAlign='center';
     ctx.fillText(d.label,x+bw/2,H-6);
   });
@@ -1825,6 +1793,7 @@ function drawTauxChart(data){
   const textCol=isDark?'#8a96b0':'#8a96b0';
   const gridCol=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
   ctx.clearRect(0,0,W,H);
+  // grille 0-100%
   for(let i=0;i<=4;i++){
     const y=pad.t+ch*(1-i/4);
     ctx.strokeStyle=gridCol; ctx.lineWidth=1;
@@ -1832,10 +1801,12 @@ function drawTauxChart(data){
     ctx.fillStyle=textCol;ctx.font='10px DM Sans';ctx.textAlign='right';
     ctx.fillText(i*25+'%',pad.l-4,y+3);
   }
+  // ligne courbe
   const pts=data.map((d,i)=>({
     x:pad.l+i*(cw/(data.length-1||1)),
     y:pad.t+ch*(1-d.taux/100)
   }));
+  // aire
   ctx.beginPath();
   ctx.moveTo(pts[0].x,pad.t+ch);
   pts.forEach(p=>ctx.lineTo(p.x,p.y));
@@ -1845,10 +1816,12 @@ function drawTauxChart(data){
   grad.addColorStop(0,'rgba(232,96,154,0.25)');
   grad.addColorStop(1,'rgba(232,96,154,0)');
   ctx.fillStyle=grad; ctx.fill();
+  // ligne
   ctx.beginPath();
   ctx.moveTo(pts[0].x,pts[0].y);
   pts.forEach(p=>ctx.lineTo(p.x,p.y));
   ctx.strokeStyle='#e8609a'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+  // points
   pts.forEach((p,i)=>{
     if(data[i].total===0) return;
     ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2);
@@ -1858,6 +1831,7 @@ function drawTauxChart(data){
   });
 }
 
+// ── CAMEMBERT ESPÈCES ──────────────────────────────────
 function drawPieChart(sorted, total, colors){
   const canvas=document.getElementById('chart-pie'); if(!canvas) return;
   const ctx=canvas.getContext('2d');
@@ -1876,9 +1850,11 @@ function drawPieChart(sorted, total, colors){
     ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
     angle+=slice;
   });
+  // Trou central (donut)
   ctx.beginPath(); ctx.arc(cx,cy,r*0.52,0,Math.PI*2);
   ctx.fillStyle=document.body.classList.contains('dark')?'#0f2147':'white';
   ctx.fill();
+  // Texte central
   ctx.fillStyle=document.body.classList.contains('dark')?'#d0e0f8':'#1a2035';
   ctx.font=`bold 22px Playfair Display`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -1891,6 +1867,7 @@ function drawPieChart(sorted, total, colors){
 //  CARNET D'APPÂTS
 // ════════════════════════════════════════════════════════
 let appats=JSON.parse(localStorage.getItem('peche-appats')||'[]');
+// Appâts par défaut si vide
 if(!appats.length){
   appats=['Bouillette','Ver de terre','Maïs','Cuillère','Leurre souple','Mouche sèche','Vairon','Asticot','Crevette','Pain'].map((n,i)=>({id:i+1,nom:n}));
   localStorage.setItem('peche-appats',JSON.stringify(appats));
@@ -1916,6 +1893,7 @@ function selectAppat(nom){
 function renderAppatsPage(){
   const el=document.getElementById('appats-page-content');
   if(!el) return;
+  // Fréquences d'utilisation
   const freq={};
   entries.filter(e=>e.appat).forEach(e=>{ freq[e.appat]=(freq[e.appat]||0)+1; });
 
@@ -1976,7 +1954,11 @@ function deleteAppat(id){
 }
 
 // ════════════════════════════════════════════════════════
-//  GÉOLOCALISATION & SPOTS (version existante, non modifiée)
+//  SPOTS — enrichi avec historique météo
+// ════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════
+//  GÉOLOCALISATION & SPOTS
 // ════════════════════════════════════════════════════════
 function geoLocate(){
   const btn=document.getElementById('geo-btn');
@@ -2041,11 +2023,14 @@ function addManualSpot(){
   showToast('⭐ Spot ajouté !');
 }
 
+// ── CARTE LEAFLET ──
 function initMap(){
-  if(leafletMap) return;
+  if(leafletMap) return; // déjà initialisée
   const container=document.getElementById('map-container');
   if(!container) return;
+  // Spots avec coordonnées GPS
   const spotsGeo=spots.filter(s=>s.lat&&s.lng);
+  // Centre par défaut : France
   let center=[46.5,2.5], zoom=5;
   if(spotsGeo.length){
     center=[spotsGeo[0].lat,spotsGeo[0].lng]; zoom=12;
@@ -2108,6 +2093,7 @@ function renderSpotsPage(){
           const sortiesSpot=entries.filter(e=>e.lieu===s.nom);
           const prisesSpot=sortiesSpot.filter(e=>!e.capot);
           const hasCoords=s.lat&&s.lng;
+          // Historique météo : conditions par sortie
           const meteoHist=sortiesSpot.filter(e=>e.date&&e.meteo&&e.meteo.length).slice(0,5);
           const meteoHtml=meteoHist.length?`
             <div style="margin-top:8px">
@@ -2153,7 +2139,7 @@ function renderSpotsPage(){
 }
 
 // ════════════════════════════════════════════════════════
-//  PARTAGE DE FICHE (version existante)
+//  PARTAGE DE FICHE — niveau sortie
 // ════════════════════════════════════════════════════════
 function openShareSortie(ids){
   const prises=ids.map(id=>entries.find(e=>e.id===id)).filter(Boolean);
@@ -2164,12 +2150,14 @@ function openShareSortie(ids){
   const date=ref.date?new Date(ref.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'';
   const heure=ref.date?new Date(ref.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
 
+  // Titre sortie
   const titre=isCapot?'🚫 Capot (bredouille)':
     prisesReelles.map(e=>e.espece).filter((v,i,a)=>a.indexOf(v)===i).join(', ');
   document.getElementById('sc-species').textContent=titre;
   document.getElementById('sc-lieu').textContent=ref.lieu?'📍 '+ref.lieu:'';
   document.getElementById('sc-date').innerHTML=`${date}<br>${heure}`;
 
+  // Stats
   const totalPoissons=prisesReelles.length;
   const avecPoids=prisesReelles.filter(e=>e.poids!=null).sort((a,b)=>{
     const ka=a.poids>100?a.poids/1000:a.poids, kb=b.poids>100?b.poids/1000:b.poids; return kb-ka;
@@ -2189,15 +2177,18 @@ function openShareSortie(ids){
   document.getElementById('sc-stats').innerHTML=stats.map(s=>`
     <div class="share-stat"><span class="val">${s.val}</span><span class="lbl">${s.lbl}</span></div>`).join('');
 
+  // Notes
   const allNotes=prisesReelles.filter(e=>e.notes).map(e=>e.notes).join(' — ');
   const notesEl=document.getElementById('sc-notes');
   if(allNotes){notesEl.textContent='"'+allNotes.slice(0,120)+'"';notesEl.style.display='block';}
   else notesEl.style.display='none';
 
+  // Stocker les ids pour le partage texte
   document.getElementById('share-wrap').dataset.ids=JSON.stringify(ids);
   document.getElementById('share-wrap').classList.add('open');
 }
 
+// Garde la compat avec l'ancien openShare(id) au cas où
 function openShare(id){ openShareSortie([id]); }
 function closeShare(e){ if(e.target===document.getElementById('share-wrap')) closeShareBtn(); }
 function closeShareBtn(){ document.getElementById('share-wrap').classList.remove('open'); }
@@ -2212,11 +2203,12 @@ function copyShareText(){
 }
 
 // ════════════════════════════════════════════════════════
-//  ÉDITION D'UNE PRISE (version existante)
+//  ÉDITION D'UNE PRISE
 // ════════════════════════════════════════════════════════
 function openEditEntry(id){
   const e=entries.find(x=>x.id===id); if(!e) return;
   document.getElementById('edit-id').value=id;
+  // Espèce : si valeur pas dans la liste → sélectionner "Autre" + afficher champ
   const knownSpecies=['Carpe','Brochet','Truite fario','Truite arc-en-ciel','Sandre','Perche','Gardon','Rotengle','Tanche','Anguille','Black-bass','Silure','Barbeau','Chevesne','Ablette','Alose'];
   const editSel=document.getElementById('edit-espece');
   const editAutre=document.getElementById('edit-espece-autre');
@@ -2265,13 +2257,12 @@ function saveEditEntry(){
     relache:document.getElementById('edit-relache').checked,
   };
   localStorage.setItem('peche-entries',JSON.stringify(entries));
-  cachedGroups = null;
   closeEdit(); renderJournal(); updateAllStats();
   showToast('✅ Prise modifiée !');
 }
 
 // ════════════════════════════════════════════════════════
-//  PARAMÈTRES (version existante)
+//  PARAMÈTRES — personnalisation du nom
 // ════════════════════════════════════════════════════════
 function getPecheurNom(){
   return localStorage.getItem('pecheur-nom')||'Bruno LARIVE';
@@ -2335,19 +2326,20 @@ function resetAllData(){
   localStorage.removeItem('peche-spots');
   localStorage.removeItem('peche-appats');
   entries=[]; spots=[]; appats=[];
-  cachedGroups = null;
   renderJournal(); updateAllStats(); renderSpotsForm();
   switchView('journal');
   showToast('🗑 Données réinitialisées');
 }
 
 // ════════════════════════════════════════════════════════
-//  RAPPORT & EXPORT (versions existantes)
+//  RAPPORT DE SAISON
 // ════════════════════════════════════════════════════════
 function renderRapportPage(){
   const el=document.getElementById('rapport-content');
   if(!el) return;
   const annee=new Date().getFullYear();
+  const prises=entries.filter(e=>!e.capot);
+  const nbSorties=new Set(entries.map(sortieKey)).size;
   el.innerHTML=`
     <div class="stat-card" style="margin-bottom:14px">
       <div class="stat-card-title">📄 Rapport & Export</div>
@@ -2379,6 +2371,7 @@ function openExport(){ document.getElementById('export-wrap').classList.add('ope
 function closeExport(){ document.getElementById('export-wrap').classList.remove('open'); }
 function closeExportOnOverlay(e){ if(e.target===document.getElementById('export-wrap')) closeExport(); }
 
+// ── EXPORT CSV ────────────────────────────────────────
 function exportCSV(){
   if(!entries.length){showToast('⚠️ Aucune donnée');return;}
   const headers=['Date','Heure','Espèce','Taille (cm)','Poids (kg)','Lieu','Technique','Appât','Profondeur (m)','Météo','Temp Air','Temp Eau','Lune','Note','Trophée','Remis à l\'eau','Capot','Notes'];
@@ -2412,7 +2405,9 @@ function exportCSV(){
   closeExport();
 }
 
+// ── EXPORT IMAGE FICHE SORTIE ────────────────────────
 function exportFicheImage(){
+  // Trouver la dernière sortie non-capot
   const dernieres=entries.filter(e=>!e.capot);
   if(!dernieres.length){showToast('⚠️ Aucune prise enregistrée');return;}
   const ref=dernieres[0];
@@ -2424,26 +2419,40 @@ function exportFicheImage(){
   const ctx=canvas.getContext('2d');
   const W=800, H=480;
 
+  // Fond dégradé
   const grad=ctx.createLinearGradient(0,0,W,H);
   grad.addColorStop(0,'#0f2147'); grad.addColorStop(1,'#1b3a6b');
   ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+
+  // Vague décorative
   ctx.fillStyle='rgba(46,109,180,0.2)';
   ctx.beginPath(); ctx.ellipse(W/2,H+60,W*0.7,120,0,0,Math.PI*2); ctx.fill();
+
+  // Bandeau rose en haut
   ctx.fillStyle='rgba(232,96,154,0.15)';
   ctx.fillRect(0,0,W,8);
+
+  // Emoji hameçon
   ctx.font='56px serif'; ctx.textAlign='left';
   ctx.fillText('🎣',40,80);
+
+  // Titre espèces
   const especes=groupe.map(e=>e.espece).filter((v,i,a)=>a.indexOf(v)===i).join(', ');
   ctx.fillStyle='white';
   ctx.font='bold 32px Georgia, serif';
   ctx.fillText(especes.slice(0,40),110,65);
+
+  // Lieu et date
   const date=ref.date?new Date(ref.date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
   ctx.font='16px DM Sans, sans-serif';
   ctx.fillStyle='rgba(255,255,255,0.65)';
   ctx.fillText((ref.lieu?'📍 '+ref.lieu+' — ':'')+date,110,92);
+
+  // Ligne séparatrice
   ctx.strokeStyle='rgba(232,96,154,0.5)'; ctx.lineWidth=1;
   ctx.beginPath(); ctx.moveTo(40,110); ctx.lineTo(W-40,110); ctx.stroke();
 
+  // Stats en grille
   const avecPoids=groupe.filter(e=>e.poids!=null).sort((a,b)=>(b.poids>100?b.poids/1000:b.poids)-(a.poids>100?a.poids/1000:a.poids));
   const avecTaille=groupe.filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
   const allMeteo=[...new Set(groupe.flatMap(e=>e.meteo||[]))];
@@ -2463,11 +2472,13 @@ function exportFicheImage(){
   stats.slice(0,6).forEach((s,i)=>{
     const col=i%cols, row=Math.floor(i/cols);
     const x=startX+col*(cardW+gapX), y=startY+row*(cardH+gapY);
+    // Carte fond
     ctx.fillStyle='rgba(255,255,255,0.07)';
     ctx.beginPath();
     if(ctx.roundRect) ctx.roundRect(x,y,cardW,cardH,10);
     else ctx.rect(x,y,cardW,cardH);
     ctx.fill();
+    // Icône + valeur
     ctx.font='22px serif'; ctx.textAlign='left'; ctx.fillStyle='white';
     ctx.fillText(s.icon,x+14,y+32);
     ctx.font='bold 22px Georgia, serif'; ctx.fillStyle='#f0c0d8';
@@ -2476,14 +2487,18 @@ function exportFicheImage(){
     ctx.fillText(s.label,x+14,y+60);
   });
 
+  // Note étoiles
   if(maxStars){
     ctx.font='20px serif'; ctx.textAlign='left'; ctx.fillStyle='white';
     ctx.fillText('⭐'.repeat(maxStars),40,H-50);
   }
+
+  // Footer
   ctx.fillStyle='rgba(255,255,255,0.3)';
   ctx.font='13px DM Sans, sans-serif'; ctx.textAlign='right';
   ctx.fillText(`🎣 Carnet de Pêche — ${getPecheurNom()}`,W-40,H-30);
 
+  // Télécharger
   canvas.toBlob(blob=>{
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
@@ -2494,6 +2509,7 @@ function exportFicheImage(){
   closeExport();
 }
 
+// ── EXPORT PDF ────────────────────────────────────────
 function exportPDF(){
   if(!entries.length){showToast('⚠️ Aucune donnée');return;}
   const annee=new Date().getFullYear();
@@ -2505,6 +2521,8 @@ function exportPDF(){
   const lx={};entries.forEach(e=>{if(e.lieu)lx[e.lieu]=(lx[e.lieu]||0)+1;});
   const spotFavori=Object.entries(lx).sort((a,b)=>b[1]-a[1])[0];
   const tauxReussite=nbSorties?Math.round(new Set(prises.map(sortieKey)).size/nbSorties*100):0;
+
+  // Générer les 20 dernières sorties
   const groups=groupEnSorties(entries).slice(0,20);
 
   const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
@@ -2537,23 +2555,29 @@ function exportPDF(){
     <div class="stat-box"><span class="val">${records[0]?formatPoids(records[0].poids>100?records[0].poids/1000:records[0].poids):'—'}</span><span class="lbl">Record</span></div>
   </div>
   ${sortedSp.length?`<h2>🐟 Espèces capturées</h2>
-  <table><th>Espèce</th><th>Nb prises</th><th>% du total</th></tr>
-  ${sortedSp.map(([s,c])=>`<tr><td>${s}</td><td>${c}</span></td><td>${Math.round(c/prises.length*100)}%</span></td></tr>`).join('')}
+  <table><th>Espèce</th><th>Nb prises</th><th>% du total</th><tr>
+  ${sortedSp.map(([s,c])=>`<tr><td>${s}</td><td>${c}</td><td>${Math.round(c/prises.length*100)}%</td></tr>`).join('')}
   </table>`:''}
   ${spotFavori?`<h2>📍 Spot favori : ${spotFavori[0]} (${spotFavori[1]} sortie${spotFavori[1]>1?'s':''})</h2>`:''}
   <h2>📖 Journal des sorties (20 dernières)</h2>
-  <table><th>Date</th><th>Lieu</th><th>Espèces</th><th>Prises</th><th>Meilleur poids</th><th>Météo</th></tr>
-  ${groups.map(g=>{
-    const ref=g[0];
-    const pr=g.filter(e=>!e.capot);
-    const ww=pr.filter(e=>e.poids!=null).sort((a,b)=>(b.poids>100?b.poids/1000:b.poids)-(a.poids>100?a.poids/1000:a.poids));
-    const date=ref.date?new Date(ref.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
-    const especes=[...new Set(pr.map(e=>e.espece))].join(', ')||'—';
-    const meteo=[...new Set(g.flatMap(e=>e.meteo||[]))].join(' ')||'—';
-    return `<tr><td>${date}</span></td><td>${ref.lieu||'—'}</span></td><td>${especes}</span></td><td>${g.every(e=>e.capot)?'<span class="badge badge-bleu">Capot</span>':pr.length}</span></td><td>${ww[0]?formatPoids(ww[0].poids>100?ww[0].poids/1000:ww[0].poids):'—'}</span></td><td>${meteo}</span></tr>`;
-  }).join('')}
+  <table>
+    <tr><th>Date</th><th>Lieu</th><th>Espèces</th><th>Prises</th><th>Meilleur poids</th><th>Météo</th></tr>
+    ${groups.map(g=>{
+      const ref=g[0];
+      const pr=g.filter(e=>!e.capot);
+      const ww=pr.filter(e=>e.poids!=null).sort((a,b)=>(b.poids>100?b.poids/1000:b.poids)-(a.poids>100?a.poids/1000:a.poids));
+      const date=ref.date?new Date(ref.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
+      const especes=[...new Set(pr.map(e=>e.espece))].join(', ')||'—';
+      const meteo=[...new Set(g.flatMap(e=>e.meteo||[]))].join(' ')||'—';
+      return `<tr>
+        <td>${date}</td><td>${ref.lieu||'—'}</td>
+        <td>${especes}</td><td>${g.every(e=>e.capot)?'<span class="badge badge-bleu">Capot</span>':pr.length}</td>
+        <td>${ww[0]?formatPoids(ww[0].poids>100?ww[0].poids/1000:ww[0].poids):'—'}</td>
+        <td>${meteo}</td>
+      </tr>`;
+    }).join('')}
   </table>
-  <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.2</div>
+  <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.1</div>
   </body></html>`;
 
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
@@ -2563,6 +2587,7 @@ function exportPDF(){
     setTimeout(()=>{ win.print(); URL.revokeObjectURL(url); },800);
     showToast('📄 Rapport ouvert — imprimez en PDF');
   } else {
+    // Fallback : téléchargement direct
     const a=document.createElement('a');
     a.href=url; a.download=`rapport-peche-${annee}.html`;
     a.click(); URL.revokeObjectURL(url);
@@ -2570,7 +2595,6 @@ function exportPDF(){
   }
   closeExport();
 }
-
 function exportData(){
   if(!entries.length){showToast('⚠️ Aucune donnée à exporter');return;}
   const data={version:2,exportDate:new Date().toISOString(),entries,spots};
@@ -2581,7 +2605,6 @@ function exportData(){
   a.click(); URL.revokeObjectURL(url);
   showToast(`📤 ${entries.length} sortie(s) exportée(s) !`);
 }
-
 function importData(event){
   const file=event.target.files[0]; if(!file) return;
   const reader=new FileReader();
@@ -2594,13 +2617,13 @@ function importData(event){
       const nouveaux=imported.filter(e=>!existingIds.has(e.id));
       entries=[...nouveaux,...entries];
       localStorage.setItem('peche-entries',JSON.stringify(entries));
+      // Import spots si présents
       if(data.spots&&Array.isArray(data.spots)){
         const existSpotIds=new Set(spots.map(s=>s.id));
         const newSpots=data.spots.filter(s=>!existSpotIds.has(s.id));
         spots=[...newSpots,...spots];
         localStorage.setItem('peche-spots',JSON.stringify(spots));
       }
-      cachedGroups = null;
       renderJournal(); updateAllStats(); renderSpotsForm();
       showToast(`📥 ${nouveaux.length} sortie(s) importée(s) !`);
     }catch{showToast('❌ Fichier invalide');}
@@ -2622,16 +2645,19 @@ let rt;
 window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJournal,200); });
 
 // ════════════════════════════════════════════════════════
-//  SERVICE WORKER
+//  SERVICE WORKER — version par date de déploiement
+//  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
-const BUILD_DATE = '20260402';
+const BUILD_DATE = '20260330'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
+      // L'URL versionnée force Chrome à recharger sw.js si BUILD_DATE change
       const swUrl = `./sw.js?v=${BUILD_DATE}`;
       const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' });
 
+      // Envoyer la version au SW pour qu'il purge l'ancien cache
       const sendVersion = (worker) => {
         if (worker) worker.postMessage({ type: 'SET_VERSION', version: BUILD_DATE });
       };
@@ -2639,10 +2665,12 @@ if ('serviceWorker' in navigator) {
       sendVersion(reg.active);
       sendVersion(reg.waiting);
 
+      // SW en attente → activer immédiatement
       if (reg.waiting) {
         reg.waiting.postMessage('SKIP_WAITING');
       }
 
+      // Nouveau SW installé en arrière-plan → activer immédiatement
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         newWorker.addEventListener('statechange', () => {
@@ -2653,17 +2681,22 @@ if ('serviceWorker' in navigator) {
         });
       });
 
+      // Forcer la vérification toutes les 2 minutes
       setInterval(() => reg.update(), 2 * 60 * 1000);
+
       console.log(`[App] SW enregistré — Build ${BUILD_DATE}`);
+
     } catch (err) {
       console.warn('[App] SW échec:', err);
     }
 
+    // Nouveau SW actif → rechargement automatique de la page
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       console.log('[App] Nouveau SW actif — rechargement');
       window.location.reload();
     });
 
+    // Message RELOAD envoyé par le SW quand version change
     navigator.serviceWorker.addEventListener('message', event => {
       if (event.data && event.data.type === 'RELOAD') {
         console.log('[App] SW demande rechargement — nouvelle version');
@@ -2676,6 +2709,7 @@ if ('serviceWorker' in navigator) {
 function showUpdateBanner() {}
 function applyUpdate() { window.location.reload(); }
 
+// ── MODALE À PROPOS ──
 function openInfo(){ document.getElementById('info-wrap').classList.add('open'); }
 function closeInfo(){ document.getElementById('info-wrap').classList.remove('open'); }
 function closeInfoOnOverlay(e){ if(e.target===document.getElementById('info-wrap')) closeInfo(); }
