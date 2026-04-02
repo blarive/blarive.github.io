@@ -641,7 +641,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
           <div id="prise-fields">
             <div class="form-group">
               <label class="form-label">🐟 Espèce</label>
-              <select class="form-select" id="f-espece">
+              <select class="form-select" id="f-espece" onchange="toggleAutreEspece('f-espece','f-espece-autre')">
                 <option value="">— Sélectionner —</option>
                 <option>Carpe</option><option>Brochet</option><option>Truite fario</option>
                 <option>Truite arc-en-ciel</option><option>Sandre</option><option>Perche</option>
@@ -650,6 +650,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
                 <option>Barbeau</option><option>Chevesne</option><option>Ablette</option>
                 <option>Alose</option><option>Autre</option>
               </select>
+              <input type="text" class="form-input" id="f-espece-autre" placeholder="Précisez l'espèce…" style="display:none;margin-top:8px">
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -846,7 +847,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
     <input type="hidden" id="edit-id">
     <div class="form-group">
       <label class="form-label">🐟 Espèce</label>
-      <select class="form-select" id="edit-espece">
+      <select class="form-select" id="edit-espece" onchange="toggleAutreEspece('edit-espece','edit-espece-autre')">
         <option value="">— Sélectionner —</option>
         <option>Carpe</option><option>Brochet</option><option>Truite fario</option>
         <option>Truite arc-en-ciel</option><option>Sandre</option><option>Perche</option>
@@ -855,6 +856,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
         <option>Barbeau</option><option>Chevesne</option><option>Ablette</option>
         <option>Alose</option><option>Autre</option>
       </select>
+      <input type="text" class="form-input" id="edit-espece-autre" placeholder="Précisez l'espèce…" style="display:none;margin-top:8px">
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -1106,6 +1108,29 @@ function popupNav(name){
 // ════════════════════════════════════════════════════════
 //  FORM
 // ════════════════════════════════════════════════════════
+// ── Gestion "Autre" espèce ──────────────────────────────
+function toggleAutreEspece(selectId, inputId){
+  const sel=document.getElementById(selectId);
+  const inp=document.getElementById(inputId);
+  if(!inp) return;
+  if(sel.value==='Autre'){
+    inp.style.display='block';
+    inp.focus();
+  } else {
+    inp.style.display='none';
+    inp.value='';
+  }
+}
+
+function getEspece(selectId, inputId){
+  const sel=document.getElementById(selectId);
+  const inp=document.getElementById(inputId);
+  if(sel.value==='Autre'){
+    return (inp?.value||'').trim()||'Autre';
+  }
+  return sel.value;
+}
+
 function setStar(n){
   currentStars=n;
   document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('active',i<n));
@@ -1149,7 +1174,7 @@ function removePhoto(e){
 }
 
 function saveEntry(){
-  const espece=document.getElementById('f-espece').value;
+  const espece=getEspece('f-espece','f-espece-autre');
   if(!isCapot&&!espece){showToast('⚠️ Sélectionne une espèce !');return;}
   const poidsVal=document.getElementById('f-poids').value;
   const entry={
@@ -1181,6 +1206,8 @@ function saveEntry(){
 function resetForm(){
   ['f-espece','f-taille','f-poids','f-lieu','f-technique','f-temp-air','f-temp-eau','f-lune','f-notes','f-appat','f-profondeur','f-heure-fin']
     .forEach(id=>document.getElementById(id).value='');
+  const autreInp=document.getElementById('f-espece-autre');
+  if(autreInp){autreInp.value='';autreInp.style.display='none';}
   document.getElementById('f-nb-poissons').value='1';
   document.querySelectorAll('.meteo-btn').forEach(b=>{b.classList.remove('selected','selected-rose');});
   document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('active'));
@@ -2075,7 +2102,19 @@ function copyShareText(){
 function openEditEntry(id){
   const e=entries.find(x=>x.id===id); if(!e) return;
   document.getElementById('edit-id').value=id;
-  document.getElementById('edit-espece').value=e.espece||'';
+  // Espèce : si valeur pas dans la liste → sélectionner "Autre" + afficher champ
+  const knownSpecies=['Carpe','Brochet','Truite fario','Truite arc-en-ciel','Sandre','Perche','Gardon','Rotengle','Tanche','Anguille','Black-bass','Silure','Barbeau','Chevesne','Ablette','Alose'];
+  const editSel=document.getElementById('edit-espece');
+  const editAutre=document.getElementById('edit-espece-autre');
+  if(e.espece&&!knownSpecies.includes(e.espece)){
+    editSel.value='Autre';
+    editAutre.style.display='block';
+    editAutre.value=e.espece;
+  } else {
+    editSel.value=e.espece||'';
+    editAutre.style.display='none';
+    editAutre.value='';
+  }
   document.getElementById('edit-taille').value=e.taille||'';
   document.getElementById('edit-poids').value=e.poids!=null?(e.poids>100?(e.poids/1000).toFixed(3):e.poids):'';
   document.getElementById('edit-technique').value=e.technique||'';
@@ -2087,7 +2126,11 @@ function openEditEntry(id){
   document.getElementById('edit-relache').checked=!!e.relache;
   document.getElementById('edit-wrap').classList.add('open');
 }
-function closeEdit(){ document.getElementById('edit-wrap').classList.remove('open'); }
+function closeEdit(){
+  document.getElementById('edit-wrap').classList.remove('open');
+  const editAutre=document.getElementById('edit-espece-autre');
+  if(editAutre){editAutre.style.display='none';editAutre.value='';}
+}
 function closeEditOnOverlay(ev){ if(ev.target===document.getElementById('edit-wrap')) closeEdit(); }
 
 function saveEditEntry(){
@@ -2096,7 +2139,7 @@ function saveEditEntry(){
   const poidsVal=document.getElementById('edit-poids').value;
   entries[idx]={
     ...entries[idx],
-    espece:document.getElementById('edit-espece').value||entries[idx].espece,
+    espece:getEspece('edit-espece','edit-espece-autre')||entries[idx].espece,
     taille:document.getElementById('edit-taille').value||null,
     poids:poidsVal?parseFloat(poidsVal):null,
     technique:document.getElementById('edit-technique').value,
