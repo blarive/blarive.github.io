@@ -665,12 +665,14 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
               <label class="form-label">🎣 Technique</label>
               <select class="form-select" id="f-technique">
                 <option value="">— Technique —</option>
-                <option>Carpe — Cheveu</option><option>Lancer — Cuillère</option>
-                <option>Lancer — Leurre souple</option><option>Lancer — Popper</option>
-                <option>Mouche sèche</option><option>Mouche noyée</option>
-                <option>Toc / Vairon</option><option>Feeder</option>
-                <option>Bolognaise</option><option>Pêche au coup</option>
-                <option>Pêche au posé</option><option>Pêche au vif</option><option>Autre</option>
+                <option>Au toc</option>
+                <option>Au toc nymphe</option>
+                <option>Au leurre</option>
+                <option>Au posé</option>
+                <option>Au ver</option>
+                <option>Au feeder</option>
+                <option>Au method feeder</option>
+                <option>En mer</option>
               </select>
             </div>
             <div class="form-group">
@@ -868,12 +870,14 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
       <label class="form-label">🎣 Technique</label>
       <select class="form-select" id="edit-technique">
         <option value="">— Technique —</option>
-        <option>Carpe — Cheveu</option><option>Lancer — Cuillère</option>
-        <option>Lancer — Leurre souple</option><option>Lancer — Popper</option>
-        <option>Mouche sèche</option><option>Mouche noyée</option>
-        <option>Toc / Vairon</option><option>Feeder</option>
-        <option>Bolognaise</option><option>Pêche au coup</option>
-        <option>Pêche au posé</option><option>Pêche au vif</option><option>Autre</option>
+        <option>Au toc</option>
+        <option>Au toc nymphe</option>
+        <option>Au leurre</option>
+        <option>Au posé</option>
+        <option>Au ver</option>
+        <option>Au feeder</option>
+        <option>Au method feeder</option>
+        <option>En mer</option>
       </select>
     </div>
     <div class="form-group">
@@ -2192,8 +2196,7 @@ function renderRapportPage(){
     <div class="stat-card" style="margin-bottom:14px">
       <div class="stat-card-title">📄 Rapport & Export</div>
       <p style="font-size:13px;color:var(--gris);margin-bottom:20px;line-height:1.6">
-        Exportez votre carnet de pêche en différents formats.<br>
-        <strong style="color:var(--texte)">${nbSorties} sortie${nbSorties>1?'s':''}</strong> — <strong style="color:var(--texte)">${prises.length} prise${prises.length>1?'s':''}</strong> enregistrées
+        Exportez votre carnet de pêche en différents formats.
       </p>
       <div style="display:flex;flex-direction:column;gap:10px">
         <button type="button" class="export-btn pdf" onclick="exportPDF()" style="border-radius:12px">
@@ -2497,7 +2500,7 @@ window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJou
 //  SERVICE WORKER — version par date de déploiement
 //  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
-const BUILD_DATE = '20260401'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+const BUILD_DATE = '20260330'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
