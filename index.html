@@ -1965,16 +1965,7 @@ function updateStats(){
     if(sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
   }, 50);
 }
-function resizeCanvasForMobile(canvasId) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const container = canvas.parentElement;
-  if (container && window.innerWidth < 768) {
-    canvas.style.width = '100%';
-    canvas.style.height = 'auto';
-    canvas.style.minWidth = '500px';
-  }
-}
+
 function getMoisData(){
   const now=new Date();
   const data=[];
