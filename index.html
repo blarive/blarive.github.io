@@ -1350,10 +1350,6 @@ function resetForm(){
   const f=document.getElementById('prise-fields'), sg=document.getElementById('statut-group');
   f.style.opacity='1'; f.style.pointerEvents='';
   sg.style.opacity='1'; sg.style.pointerEvents='';
-  document.getElementById('photo-preview-container').style.display='none';
-  document.getElementById('photo-preview').src='';
-  document.getElementById('photo-upload-label').classList.remove('has-photo');
-  document.getElementById('f-photo').value='';
   const gb=document.getElementById('geo-btn');
   if(gb){gb.textContent='📡 Utiliser ma position GPS';gb.disabled=false;}
   selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false; 
