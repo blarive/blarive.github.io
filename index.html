@@ -501,7 +501,7 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   body.dark .app-body{background:#0a1628;}
   .page-content{padding:16px 12px 90px;}
   .cards-grid{grid-template-columns:1fr;}
-  .stats-grid{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:1fr !important;gap:12px;}
   .form-layout{grid-template-columns:1fr;}
   .form-card{padding:16px;}
   .form-card-title{font-size:13px;margin-bottom:12px;}
@@ -516,6 +516,181 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .fab-menu-btn.open{transform:rotate(45deg);}
   .toast{bottom:90px;}
   .btn-delete-desktop{display:none;}
+
+  /* ===== STATS RESPONSIVE - CORRECTION COMPLÈTE ===== */
+
+  /* Cartes statistiques */
+  .stat-card {
+    padding: 14px !important;
+    margin-bottom: 12px;
+    overflow-x: auto;
+  }
+
+  .stat-card-title {
+    font-size: 13px !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* Graphiques - scroll horizontal */
+  .chart-wrap {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    margin: 8px 0;
+  }
+
+  .chart-wrap canvas {
+    min-width: 500px;
+    height: 160px !important;
+    display: block;
+  }
+
+  /* Camembert */
+  .pie-wrap {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 16px !important;
+  }
+
+  .pie-canvas-wrap {
+    width: 160px;
+    height: 160px;
+    margin: 0 auto;
+  }
+
+  .pie-canvas-wrap canvas {
+    width: 160px !important;
+    height: 160px !important;
+    min-width: auto !important;
+  }
+
+  .pie-legend {
+    width: 100% !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center;
+    gap: 8px 12px !important;
+  }
+
+  .pie-legend-item {
+    min-width: 90px;
+    font-size: 11px;
+  }
+
+  /* Liste des espèces */
+  .species-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .species-name {
+    width: auto !important;
+    min-width: 80px;
+    font-size: 12px;
+  }
+
+  .bar-track {
+    flex: 2;
+    min-width: 120px;
+    height: 8px;
+  }
+
+  .bar-count {
+    font-size: 11px;
+    min-width: 35px;
+    text-align: right;
+  }
+
+  /* Records */
+  .record-item {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0;
+  }
+
+  .record-icon {
+    font-size: 22px;
+  }
+
+  .record-info .species {
+    font-size: 13px;
+  }
+
+  .record-info .detail {
+    font-size: 10px;
+  }
+
+  .record-value {
+    font-size: 16px !important;
+  }
+
+  /* Comparaison années */
+  .cmp-year-header {
+    justify-content: center !important;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .cmp-year-badge {
+    font-size: 10px;
+    padding: 4px 12px;
+  }
+
+  .cmp-row {
+    font-size: 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0;
+  }
+
+  .cmp-label {
+    min-width: 80px;
+    font-size: 12px;
+  }
+
+  .cmp-val {
+    font-size: 13px !important;
+  }
+
+  .cmp-arrow {
+    font-size: 12px;
+    min-width: 20px;
+  }
+
+  /* Boutons export */
+  .export-btn {
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+  }
+
+  .export-btn .eb-icon {
+    font-size: 20px;
+  }
+
+  .export-btn .eb-title {
+    font-size: 13px;
+  }
+
+  .export-btn .eb-sub {
+    font-size: 10px;
+  }
+
+  /* Grille des stats */
+  .stats-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px;
+  }
+
+  /* Résumé stats en haut */
+  .stat-card:first-child .record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
   
   /* ===== STATS RESPONSIVE ===== */
   .stats-grid{grid-template-columns:1fr !important;gap:12px;}
@@ -1790,7 +1965,16 @@ function updateStats(){
     if(sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
   }, 50);
 }
-
+function resizeCanvasForMobile(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const container = canvas.parentElement;
+  if (container && window.innerWidth < 768) {
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+    canvas.style.minWidth = '500px';
+  }
+}
 function getMoisData(){
   const now=new Date();
   const data=[];
