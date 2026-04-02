@@ -218,7 +218,10 @@ body.dark .prise-species{color:#d0e0f8;}
 .prise-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .prise-val{font-size:12px;color:#555;display:flex;align-items:center;gap:3px;}
 body.dark .prise-val{color:#8a96b0;}
-.prise-photo{width:64px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0;}
+.prise-photos{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.prise-photo-mini{width:36px;height:36px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid rgba(0,0,0,0.1);transition:transform 0.1s;}
+.prise-photo-mini:hover{transform:scale(1.05);}
+.prise-photo-grid{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
 .prise-badges{display:flex;gap:4px;flex-wrap:wrap;}
 .prise-notes{font-size:11px;color:#888;font-style:italic;margin-top:4px;grid-column:1/-1;}
 .prise-del-btn{background:none;border:none;color:var(--gris);font-size:18px;cursor:pointer;padding:2px 4px;flex-shrink:0;transition:color 0.15s;}
@@ -242,6 +245,17 @@ body.dark .edit-modal{background:#0f2147;color:#e0e8f4;}
 body.dark .edit-modal-handle{background:#2a4080;}
 .edit-modal h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--eau-profonde);margin-bottom:16px;}
 body.dark .edit-modal h3{color:#d0e0f8;}
+
+/* ── MULTI PHOTO UPLOAD ─── */
+.photo-grid-upload{display:flex;flex-direction:column;gap:12px;}
+.photo-thumb-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+.photo-thumb-item{position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:2px solid var(--bleu-clair);}
+.photo-thumb-item img{width:100%;height:100%;object-fit:cover;}
+.photo-thumb-remove{position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.photo-add-btn{padding:12px;border:2px dashed var(--eau-claire);border-radius:12px;background:var(--bleu-clair);cursor:pointer;text-align:center;font-size:13px;font-weight:600;color:var(--eau-claire);transition:all 0.2s;}
+.photo-add-btn.disabled{opacity:0.4;cursor:not-allowed;border-color:var(--gris);background:#f0f0f0;}
+.photo-add-btn span{font-size:20px;margin-right:6px;}
+.photo-counter{font-size:11px;color:var(--gris);margin-top:6px;text-align:right;}
 
 /* ── PERSONNALISATION NOM ─── */
 .settings-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0;}
@@ -279,18 +293,6 @@ body.dark .meteo-btn.selected{background:rgba(46,109,180,0.3);color:#90c0ff;bord
 body.dark .meteo-btn.selected-rose{background:rgba(232,96,154,0.25);color:#ffaacc;border-color:var(--rose);}
 .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--eau-claire) 0%,var(--rose) 100%);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(46,109,180,0.25);transition:transform 0.15s;}
 .btn-submit:active{transform:scale(0.98);}
-.photo-upload{display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #c8d8f0;border-radius:var(--radius);padding:20px 16px;cursor:pointer;background:#f8faff;transition:all 0.2s;width:100%;}
-.photo-upload:hover{border-color:var(--eau-claire);background:#f0f5ff;}
-.photo-upload input{display:none;}
-.photo-upload .icon{font-size:32px;display:block;margin-bottom:8px;opacity:0.6;}
-.photo-upload p{font-size:13px;color:var(--gris);text-align:center;margin:0;}
-.photo-upload .photo-preview-container{width:100%;margin-top:12px;display:none;}
-.photo-upload .photo-preview{width:100%;max-height:180px;object-fit:cover;border-radius:10px;display:block;}
-.photo-upload.has-photo{border-style:solid;border-color:var(--mousse);background:#f0f9f0;}
-.photo-upload.has-photo .icon,.photo-upload.has-photo p{display:none;}
-.photo-upload.has-photo .photo-preview-container{display:block;}
-.photo-remove{margin-top:8px;padding:6px 12px;background:#fee;border:1px solid #fcc;border-radius:20px;font-size:11px;color:var(--rouge);cursor:pointer;font-weight:600;transition:all 0.15s;}
-.photo-remove:hover{background:var(--rouge);color:white;border-color:var(--rouge);}
 .capot-banner{display:none;background:var(--bleu-clair);border:1.5px solid #b8cef0;border-radius:12px;padding:14px 16px;margin-bottom:14px;color:var(--eau);font-size:14px;font-weight:500;text-align:center;}
 .capot-banner.visible{display:block;}
 .geo-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid #c8d8f0;border-radius:10px;background:var(--bleu-clair);color:var(--eau-claire);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;width:100%;margin-top:6px;}
@@ -754,18 +756,20 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
             <label class="form-label">📝 Notes</label>
             <textarea class="form-textarea" id="f-notes" placeholder="Appâts, conditions, anecdotes…"></textarea>
           </div>
+          
+          <!-- MULTI-PHOTO UPLOAD (max 3) -->
           <div class="form-group">
-            <label class="form-label">📸 Photo</label>
-            <label class="photo-upload" id="photo-upload-label" for="f-photo">
-              <input type="file" id="f-photo" accept="image/*" onchange="previewPhoto(event)">
-              <span class="icon" id="photo-icon">📷</span>
-              <p id="photo-text">Ajouter une photo</p>
-              <div class="photo-preview-container" id="photo-preview-container">
-                <img class="photo-preview" id="photo-preview" alt="">
-                <button type="button" class="photo-remove" onclick="removePhoto(event)">✕ Supprimer la photo</button>
+            <label class="form-label">📸 Photos (max 3)</label>
+            <div class="photo-grid-upload">
+              <div class="photo-thumb-list" id="photo-thumb-list"></div>
+              <div class="photo-add-btn" id="photo-add-btn" onclick="addPhotoInput()">
+                <span>➕</span> Ajouter une photo (<span id="photo-count">0</span>/3)
               </div>
-            </label>
+              <div class="photo-counter">Formats acceptés : JPG, PNG (compression automatique)</div>
+            </div>
+            <input type="file" id="f-photo-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
           </div>
+          
           <button type="button" class="btn-submit" onclick="saveEntry()">✅ Enregistrer la sortie</button>
         </div>
       </div>
@@ -970,7 +974,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
   <div class="info-modal">
     <div class="info-logo">🎣</div>
     <h2>Carnet de Pêche</h2>
-    <span class="info-version">Version V 1.0</span>
+    <span class="info-version">Version V 1.1</span>
     <div class="info-desc">Application personnelle de suivi<br>des sorties et prises de pêche</div>
     <div class="info-divider"></div>
     <div class="info-author" id="info-author-name">Bruno LARIVE</div>
@@ -1008,7 +1012,8 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 let entries = JSON.parse(localStorage.getItem('peche-entries')||'[]');
 let spots   = JSON.parse(localStorage.getItem('peche-spots')||'[]');
 let currentFilter='tous', currentStars=0, selectedMeteo=[];
-let isTrophy=false, isRelache=false, isCapot=false, photoData=null;
+let isTrophy=false, isRelache=false, isCapot=false;
+let currentPhotos = []; // Tableau de photos compressées (base64)
 let leafletMap=null, mapMarkers=[];
 
 const topbarTitles={
@@ -1036,7 +1041,117 @@ function init(){
   renderJournal(); updateStats(); updateAllStats();
   renderSpotsForm(); renderSpotsPage();
   renderAppatsForm();
-  // À propos : nom fixe (Bruno LARIVE), pas de mise à jour dynamique
+  updatePhotoThumbList();
+}
+
+// ════════════════════════════════════════════════════════
+//  COMPRESSION D'IMAGE
+// ════════════════════════════════════════════════════════
+function compressImage(file, maxWidth=1200, quality=0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Compression en JPEG pour réduire la taille
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedDataUrl);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  MULTI-PHOTO GESTION
+// ════════════════════════════════════════════════════════
+function addPhotoInput() {
+  if (currentPhotos.length >= 3) {
+    showToast('⚠️ Maximum 3 photos par prise');
+    return;
+  }
+  document.getElementById('f-photo-input').click();
+}
+
+async function handlePhotoSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (!file.type.startsWith('image/')) {
+    showToast('❌ Veuillez sélectionner une image');
+    return;
+  }
+  
+  if (currentPhotos.length >= 3) {
+    showToast('⚠️ Maximum 3 photos par prise');
+    return;
+  }
+  
+  showToast('📸 Compression en cours...');
+  
+  try {
+    const compressed = await compressImage(file, 1024, 0.7);
+    currentPhotos.push(compressed);
+    updatePhotoThumbList();
+    showToast('✅ Photo ajoutée et compressée');
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Erreur lors de la compression');
+  }
+  
+  event.target.value = '';
+}
+
+function updatePhotoThumbList() {
+  const container = document.getElementById('photo-thumb-list');
+  const counter = document.getElementById('photo-count');
+  const addBtn = document.getElementById('photo-add-btn');
+  
+  if (!container) return;
+  
+  if (counter) counter.textContent = currentPhotos.length;
+  if (addBtn) {
+    if (currentPhotos.length >= 3) {
+      addBtn.classList.add('disabled');
+    } else {
+      addBtn.classList.remove('disabled');
+    }
+  }
+  
+  container.innerHTML = currentPhotos.map((photo, idx) => `
+    <div class="photo-thumb-item">
+      <img src="${photo}" alt="Photo ${idx+1}">
+      <button type="button" class="photo-thumb-remove" onclick="removePhotoFromList(${idx})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removePhotoFromList(index) {
+  currentPhotos.splice(index, 1);
+  updatePhotoThumbList();
+  showToast('🗑 Photo supprimée');
+}
+
+function resetPhotos() {
+  currentPhotos = [];
+  updatePhotoThumbList();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1153,25 +1268,6 @@ function toggleCapot(btn){
     ['f-espece','f-taille','f-poids','f-technique'].forEach(id=>document.getElementById(id).value='');
   }
 }
-function previewPhoto(e){
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    photoData=ev.target.result;
-    document.getElementById('photo-preview').src=photoData;
-    document.getElementById('photo-preview-container').style.display='block';
-    document.getElementById('photo-upload-label').classList.add('has-photo');
-  };
-  reader.readAsDataURL(file);
-}
-function removePhoto(e){
-  e.stopPropagation(); photoData=null;
-  document.getElementById('f-photo').value='';
-  document.getElementById('photo-preview-container').style.display='none';
-  document.getElementById('photo-preview').src='';
-  document.getElementById('photo-upload-label').classList.remove('has-photo');
-  showToast('🗑 Photo supprimée');
-}
 
 function saveEntry(){
   const espece=getEspece('f-espece','f-espece-autre');
@@ -1194,7 +1290,8 @@ function saveEntry(){
     tempEau:document.getElementById('f-temp-eau').value||null,
     lune:document.getElementById('f-lune').value,
     stars:currentStars, trophy:isCapot?false:isTrophy, relache:isCapot?false:isRelache,
-    capot:isCapot, notes:document.getElementById('f-notes').value, photo:photoData
+    capot:isCapot, notes:document.getElementById('f-notes').value, 
+    photos: [...currentPhotos] // Stocker les photos compressées
   };
   entries.unshift(entry);
   localStorage.setItem('peche-entries',JSON.stringify(entries));
@@ -1215,13 +1312,10 @@ function resetForm(){
   const f=document.getElementById('prise-fields'), sg=document.getElementById('statut-group');
   f.style.opacity='1'; f.style.pointerEvents='';
   sg.style.opacity='1'; sg.style.pointerEvents='';
-  document.getElementById('photo-preview-container').style.display='none';
-  document.getElementById('photo-preview').src='';
-  document.getElementById('photo-upload-label').classList.remove('has-photo');
-  document.getElementById('f-photo').value='';
   const gb=document.getElementById('geo-btn');
   if(gb){gb.textContent='📡 Utiliser ma position GPS';gb.disabled=false;}
-  selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false; photoData=null;
+  selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false;
+  resetPhotos(); // Réinitialiser les photos
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('f-date').value=now.toISOString().slice(0,16);
 }
@@ -1337,9 +1431,16 @@ function renderJournal(){
       if(e.profondeur) tags.push(`🌊 ${e.profondeur}m`);
       if(e.relache) tags.push("↩️ R.à l'eau");
       if(e.trophy) tags.push('🏆 Trophée');
+      
+      // Photos miniatures
+      const photosHtml = e.photos && e.photos.length ? `
+        <div class="prise-photo-grid">
+          ${e.photos.slice(0,3).map(p => `<img class="prise-photo-mini" src="${p}" alt="photo" onclick="event.stopPropagation();viewFullImage('${p}')">`).join('')}
+        </div>
+      ` : '';
+      
       return `
         <div class="prise-row">
-          ${e.photo?`<img class="prise-photo" src="${e.photo}" alt="">`:''}
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <span class="prise-species">${e.capot?'🚫 Capot (bredouille)':e.espece||'—'}</span>
@@ -1350,6 +1451,7 @@ function renderJournal(){
               ${e.poids!=null?`<span class="prise-val">⚖️ ${formatPoids(e.poids>100?e.poids/1000:e.poids)}</span>`:''}
             </div>
             ${tags.length?`<div class="prise-badges" style="margin-top:4px">${tags.map(t=>`<span style="font-size:10px;background:var(--bleu-clair);color:var(--eau-claire);padding:2px 7px;border-radius:8px;font-weight:500">${t}</span>`).join('')}</div>`:''}
+            ${photosHtml}
             ${e.notes?`<div class="prise-notes">"${e.notes.slice(0,80)}${e.notes.length>80?'…':''}"</div>`:''}
           </div>
           <button type="button" class="prise-edit-btn" onclick="openEditEntry(${e.id})" title="Modifier cette prise">✏️</button>
@@ -1429,7 +1531,6 @@ function renderJournal(){
     document.querySelectorAll('.sortie-card').forEach(card=>{
       let sx=0,cx=0,d=false;
       card.addEventListener('touchstart',e=>{
-        // Ne pas swiper si on clique sur un bouton interne
         if(e.target.closest('button,a,.prise-del-btn')) return;
         sx=e.touches[0].clientX; d=true;
       },{passive:true});
@@ -1445,6 +1546,11 @@ function renderJournal(){
       });
     });
   }
+}
+
+function viewFullImage(src) {
+  const imgWindow = window.open();
+  imgWindow.document.write(`<img src="${src}" style="max-width:100%;height:auto;margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh">`);
 }
 
 function calcDuree(dateStr, heureFin){
@@ -2209,7 +2315,6 @@ function saveNom(){
   const nom=(document.getElementById('param-nom')?.value||'').trim();
   if(!nom){showToast('⚠️ Entrez votre nom');return;}
   localStorage.setItem('pecheur-nom',nom);
-  // NE PAS modifier À propos — le nom dans À propos reste celui du code
   renderParametresPage();
   showToast('✅ Nom enregistré pour les rapports !');
 }
@@ -2450,7 +2555,7 @@ function exportPDF(){
     <div class="stat-box"><span class="val">${records[0]?formatPoids(records[0].poids>100?records[0].poids/1000:records[0].poids):'—'}</span><span class="lbl">Record</span></div>
   </div>
   ${sortedSp.length?`<h2>🐟 Espèces capturées</h2>
-  <table><tr><th>Espèce</th><th>Nb prises</th><th>% du total</th></tr>
+  <table><th>Espèce</th><th>Nb prises</th><th>% du total</th><tr>
   ${sortedSp.map(([s,c])=>`<tr><td>${s}</td><td>${c}</td><td>${Math.round(c/prises.length*100)}%</td></tr>`).join('')}
   </table>`:''}
   ${spotFavori?`<h2>📍 Spot favori : ${spotFavori[0]} (${spotFavori[1]} sortie${spotFavori[1]>1?'s':''})</h2>`:''}
@@ -2472,7 +2577,7 @@ function exportPDF(){
       </tr>`;
     }).join('')}
   </table>
-  <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.0</div>
+  <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.1</div>
   </body></html>`;
 
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
