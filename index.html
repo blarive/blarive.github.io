@@ -10,10 +10,534 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Carnet de Pêche</title>
-<link rel="stylesheet" href="style.css">
+<style>
+  /* Bannière mise à jour — désactivée (rechargement automatique) */
+  .update-banner{ display:none !important; }
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<!-- Leaflet.js pour la carte interactive -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root {
+  --eau:#1b3a6b; --eau-profonde:#0f2147; --eau-claire:#2e6db4;
+  --sable:#f7d6e8; --mousse:#4a7c59; --eclair:#e8609a;
+  --blanc:#fdf4f8; --texte:#1a2035; --gris:#8a96b0;
+  --rouge:#c0392b; --rose:#e8609a; --rose-clair:#fce4f0;
+  --bleu-clair:#e8f0fb; --radius:14px; --sidebar-w:240px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{font-family:'DM Sans',sans-serif;background:#eef2f5;color:var(--texte);display:flex;min-height:100vh;}
+
+/* ── DARK MODE — bloc unique et autoritaire ─── */
+body.dark{background:#0a1628;color:#e0e8f4;}
+/* Redéfinition des variables CSS en dark mode — résout tous les color:var(--texte) inline */
+body.dark{
+  --texte:#e0e8f4;
+  --gris:#8a96b0;
+  --blanc:#0a1628;
+  --bleu-clair:#1a3060;
+}
+body.dark .app-body{background:#0a1628;}
+body.dark .topbar{background:#0f2147;border-color:#1a3060;}
+body.dark .topbar-title{color:#e0e8f4;}
+body.dark .page-content{background:#0a1628;}
+body.dark .form-card,body.dark .stat-card,body.dark .menu-popup{background:#0f2147;color:#e0e8f4;}
+body.dark .entry-card{background:#0f2147;box-shadow:0 1px 6px rgba(0,0,0,0.3);color:#e0e8f4;}
+body.dark .entry-card.capot{background:#0d1e3a;}
+body.dark .entry-species{color:#d0e0f8;}
+body.dark .form-input,body.dark .form-select,body.dark .form-textarea{background:#1a3060;border-color:#2a4080;color:#e0e8f4;}
+body.dark .filter-pill{background:#0f2147;border-color:#2a4080;color:#8a96b0;}
+body.dark .filter-pill.active{background:var(--rose);border-color:var(--rose);color:white;}
+body.dark .search-box input{background:#0f2147;border-color:#2a4080;color:#e0e8f4;}
+body.dark .stat-card{background:#0f2147;}
+body.dark .record-item{border-color:#1a3060;}
+body.dark .bar-track{background:#1a3060;}
+body.dark .menu-popup-item{background:#1a3060;}
+body.dark .menu-popup-item .mi-label{color:white;font-weight:700;}
+body.dark .menu-popup-item .mi-sub{color:#8a96b0;}
+body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--rose);}
+body.dark .menu-popup-small{background:#1a3060;color:#e0e8f4;}
+/* Nav sidebar */
+body.dark .nav-item{color:#a0b8d8;}
+body.dark .nav-item:hover{background:rgba(255,255,255,0.1);color:white;}
+body.dark .nav-item.active{background:var(--rose);color:white;}
+/* Stats mobiles — fond bleu foncé, textes blancs */
+body.dark .mobile-stats-bar{background:var(--eau-profonde);}
+body.dark .mob-stat{background:rgba(255,255,255,0.08);}
+body.dark .mob-stat .num{color:var(--rose);}
+body.dark .mob-stat .label{color:white;opacity:1;}
+/* Stat sidebar sur desktop */
+body.dark .sidebar-stat .num{color:var(--rose);}
+body.dark .sidebar-stat .label{color:#8a96b0;}
+/* Sortie cards */
+body.dark .sortie-card{background:#0f2147;}
+body.dark .sortie-card.is-capot{background:#0d1e3a;}
+body.dark .sortie-date-line{color:#d0e0f8;}
+body.dark .prise-species{color:#d0e0f8;}
+body.dark .prise-val{color:#8a96b0;}
+body.dark .prise-row{border-color:#1a3060;}
+body.dark .prises-list{border-color:#1a3060;}
+/* Appâts */
+body.dark .appat-tag{background:#1a3060;color:white;border-color:#2a4080;}
+body.dark .appat-tag.selected{background:var(--eau-claire);color:white;}
+body.dark .appat-list-row{border-color:#1a3060;}
+body.dark .appat-list-nom{color:white;}
+/* Meteo btns */
+body.dark .meteo-btn{color:white;border-color:#2a4080;}
+body.dark .meteo-btn.selected{background:rgba(46,109,180,0.3);color:#90c0ff;border-color:var(--eau-claire);}
+body.dark .meteo-btn.selected-rose{background:rgba(232,96,154,0.25);color:#ffaacc;border-color:var(--rose);}
+/* Modales */
+body.dark .edit-modal{background:#0f2147;color:#e0e8f4;}
+body.dark .edit-modal-handle{background:#2a4080;}
+body.dark .edit-modal h3{color:#d0e0f8;}
+body.dark .export-modal{background:#0f2147;color:#e0e8f4;}
+body.dark .export-modal h3{color:#d0e0f8;}
+body.dark .export-cancel{background:#1a3060;color:#8a96b0;}
+body.dark .info-modal{background:#0f2147;color:#e0e8f4;}
+body.dark .info-modal h2{color:#d0e0f8;}
+body.dark .info-modal .info-divider{background:#1a3060;}
+body.dark .info-author{color:#e0e8f4;}
+/* Divers */
+body.dark .species-name{color:#e0e8f4;}
+body.dark .cmp-label{color:#e0e8f4;}
+body.dark .pie-legend-item{color:#e0e8f4;}
+body.dark .settings-label{color:#e0e8f4;}
+body.dark .settings-row{border-color:#1a3060;}
+body.dark .spot-chip{background:#1a3060;border-color:#2a4080;color:white;}
+body.dark .meteo-spot-row{border-color:#1a3060;}
+body.dark .sortie-chip{background:#1a3060;}
+body.dark .sortie-header:hover{background:rgba(255,255,255,0.04);}
+body.dark .record-info .species{color:#e0e8f4;}
+body.dark .entry-notes{color:#8a96b0;}
+body.dark .entry-meta-item{color:#a0b8d8;}
+
+/* ── SIDEBAR ─── */
+.sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,var(--eau-profonde) 0%,var(--eau) 100%);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden;}
+.sidebar::after{content:'';position:absolute;bottom:60px;left:-20%;width:140%;height:100px;background:rgba(232,96,154,0.15);border-radius:50%;filter:blur(30px);animation:vague 7s ease-in-out infinite;pointer-events:none;}
+@keyframes vague{0%,100%{transform:translateX(0) scaleY(1)}50%{transform:translateX(4%) scaleY(1.2)}}
+.sidebar-logo{padding:32px 24px 20px;position:relative;z-index:1;}
+.sidebar-logo .icon{font-size:34px;display:block;margin-bottom:8px;filter:drop-shadow(0 2px 8px rgba(240,192,64,0.5));}
+.sidebar-logo h1{font-family:'Playfair Display',serif;font-size:19px;color:var(--sable);line-height:1.2;}
+.sidebar-logo p{font-size:10px;color:var(--gris);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;}
+.sidebar-stats{display:flex;flex-direction:column;gap:8px;padding:0 16px 20px;position:relative;z-index:1;}
+.sidebar-stat{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
+.sidebar-stat .label{font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:0.8px;}
+.sidebar-stat .num{font-family:'Playfair Display',serif;font-size:20px;color:var(--rose);}
+.sidebar-nav{flex:1;padding:8px 12px;position:relative;z-index:1;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;cursor:pointer;color:var(--gris);font-size:14px;font-weight:500;transition:all 0.2s;border:none;background:none;width:100%;text-align:left;margin-bottom:4px;}
+.nav-item .nav-icon{font-size:20px;width:24px;text-align:center;}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:white;}
+.nav-item.active{background:var(--rose);color:white;font-weight:700;}
+
+/* ── APP BODY ─── */
+.app-body{flex:1;margin-left:var(--sidebar-w);display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:white;border-bottom:1px solid #e0e6ea;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--eau-profonde);}
+.topbar-title small{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--gris);font-weight:400;display:block;text-transform:uppercase;letter-spacing:1px;}
+.btn-primary{padding:9px 20px;background:linear-gradient(135deg,var(--eau-claire) 0%,var(--rose) 100%);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity 0.15s,transform 0.15s;}
+.btn-primary:hover{opacity:0.9;}.btn-primary:active{transform:scale(0.97);}
+.btn-secondary{padding:9px 14px;background:white;color:var(--eau);border:1.5px solid #c8d8f0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;}
+.btn-secondary:hover{background:var(--bleu-clair);}
+
+/* ── PAGE CONTENT ─── */
+.page-content{flex:1;padding:24px 28px 40px;max-width:1200px;}
+.view{display:none;}.view.active{display:block;}
+
+/* ── JOURNAL ─── */
+.journal-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.search-box{position:relative;flex:1;min-width:180px;}
+.search-box input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:white;color:var(--texte);transition:border-color 0.2s;}
+.search-box input:focus{border-color:var(--eau-claire);}
+.search-box::before{content:'🔍';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;}
+.filter-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+.filter-pill{padding:6px 14px;border-radius:20px;border:1.5px solid #ddd;background:white;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--gris);font-family:'DM Sans',sans-serif;transition:all 0.15s;flex-shrink:0;}
+.filter-pill.active{background:var(--eau-profonde);border-color:var(--eau-profonde);color:white;font-weight:600;}
+.cards-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+
+/* ── CARD ─── */
+.card-wrapper{position:relative;border-radius:var(--radius);overflow:hidden;}
+.card-delete-bg{position:absolute;top:0;right:0;bottom:0;width:90px;background:var(--rouge);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:white;font-size:20px;cursor:pointer;border-radius:var(--radius);}
+.card-delete-bg span{font-size:10px;font-weight:600;}
+.entry-card{background:white;border-radius:var(--radius);padding:16px 18px;border-left:4px solid var(--eau-claire);position:relative;transition:transform 0.25s cubic-bezier(.2,.8,.3,1),box-shadow 0.2s;will-change:transform;touch-action:pan-y;user-select:none;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
+.entry-card:hover{box-shadow:0 4px 18px rgba(0,0,0,0.1);}
+.entry-card.swiping{transition:none;}
+.entry-card.trophy{border-left-color:var(--rose);}
+.entry-card.capot{border-left-color:#b0bcd8;background:#f8f9fd;}
+.btn-delete-desktop{display:none;position:absolute;top:12px;right:14px;background:#fee;border:1.5px solid #fcc;color:var(--rouge);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;}
+.btn-delete-desktop:hover{background:var(--rouge);color:white;}
+.entry-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-right:90px;}
+.entry-species{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:var(--eau-profonde);}
+.entry-date{font-size:11px;color:var(--gris);text-align:right;}
+.entry-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.entry-meta-item{display:flex;align-items:center;gap:4px;font-size:13px;color:#555;}
+.entry-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.tag{padding:3px 10px;border-radius:10px;font-size:11px;background:var(--bleu-clair);color:var(--eau-claire);font-weight:500;}
+.tag.rose{background:var(--rose-clair);color:var(--rose);}
+.entry-stars{font-size:13px;margin-top:4px;}
+.entry-notes{font-size:13px;color:#666;margin-top:6px;font-style:italic;line-height:1.4;}
+.photo-badge{display:inline-block;background:linear-gradient(135deg,var(--rose),#c0306a);color:white;padding:2px 9px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px;}
+.empty-state{text-align:center;padding:56px 24px;color:var(--gris);}
+.empty-state .icon{font-size:56px;margin-bottom:12px;display:block;opacity:0.4;}
+
+/* ── CARTE SORTIE (regroupée) ─── */
+.sortie-card{background:white;border-radius:var(--radius);box-shadow:0 2px 10px rgba(0,0,0,0.07);overflow:hidden;position:relative;}
+body.dark .sortie-card{background:#0f2147;}
+.sortie-card.has-trophy{border-left:4px solid var(--rose);}
+.sortie-card.is-capot{border-left:4px solid #b0bcd8;background:#f8f9fd;}
+body.dark .sortie-card.is-capot{background:#0d1e3a;}
+.sortie-header{padding:14px 16px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;transition:background 0.15s;user-select:none;}
+.sortie-header:hover{background:rgba(46,109,180,0.04);}
+.sortie-header-left{flex:1;min-width:0;}
+.sortie-date-line{font-size:13px;font-weight:700;color:var(--eau-profonde);margin-bottom:3px;}
+body.dark .sortie-date-line{color:#d0e0f8;}
+.sortie-lieu{font-size:12px;color:var(--gris);display:flex;align-items:center;gap:4px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sortie-chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.sortie-chip{padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;}
+.chip-prises{background:var(--bleu-clair);color:var(--eau-claire);}
+.chip-capot{background:#e8edf5;color:#7a8fb0;}
+.chip-trophy{background:var(--rose-clair);color:var(--rose);}
+.chip-meteo{background:#f0f4ff;color:#6080b0;font-size:12px;}
+.chip-stars{background:#fffbe8;color:#b08000;}
+.chip-duree{background:#f0faf4;color:#4a7c59;}
+.sortie-header-right{text-align:right;flex-shrink:0;}
+.sortie-chevron{font-size:18px;color:var(--gris);transition:transform 0.25s;margin-top:2px;}
+.sortie-card.open .sortie-chevron{transform:rotate(180deg);}
+.sortie-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:8px;}
+
+/* Liste des prises dans la sortie */
+.prises-list{display:none;border-top:1px solid #f0f0f0;padding:0 12px 12px;}
+body.dark .prises-list{border-color:#1a3060;}
+.sortie-card.open .prises-list{display:block;}
+.prise-row{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #f5f5f5;}
+body.dark .prise-row{border-color:#1a3060;}
+.prise-row:last-child{border-bottom:none;}
+.prise-species{font-family:'Playfair Display',serif;font-style:italic;font-size:14px;color:var(--eau-profonde);flex:1;}
+body.dark .prise-species{color:#d0e0f8;}
+.prise-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.prise-val{font-size:12px;color:#555;display:flex;align-items:center;gap:3px;}
+body.dark .prise-val{color:#8a96b0;}
+.prise-photo{width:64px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0;}
+.prise-badges{display:flex;gap:4px;flex-wrap:wrap;}
+.prise-notes{font-size:11px;color:#888;font-style:italic;margin-top:4px;grid-column:1/-1;}
+.prise-del-btn{background:none;border:none;color:var(--gris);font-size:18px;cursor:pointer;padding:2px 4px;flex-shrink:0;transition:color 0.15s;}
+.prise-del-btn:hover{color:var(--rouge);}
+.prise-edit-btn{background:none;border:none;color:var(--gris);font-size:18px;cursor:pointer;padding:2px 4px;flex-shrink:0;transition:color 0.15s;}
+.prise-edit-btn:hover{color:var(--eau-claire);}
+
+/* ── MODALE ÉDITION PRISE ─── */
+.edit-wrap{display:none;position:fixed;inset:0;z-index:600;background:rgba(10,22,40,0.72);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;padding-bottom:0;}
+.edit-wrap.open{display:flex;}
+.edit-modal{
+  background:white;border-radius:22px 22px 0 0;
+  padding:20px 20px 32px;width:100%;max-width:560px;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.2);
+  max-height:90vh;overflow-y:auto;
+  animation:slideUpModal 0.3s cubic-bezier(.2,.8,.3,1) both;
+}
+@keyframes slideUpModal{from{transform:translateY(100%)}to{transform:translateY(0)}}
+body.dark .edit-modal{background:#0f2147;color:#e0e8f4;}
+.edit-modal-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
+body.dark .edit-modal-handle{background:#2a4080;}
+.edit-modal h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--eau-profonde);margin-bottom:16px;}
+body.dark .edit-modal h3{color:#d0e0f8;}
+
+/* ── PERSONNALISATION NOM ─── */
+.settings-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0;}
+body.dark .settings-row{border-color:#1a3060;}
+.settings-row:last-child{border-bottom:none;}
+.settings-label{flex:1;font-size:14px;font-weight:500;color:var(--texte);}
+body.dark .settings-label{color:#e0e8f4;}
+.settings-sub{font-size:11px;color:var(--gris);display:block;margin-top:2px;}
+
+/* Swipe mobile sur la carte sortie */
+.sortie-swipe-wrap{position:relative;border-radius:var(--radius);overflow:hidden;}
+.sortie-del-bg{position:absolute;top:0;right:0;bottom:0;width:90px;background:var(--rouge);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:white;font-size:20px;cursor:pointer;border-radius:var(--radius);}
+.sortie-del-bg span{font-size:10px;font-weight:600;}
+
+/* ── FORM ─── */
+.form-layout{display:grid;grid-template-columns:1fr;gap:0;}
+.form-card{background:white;border-radius:var(--radius);padding:24px;box-shadow:0 1px 6px rgba(0,0,0,0.06);margin-bottom:16px;}
+.form-card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #eee;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:11px;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
+.form-input,.form-select,.form-textarea{width:100%;padding:11px 14px;border:1.5px solid #ddd;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texte);background:#fafaf8;outline:none;transition:border-color 0.2s;appearance:none;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--eau-claire);}
+.form-textarea{resize:none;height:80px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.stars-input{display:flex;gap:6px;}
+.star-btn{font-size:26px;background:none;border:none;cursor:pointer;filter:grayscale(1) opacity(0.3);transition:all 0.15s;padding:2px;}
+.star-btn.active{filter:none;transform:scale(1.1);}
+.meteo-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.meteo-btn{padding:8px 14px;border:1.5px solid #dde3f0;border-radius:20px;background:none;font-size:13px;cursor:pointer;transition:all 0.15s;color:var(--texte);font-family:'DM Sans',sans-serif;}
+.meteo-btn.selected{border-color:var(--eau-claire);background:var(--bleu-clair);color:var(--eau-claire);font-weight:600;}
+.meteo-btn.selected-rose{border-color:var(--rose);background:var(--rose-clair);color:var(--rose);font-weight:600;}
+body.dark .meteo-btn{color:white;border-color:#2a4080;}
+body.dark .meteo-btn.selected{background:rgba(46,109,180,0.3);color:#90c0ff;border-color:var(--eau-claire);}
+body.dark .meteo-btn.selected-rose{background:rgba(232,96,154,0.25);color:#ffaacc;border-color:var(--rose);}
+.btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--eau-claire) 0%,var(--rose) 100%);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(46,109,180,0.25);transition:transform 0.15s;}
+.btn-submit:active{transform:scale(0.98);}
+.photo-upload{display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #c8d8f0;border-radius:var(--radius);padding:20px 16px;cursor:pointer;background:#f8faff;transition:all 0.2s;width:100%;}
+.photo-upload:hover{border-color:var(--eau-claire);background:#f0f5ff;}
+.photo-upload input{display:none;}
+.photo-upload .icon{font-size:32px;display:block;margin-bottom:8px;opacity:0.6;}
+.photo-upload p{font-size:13px;color:var(--gris);text-align:center;margin:0;}
+.photo-upload .photo-preview-container{width:100%;margin-top:12px;display:none;}
+.photo-upload .photo-preview{width:100%;max-height:180px;object-fit:cover;border-radius:10px;display:block;}
+.photo-upload.has-photo{border-style:solid;border-color:var(--mousse);background:#f0f9f0;}
+.photo-upload.has-photo .icon,.photo-upload.has-photo p{display:none;}
+.photo-upload.has-photo .photo-preview-container{display:block;}
+.photo-remove{margin-top:8px;padding:6px 12px;background:#fee;border:1px solid #fcc;border-radius:20px;font-size:11px;color:var(--rouge);cursor:pointer;font-weight:600;transition:all 0.15s;}
+.photo-remove:hover{background:var(--rouge);color:white;border-color:var(--rouge);}
+.capot-banner{display:none;background:var(--bleu-clair);border:1.5px solid #b8cef0;border-radius:12px;padding:14px 16px;margin-bottom:14px;color:var(--eau);font-size:14px;font-weight:500;text-align:center;}
+.capot-banner.visible{display:block;}
+.geo-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid #c8d8f0;border-radius:10px;background:var(--bleu-clair);color:var(--eau-claire);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;width:100%;margin-top:6px;}
+.geo-btn:hover{background:#d8eaff;}
+.spots-list{margin-top:6px;display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;}
+.spot-chip{display:flex;align-items:center;gap:8px;padding:8px 12px;background:white;border:1.5px solid #dde8f5;border-radius:10px;cursor:pointer;transition:border-color 0.15s;font-size:13px;color:var(--texte);}
+.spot-chip:hover{border-color:var(--eau-claire);}
+.spot-chip .spot-del{margin-left:auto;color:var(--gris);font-size:16px;background:none;border:none;cursor:pointer;padding:0 2px;}
+
+/* ── CARNET D'APPÂTS ─── */
+.appat-tag{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:500;background:var(--bleu-clair);color:var(--eau-claire);border:1.5px solid transparent;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.appat-tag:hover{border-color:var(--eau-claire);}
+.appat-tag.selected{background:var(--eau-claire);color:white;}
+body.dark .appat-tag{background:#1a3060;color:white;border-color:#2a4080;}
+body.dark .appat-tag:hover{border-color:var(--eau-claire);}
+body.dark .appat-tag.selected{background:var(--eau-claire);color:white;}
+.appat-del{background:none;border:none;color:inherit;cursor:pointer;font-size:14px;opacity:0.6;padding:0;margin-left:2px;}
+.appat-del:hover{opacity:1;}
+.appats-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+.appat-list-row{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #f5f5f5;}
+body.dark .appat-list-row{border-color:#1a3060;}
+.appat-list-row:last-child{border-bottom:none;}
+.appat-list-nom{font-size:14px;font-weight:500;color:var(--texte);}
+body.dark .appat-list-nom{color:white;}
+
+/* ── MÉTÉO PAR SPOT ─── */
+.meteo-spot-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0;}
+.meteo-spot-row:last-child{border-bottom:none;}
+body.dark .meteo-spot-row{border-color:#1a3060;}
+.meteo-spot-date{font-size:11px;color:var(--gris);white-space:nowrap;min-width:72px;}
+.meteo-spot-info{flex:1;font-size:13px;}
+
+/* ── EXPORT PDF / IMAGE ─── */
+.export-modal-wrap{display:none;position:fixed;inset:0;z-index:600;background:rgba(10,22,40,0.72);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;}
+.export-modal-wrap.open{display:flex;}
+.export-modal{background:white;border-radius:20px;padding:28px 24px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:popupUp 0.25s cubic-bezier(.34,1.4,.64,1) both;}
+body.dark .export-modal{background:#0f2147;color:#e0e8f4;}
+.export-modal h3{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:6px;color:var(--eau-profonde);}
+body.dark .export-modal h3{color:#d0e0f8;}
+.export-modal p{font-size:13px;color:var(--gris);margin-bottom:18px;}
+.export-btns{display:flex;flex-direction:column;gap:10px;}
+.export-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;transition:opacity 0.15s,transform 0.1s;text-align:left;width:100%;}
+.export-btn:active{transform:scale(0.98);}
+.export-btn.pdf{background:linear-gradient(135deg,#c0392b,#e74c3c);color:white;}
+.export-btn.img{background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;}
+.export-btn.csv{background:linear-gradient(135deg,var(--mousse),#27ae60);color:white;}
+.export-btn .eb-icon{font-size:24px;}
+.export-btn .eb-text .eb-title{display:block;font-size:14px;}
+.export-btn .eb-text .eb-sub{display:block;font-size:11px;opacity:0.8;font-weight:400;margin-top:2px;}
+.export-cancel{margin-top:12px;width:100%;padding:10px;border:none;border-radius:10px;background:#f0f0f0;color:var(--gris);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+body.dark .export-cancel{background:#1a3060;color:#8a96b0;}
+#share-canvas{display:none;}
+
+/* ── CAMEMBERT ESPÈCES ─── */
+.pie-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:8px;}
+.pie-legend{display:flex;flex-direction:column;gap:6px;flex:1;min-width:120px;}
+.pie-legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--texte);}
+body.dark .pie-legend-item{color:#e0e8f4;}
+.pie-legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.pie-legend-pct{margin-left:auto;font-weight:600;color:var(--gris);}
+
+/* ── COMPARAISON N vs N-1 ─── */
+.cmp-year-header{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;}
+.cmp-year-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;}
+.cmp-year-badge.current{background:var(--bleu-clair);color:var(--eau-claire);}
+.cmp-year-badge.prev{background:#f0f0f0;color:var(--gris);}
+body.dark .cmp-year-badge.prev{background:#1a3060;}
+.cmp-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px;}
+body.dark .cmp-row{border-color:#1a3060;}
+.cmp-row:last-child{border-bottom:none;}
+.cmp-label{flex:1;color:var(--texte);}
+body.dark .cmp-label{color:#e0e8f4;}
+.cmp-val{font-weight:700;min-width:44px;text-align:right;font-family:'Playfair Display',serif;font-size:15px;}
+.cmp-val.current{color:var(--eau-claire);}
+.cmp-val.prev{color:var(--gris);}
+.cmp-arrow{font-size:14px;min-width:18px;text-align:center;}
+.cmp-arrow.up{color:#27ae60;}
+.cmp-arrow.down{color:var(--rouge);}
+.cmp-arrow.eq{color:var(--gris);}
+
+/* ── STATS ─── */
+.stats-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+.stat-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
+.stat-card-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:14px;font-weight:700;}
+.species-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.species-name{font-size:14px;width:100px;flex-shrink:0;color:var(--texte);}
+.bar-track{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--eau-claire) 0%,var(--rose) 100%);border-radius:4px;transition:width 0.5s ease;}
+.bar-count{font-size:13px;color:var(--gris);min-width:20px;text-align:right;}
+.record-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0;}
+.record-item:last-child{border-bottom:none;}
+.record-icon{font-size:26px;}
+.record-info{flex:1;}
+.record-info .species{font-family:'Playfair Display',serif;font-style:italic;font-size:15px;}
+.record-info .detail{font-size:12px;color:var(--gris);margin-top:2px;}
+.record-value{font-family:'Playfair Display',serif;font-size:20px;color:var(--rose);}
+
+/* ── GRAPHIQUES ─── */
+.chart-wrap{position:relative;width:100%;height:180px;margin-top:8px;}
+canvas.stat-chart{width:100%!important;height:100%!important;}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gris);}
+.chart-legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* ── CARTE LEAFLET ─── */
+#map-container{width:100%;height:400px;border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.1);}
+/* Forcer la carte Leaflet sous le menu popup (z-index 200) */
+#map-container .leaflet-pane,
+#map-container .leaflet-control,
+#map-container .leaflet-top,
+#map-container .leaflet-bottom{z-index:1 !important;}
+#map-container{isolation:isolate;}
+.leaflet-popup-content-wrapper{border-radius:12px!important;font-family:'DM Sans',sans-serif;}
+.map-spot-popup{font-size:13px;min-width:140px;}
+.map-spot-popup strong{font-family:'Playfair Display',serif;font-size:15px;display:block;margin-bottom:4px;}
+.map-spot-popup .popup-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;background:var(--bleu-clair);color:var(--eau-claire);}
+
+/* ── PARTAGE FICHE ─── */
+.share-card-wrap{display:none;position:fixed;inset:0;z-index:500;background:rgba(10,22,40,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;}
+.share-card-wrap.open{display:flex;}
+
+/* ── MODALE INFO ─── */
+.info-wrap{display:none;position:fixed;inset:0;z-index:500;background:rgba(10,22,40,0.65);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:24px;}
+.info-wrap.open{display:flex;}
+.info-modal{
+  background:white;border-radius:22px;padding:32px 28px 24px;
+  max-width:320px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  text-align:center;
+  animation:popupUp 0.25s cubic-bezier(.34,1.4,.64,1) both;
+}
+body.dark .info-modal{background:#0f2147;color:#e0e8f4;}
+.info-modal .info-logo{font-size:52px;margin-bottom:12px;filter:drop-shadow(0 3px 10px rgba(232,96,154,0.4));}
+.info-modal h2{font-family:'Playfair Display',serif;font-size:20px;color:var(--eau-profonde);margin-bottom:4px;}
+body.dark .info-modal h2{color:#d0e0f8;}
+.info-modal .info-version{
+  display:inline-block;margin:10px auto;
+  padding:4px 14px;border-radius:20px;
+  background:linear-gradient(135deg,var(--eau-claire),var(--rose));
+  color:white;font-size:12px;font-weight:700;letter-spacing:1px;
+}
+.info-modal .info-divider{height:1px;background:#eee;margin:16px 0;}
+body.dark .info-modal .info-divider{background:#1a3060;}
+.info-modal .info-author{font-size:15px;font-weight:600;color:var(--texte);margin-bottom:4px;}
+body.dark .info-modal .info-author{color:#e0e8f4;}
+.info-modal .info-copy{font-size:12px;color:var(--gris);margin-bottom:20px;}
+.info-modal .info-desc{font-size:12px;color:var(--gris);font-style:italic;margin-bottom:20px;line-height:1.5;}
+.btn-info-close{
+  width:100%;padding:12px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--eau-claire),var(--rose));
+  color:white;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;transition:opacity 0.15s;
+}
+.btn-info-close:hover{opacity:0.9;}
+.share-card{background:white;border-radius:20px;padding:28px 24px 20px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.share-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.share-card-species{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--eau-profonde);}
+.share-card-date{font-size:11px;color:var(--gris);text-align:right;}
+.share-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.share-stat{background:var(--bleu-clair);border-radius:10px;padding:10px;text-align:center;}
+.share-stat .val{font-family:'Playfair Display',serif;font-size:18px;color:var(--eau-profonde);display:block;}
+.share-stat .lbl{font-size:10px;color:var(--gris);text-transform:uppercase;letter-spacing:0.8px;}
+.share-card-footer{display:flex;gap:8px;margin-top:12px;}
+.btn-share{flex:1;padding:11px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-share.copy{background:var(--bleu-clair);color:var(--eau-claire);}
+.btn-share.close{background:#f0f0f0;color:var(--gris);}
+
+/* ── MOBILE ─── */
+.bottom-nav{display:none;}
+.mobile-header{display:none;}
+.mobile-stats-bar{display:none;}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--mousse);color:white;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:500;opacity:0;transition:all 0.3s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.15);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card-wrapper{animation:slideUp 0.3s ease both;}
+
+/* ── TABLETTE ─── */
+@media(min-width:768px){
+  .cards-grid{grid-template-columns:1fr 1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .form-layout{grid-template-columns:1fr 1fr;gap:16px;}
+  .form-card.full{grid-column:1/-1;}
+  .btn-delete-desktop{display:block;}
+  .card-delete-bg{display:none;}
+}
+@media(min-width:1024px){
+  .cards-grid{grid-template-columns:1fr 1fr 1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr 1fr;}
+  .page-content{padding:28px 36px 48px;}
+}
+
+/* ── MOBILE < 768px ─── */
+@media(max-width:767px){
+  body{display:block;background:var(--blanc);}
+  body.dark{background:#0a1628;}
+  .sidebar{display:none;}
+  .topbar{display:none;}
+  .mobile-header{display:flex;align-items:center;justify-content:center;gap:8px;position:sticky;top:0;left:0;right:0;z-index:50;padding:12px 16px 8px;background:linear-gradient(135deg,var(--eau-profonde) 0%,var(--eau) 100%);}
+  .mobile-header .icon{font-size:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
+  .mobile-header h1{font-family:'Playfair Display',serif;font-size:18px;color:var(--sable);}
+  .mobile-stats-bar{display:flex;gap:6px;position:sticky;top:52px;left:0;right:0;padding:8px 12px;background:var(--eau-profonde);z-index:49;}
+  .mob-stat{flex:1;background:rgba(255,255,255,0.1);border-radius:8px;padding:6px 4px;text-align:center;}
+  .mob-stat .num{font-family:'Playfair Display',serif;font-size:15px;color:var(--rose);display:block;line-height:1.2;}
+  .mob-stat .label{font-size:9px;color:white;text-transform:uppercase;letter-spacing:0.5px;}
+  .app-body{margin-left:0;background:var(--blanc);min-height:calc(100vh - 100px);}
+  body.dark .app-body{background:#0a1628;}
+  .page-content{padding:16px 12px 90px;}
+  .cards-grid{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:1fr;}
+  .form-layout{grid-template-columns:1fr;}
+  .form-card{padding:16px;}
+  .form-card-title{font-size:13px;margin-bottom:12px;}
+  .form-group{margin-bottom:12px;}
+  .form-input,.form-select,.form-textarea{padding:10px 12px;font-size:14px;}
+  .filter-pills{flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;}
+  .filter-pill{flex-shrink:0;padding:8px 16px;font-size:13px;}
+  #map-container{height:300px;}
+  .bottom-nav{display:flex;align-items:center;justify-content:center;position:fixed;bottom:0;left:0;right:0;background:transparent;padding:0 0 max(12px,env(safe-area-inset-bottom)) 0;z-index:100;pointer-events:none;}
+  .fab-menu-btn{pointer-events:all;width:56px;height:56px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));border-radius:50%;border:none;color:white;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(46,109,180,0.4);display:flex;align-items:center;justify-content:center;transition:transform 0.2s;margin-bottom:12px;}
+  .fab-menu-btn:active{transform:scale(0.93);}
+  .fab-menu-btn.open{transform:rotate(45deg);}
+  .toast{bottom:90px;}
+  .btn-delete-desktop{display:none;}
+}
+
+/* ── POPUP MENU ─── */
+.menu-overlay{display:none;position:fixed;inset:0;background:rgba(15,33,71,0.55);backdrop-filter:blur(4px);z-index:1000;align-items:flex-end;justify-content:center;padding-bottom:90px;}
+.menu-overlay.open{display:flex;}
+.menu-popup{background:white;border-radius:24px;padding:8px 12px 12px;width:calc(100% - 32px);max-width:360px;box-shadow:0 16px 48px rgba(15,33,71,0.25);animation:popupUp 0.25s cubic-bezier(.34,1.4,.64,1) both;}
+@keyframes popupUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.menu-popup-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);text-align:center;padding:10px 0 8px;border-bottom:1px solid #eee;margin-bottom:8px;}
+.menu-popup-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.menu-popup-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;border-radius:16px;border:none;background:#f4f7fd;cursor:pointer;transition:background 0.15s,transform 0.1s;font-family:'DM Sans',sans-serif;}
+.menu-popup-item:active{transform:scale(0.96);}
+.menu-popup-item.active-view{background:var(--bleu-clair);border:1.5px solid var(--eau-claire);}
+.menu-popup-item .mi-icon{font-size:26px;}
+.menu-popup-item .mi-label{font-size:12px;font-weight:600;color:var(--texte);}
+.menu-popup-item .mi-sub{font-size:10px;color:var(--gris);}
+body.dark .menu-popup-item .mi-label{color:white;font-weight:700;}
+body.dark .menu-popup-item .mi-sub{color:#8a96b0;}
+body.dark .menu-popup-item{background:#1a3060;}
+body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--rose);}
+.menu-popup-divider{height:1px;background:#eee;margin:8px 0;}
+.menu-popup-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.menu-popup-small{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:none;background:#f8f9ff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--texte);transition:background 0.15s;}
+.menu-popup-small:active{background:var(--bleu-clair);}
+</style>
 </head>
 <body>
 
@@ -80,7 +604,7 @@
     <!-- JOURNAL -->
     <div class="view active" id="view-journal">
       <div class="journal-toolbar">
-        <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="debouncedRenderJournal()"></div>
+        <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="renderJournal()"></div>
       </div>
       <div class="filter-pills">
         <button type="button" class="filter-pill active" onclick="setFilter('tous',this)">Toutes</button>
@@ -230,20 +754,18 @@
             <label class="form-label">📝 Notes</label>
             <textarea class="form-textarea" id="f-notes" placeholder="Appâts, conditions, anecdotes…"></textarea>
           </div>
-          
-          <!-- MULTI-PHOTO UPLOAD (max 3) -->
           <div class="form-group">
-            <label class="form-label">📸 Photos (max 3)</label>
-            <div class="photo-grid-upload">
-              <div class="photo-thumb-list" id="photo-thumb-list"></div>
-              <div class="photo-add-btn" id="photo-add-btn" onclick="addPhotoInput()">
-                <span>➕</span> Ajouter une photo (<span id="photo-count">0</span>/3)
+            <label class="form-label">📸 Photo</label>
+            <label class="photo-upload" id="photo-upload-label" for="f-photo">
+              <input type="file" id="f-photo" accept="image/*" onchange="previewPhoto(event)">
+              <span class="icon" id="photo-icon">📷</span>
+              <p id="photo-text">Ajouter une photo</p>
+              <div class="photo-preview-container" id="photo-preview-container">
+                <img class="photo-preview" id="photo-preview" alt="">
+                <button type="button" class="photo-remove" onclick="removePhoto(event)">✕ Supprimer la photo</button>
               </div>
-              <div class="photo-counter">Formats acceptés : JPG, PNG (compression automatique)</div>
-            </div>
-            <input type="file" id="f-photo-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+            </label>
           </div>
-          
           <button type="button" class="btn-submit" onclick="saveEntry()">✅ Enregistrer la sortie</button>
         </div>
       </div>
@@ -448,7 +970,7 @@
   <div class="info-modal">
     <div class="info-logo">🎣</div>
     <h2>Carnet de Pêche</h2>
-    <span class="info-version">Version V 1.1</span>
+    <span class="info-version">Version V 1.0</span>
     <div class="info-desc">Application personnelle de suivi<br>des sorties et prises de pêche</div>
     <div class="info-divider"></div>
     <div class="info-author" id="info-author-name">Bruno LARIVE</div>
@@ -479,6 +1001,1615 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="app.js"></script>
+<script>
+// ════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════
+let entries = JSON.parse(localStorage.getItem('peche-entries')||'[]');
+let spots   = JSON.parse(localStorage.getItem('peche-spots')||'[]');
+let currentFilter='tous', currentStars=0, selectedMeteo=[];
+let isTrophy=false, isRelache=false, isCapot=false, photoData=null;
+let leafletMap=null, mapMarkers=[];
+
+const topbarTitles={
+  journal:['Mes sorties','Journal de pêche'],
+  ajouter:['Nouvelle entrée','Ajouter une prise'],
+  stats:["Vue d'ensemble",'Statistiques'],
+  spots:['Mes lieux','Spots & Carte'],
+  appats:['Mes appâts','Carnet d\'appâts'],
+  rapport:['Bilan & Export','Rapport de saison'],
+  parametres:['Réglages','Paramètres']
+};
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+function init(){
+  // Dark mode auto
+  if(localStorage.getItem('dark')==='1'||
+     (localStorage.getItem('dark')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
+    document.body.classList.add('dark');
+    updateDarkBtn(true);
+  }
+  const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+  document.getElementById('f-date').value=now.toISOString().slice(0,16);
+  renderJournal(); updateStats(); updateAllStats();
+  renderSpotsForm(); renderSpotsPage();
+  renderAppatsForm();
+  // À propos : nom fixe (Bruno LARIVE), pas de mise à jour dynamique
+}
+
+// ════════════════════════════════════════════════════════
+//  DARK MODE
+// ════════════════════════════════════════════════════════
+function toggleDarkMode(){
+  const on=document.body.classList.toggle('dark');
+  localStorage.setItem('dark', on?'1':'0');
+  updateDarkBtn(on);
+  showToast(on?'🌙 Mode sombre activé':'☀️ Mode clair activé');
+}
+function updateDarkBtn(on){
+  const ic=document.getElementById('dark-icon');
+  const lb=document.getElementById('dark-label');
+  const btn=document.getElementById('dark-btn');
+  if(ic) ic.textContent=on?'☀️':'🌙';
+  if(lb) lb.textContent=on?'Mode clair':'Mode sombre';
+  if(btn) btn.textContent=on?'☀️':'🌙';
+}
+
+// ════════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════════
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b=>{
+    const t=b.textContent.trim().toLowerCase();
+    b.classList.toggle('active',
+      (name==='journal'&&t.includes('journal'))||(name==='ajouter'&&t.includes('ajouter'))||
+      (name==='stats'&&t.includes('stat'))||(name==='spots'&&t.includes('spot')));
+  });
+  const titles=topbarTitles[name]||['',''];
+  document.getElementById('topbar-title').innerHTML=`<small>${titles[0]}</small>${titles[1]}`;
+  if(name==='stats') updateStats();
+  if(name==='spots'){ renderSpotsPage(); setTimeout(initMap,200); }
+  if(name==='appats') renderAppatsPage();
+  if(name==='rapport') renderRapportPage();
+  if(name==='parametres') renderParametresPage();
+}
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  renderJournal();
+}
+
+// ── POPUP MENU ──
+let menuOpen=false;
+function toggleMenu(){
+  menuOpen=!menuOpen;
+  document.getElementById('menu-overlay').classList.toggle('open',menuOpen);
+  document.getElementById('fab-btn').textContent=menuOpen?'✕':'☰';
+  document.getElementById('fab-btn').classList.toggle('open',menuOpen);
+}
+function closeMenu(){
+  menuOpen=false;
+  document.getElementById('menu-overlay').classList.remove('open');
+  document.getElementById('fab-btn').textContent='☰';
+  document.getElementById('fab-btn').classList.remove('open');
+}
+function closeMenuOnOverlay(e){ if(e.target===document.getElementById('menu-overlay')) closeMenu(); }
+function popupNav(name){
+  closeMenu(); switchView(name);
+  document.querySelectorAll('.menu-popup-item').forEach(b=>b.classList.remove('active-view'));
+  const el=document.getElementById('mpop-'+name); if(el) el.classList.add('active-view');
+}
+
+// ════════════════════════════════════════════════════════
+//  FORM
+// ════════════════════════════════════════════════════════
+// ── Gestion "Autre" espèce ──────────────────────────────
+function toggleAutreEspece(selectId, inputId){
+  const sel=document.getElementById(selectId);
+  const inp=document.getElementById(inputId);
+  if(!inp) return;
+  if(sel.value==='Autre'){
+    inp.style.display='block';
+    inp.focus();
+  } else {
+    inp.style.display='none';
+    inp.value='';
+  }
+}
+
+function getEspece(selectId, inputId){
+  const sel=document.getElementById(selectId);
+  const inp=document.getElementById(inputId);
+  if(sel.value==='Autre'){
+    return (inp?.value||'').trim()||'Autre';
+  }
+  return sel.value;
+}
+
+function setStar(n){
+  currentStars=n;
+  document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('active',i<n));
+}
+function toggleMeteo(btn,val){
+  btn.classList.toggle('selected');
+  selectedMeteo.includes(val)?selectedMeteo=selectedMeteo.filter(v=>v!==val):selectedMeteo.push(val);
+}
+function toggleTrophy(btn){isTrophy=!isTrophy;btn.classList.toggle('selected',isTrophy);}
+function toggleRelache(btn){isRelache=!isRelache;btn.classList.toggle('selected',isRelache);}
+function toggleCapot(btn){
+  isCapot=!isCapot;
+  btn.classList.toggle('selected-rose',isCapot);
+  btn.classList.remove('selected');
+  const f=document.getElementById('prise-fields');
+  const sg=document.getElementById('statut-group');
+  f.style.opacity=isCapot?'0.35':'1'; f.style.pointerEvents=isCapot?'none':'';
+  sg.style.opacity=isCapot?'0.35':'1'; sg.style.pointerEvents=isCapot?'none':'';
+  if(isCapot){
+    ['f-espece','f-taille','f-poids','f-technique'].forEach(id=>document.getElementById(id).value='');
+  }
+}
+function previewPhoto(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    photoData=ev.target.result;
+    document.getElementById('photo-preview').src=photoData;
+    document.getElementById('photo-preview-container').style.display='block';
+    document.getElementById('photo-upload-label').classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(e){
+  e.stopPropagation(); photoData=null;
+  document.getElementById('f-photo').value='';
+  document.getElementById('photo-preview-container').style.display='none';
+  document.getElementById('photo-preview').src='';
+  document.getElementById('photo-upload-label').classList.remove('has-photo');
+  showToast('🗑 Photo supprimée');
+}
+
+function saveEntry(){
+  const espece=getEspece('f-espece','f-espece-autre');
+  if(!isCapot&&!espece){showToast('⚠️ Sélectionne une espèce !');return;}
+  const poidsVal=document.getElementById('f-poids').value;
+  const entry={
+    id:Date.now(),
+    date:document.getElementById('f-date').value,
+    heureFin:document.getElementById('f-heure-fin').value||null,
+    espece:isCapot?'🚫 Capot':espece,
+    taille:isCapot?null:(document.getElementById('f-taille').value||null),
+    poids:isCapot?null:(poidsVal?parseFloat(poidsVal):null),
+    nbPoissons:isCapot?0:(parseInt(document.getElementById('f-nb-poissons').value)||1),
+    appat:isCapot?'':(document.getElementById('f-appat').value||''),
+    profondeur:isCapot?null:(document.getElementById('f-profondeur').value||null),
+    lieu:document.getElementById('f-lieu').value,
+    technique:isCapot?'':document.getElementById('f-technique').value,
+    meteo:[...selectedMeteo],
+    tempAir:document.getElementById('f-temp-air').value||null,
+    tempEau:document.getElementById('f-temp-eau').value||null,
+    lune:document.getElementById('f-lune').value,
+    stars:currentStars, trophy:isCapot?false:isTrophy, relache:isCapot?false:isRelache,
+    capot:isCapot, notes:document.getElementById('f-notes').value, photo:photoData
+  };
+  entries.unshift(entry);
+  localStorage.setItem('peche-entries',JSON.stringify(entries));
+  resetForm(); updateAllStats();
+  showToast(isCapot?'😔 Capot enregistré…':'🎣 Sortie enregistrée !');
+  switchView('journal'); renderJournal();
+}
+
+function resetForm(){
+  ['f-espece','f-taille','f-poids','f-lieu','f-technique','f-temp-air','f-temp-eau','f-lune','f-notes','f-appat','f-profondeur','f-heure-fin']
+    .forEach(id=>document.getElementById(id).value='');
+  const autreInp=document.getElementById('f-espece-autre');
+  if(autreInp){autreInp.value='';autreInp.style.display='none';}
+  document.getElementById('f-nb-poissons').value='1';
+  document.querySelectorAll('.meteo-btn').forEach(b=>{b.classList.remove('selected','selected-rose');});
+  document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-capot').classList.remove('selected-rose');
+  const f=document.getElementById('prise-fields'), sg=document.getElementById('statut-group');
+  f.style.opacity='1'; f.style.pointerEvents='';
+  sg.style.opacity='1'; sg.style.pointerEvents='';
+  document.getElementById('photo-preview-container').style.display='none';
+  document.getElementById('photo-preview').src='';
+  document.getElementById('photo-upload-label').classList.remove('has-photo');
+  document.getElementById('f-photo').value='';
+  const gb=document.getElementById('geo-btn');
+  if(gb){gb.textContent='📡 Utiliser ma position GPS';gb.disabled=false;}
+  selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false; photoData=null;
+  const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+  document.getElementById('f-date').value=now.toISOString().slice(0,16);
+}
+
+// ════════════════════════════════════════════════════════
+//  JOURNAL — regroupement par jour + lieu
+// ════════════════════════════════════════════════════════
+
+// Clé de regroupement : jour (YYYY-MM-DD) + lieu
+function sortieKey(e){
+  const jour=e.date?e.date.slice(0,10):'sans-date';
+  const lieu=e.lieu||'sans-lieu';
+  return `${jour}||${lieu}`;
+}
+
+// Grouper les entrées filtrées en sorties
+function groupEnSorties(filtered){
+  const map=new Map();
+  // On parcourt dans l'ordre déjà trié (plus récent en premier)
+  filtered.forEach(e=>{
+    const k=sortieKey(e);
+    if(!map.has(k)) map.set(k,[]);
+    map.get(k).push(e);
+  });
+  // Retourner tableau de groupes triés par date desc (première prise du groupe)
+  return [...map.values()].sort((a,b)=>{
+    const da=a[0].date||''; const db=b[0].date||'';
+    return db.localeCompare(da);
+  });
+}
+
+function deleteEntry(id){
+  if(!confirm('Supprimer cette prise ?')) return;
+  entries=entries.filter(e=>e.id!==id);
+  localStorage.setItem('peche-entries',JSON.stringify(entries));
+  renderJournal(); updateAllStats();
+  showToast('🗑 Prise supprimée');
+}
+
+function deleteSortie(ids){
+  if(!confirm(`Supprimer cette sortie et ses ${ids.length} prise(s) ?`)) return;
+  const set=new Set(ids);
+  entries=entries.filter(e=>!set.has(e.id));
+  localStorage.setItem('peche-entries',JSON.stringify(entries));
+  renderJournal(); updateAllStats();
+  showToast('🗑 Sortie supprimée');
+}
+
+function toggleSortie(key){
+  const card=document.querySelector(`.sortie-card[data-key="${CSS.escape(key)}"]`);
+  if(card) card.classList.toggle('open');
+}
+
+function renderJournal(){
+  const search=document.getElementById('search-input').value.toLowerCase();
+  let filtered=entries.filter(e=>{
+    if(currentFilter==='trophy') return e.trophy;
+    if(currentFilter==='capot') return e.capot;
+    const mF=currentFilter==='tous'||(e.espece&&e.espece.includes(currentFilter));
+    const mS=!search||(e.espece&&e.espece.toLowerCase().includes(search))||(e.lieu&&e.lieu.toLowerCase().includes(search));
+    return mF&&mS;
+  });
+
+  const list=document.getElementById('journal-list');
+  if(!filtered.length){
+    list.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">🎣</span><p>Aucune sortie enregistrée.<br>Ajoutez votre première prise !</p></div>`;
+    return;
+  }
+
+  const isMobile=window.innerWidth<768;
+  const sorties=groupEnSorties(filtered);
+
+  list.innerHTML=sorties.map((prises,idx)=>{
+    const ref=prises[0]; // Première prise du groupe pour les infos générales
+    const ids=prises.map(e=>e.id);
+    const key=sortieKey(ref);
+    const jour=ref.date?new Date(ref.date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
+    const heureDeb=ref.date?new Date(ref.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+
+    // Heure de fin = heureFin de la dernière prise ou de n'importe laquelle qui l'a
+    const avecFin=prises.filter(e=>e.heureFin);
+    const heureFin=avecFin.length?avecFin[avecFin.length-1].heureFin:'';
+    const duree=heureFin&&ref.date?calcDuree(ref.date,heureFin):'';
+
+    // Météo unique du groupe
+    const allMeteo=[...new Set(prises.flatMap(e=>e.meteo||[]))];
+    // Note : meilleure note de la sortie
+    const maxStars=Math.max(...prises.map(e=>e.stars||0));
+    // Prises hors capot
+    const prisesReelles=prises.filter(e=>!e.capot);
+    const nbPrises=prisesReelles.length;
+    const isCapotSortie=prises.every(e=>e.capot);
+    const hasTrophy=prises.some(e=>e.trophy);
+
+    // Meilleure prise (poids max)
+    const avecPoids=prisesReelles.filter(e=>e.poids!=null).sort((a,b)=>{
+      const ka=a.poids>100?a.poids/1000:a.poids, kb=b.poids>100?b.poids/1000:b.poids; return kb-ka;
+    });
+    const meilleureEspece=avecPoids[0]?.espece||(prisesReelles[0]?.espece||'Capot');
+    const meilleurPoids=avecPoids[0]?.poids!=null?formatPoids(avecPoids[0].poids>100?avecPoids[0].poids/1000:avecPoids[0].poids):'';
+
+    // Espèces résumé
+    const especesCount={};
+    prisesReelles.forEach(e=>{ especesCount[e.espece]=(especesCount[e.espece]||0)+1; });
+    const especesSummary=Object.entries(especesCount).map(([sp,n])=>n>1?`${n}× ${sp}`:sp).join(', ');
+
+    // Cartes des prises individuelles
+    const prisesHTML=prises.map(e=>{
+      const h=e.date?new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+      const tags=[];
+      if(e.technique) tags.push(`🎣 ${e.technique}`);
+      if(e.appat) tags.push(`🪱 ${e.appat}`);
+      if(e.profondeur) tags.push(`🌊 ${e.profondeur}m`);
+      if(e.relache) tags.push("↩️ R.à l'eau");
+      if(e.trophy) tags.push('🏆 Trophée');
+      return `
+        <div class="prise-row">
+          ${e.photo?`<img class="prise-photo" src="${e.photo}" alt="">`:''}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span class="prise-species">${e.capot?'🚫 Capot (bredouille)':e.espece||'—'}</span>
+              <span style="font-size:11px;color:var(--gris)">${h}</span>
+            </div>
+            <div class="prise-meta" style="margin-top:4px">
+              ${e.taille?`<span class="prise-val">📏 ${e.taille} cm</span>`:''}
+              ${e.poids!=null?`<span class="prise-val">⚖️ ${formatPoids(e.poids>100?e.poids/1000:e.poids)}</span>`:''}
+            </div>
+            ${tags.length?`<div class="prise-badges" style="margin-top:4px">${tags.map(t=>`<span style="font-size:10px;background:var(--bleu-clair);color:var(--eau-claire);padding:2px 7px;border-radius:8px;font-weight:500">${t}</span>`).join('')}</div>`:''}
+            ${e.notes?`<div class="prise-notes">"${e.notes.slice(0,80)}${e.notes.length>80?'…':''}"</div>`:''}
+          </div>
+          <button type="button" class="prise-edit-btn" onclick="openEditEntry(${e.id})" title="Modifier cette prise">✏️</button>
+          <button type="button" class="prise-del-btn" onclick="deleteEntry(${e.id})" title="Supprimer cette prise">🗑</button>
+        </div>`;
+    }).join('');
+
+    const cardClass=`sortie-card${hasTrophy?' has-trophy':''}${isCapotSortie?' is-capot':''}`;
+    const keyEsc=key.replace(/"/g,'&quot;');
+
+    // Sur desktop : bouton supprimer toute la sortie
+    const deleteSortieBtn=`<button type="button" onclick="deleteSortie([${ids.join(',')}])" style="font-size:11px;color:var(--rouge);background:#fee;border:1px solid #fcc;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif">🗑 Sortie</button>`;
+    const shareBtn=nbPrises>0?`<button type="button" onclick="openShareSortie([${ids.join(',')}])" style="font-size:11px;color:var(--eau-claire);background:var(--bleu-clair);border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif">📤 Partager</button>`:'';
+
+    if(isMobile){
+      return `
+        <div class="sortie-swipe-wrap" style="animation:slideUp 0.3s ease both;animation-delay:${idx*0.04}s">
+          <div class="sortie-del-bg" onclick="deleteSortie([${ids.join(',')}])">🗑<span>Sortie</span></div>
+          <div class="${cardClass}" data-key="${keyEsc}">
+            <div class="sortie-header" onclick="toggleSortie('${keyEsc}')">
+              <div class="sortie-header-left">
+                <div class="sortie-date-line">${jour}</div>
+                ${ref.lieu?`<div class="sortie-lieu">📍 ${ref.lieu}</div>`:''}
+                <div class="sortie-chips">
+                  ${isCapotSortie?'<span class="sortie-chip chip-capot">🚫 Capot</span>':`<span class="sortie-chip chip-prises">${nbPrises} prise${nbPrises>1?'s':''}</span>`}
+                  ${hasTrophy?'<span class="sortie-chip chip-trophy">🏆</span>':''}
+                  ${allMeteo.length?`<span class="sortie-chip chip-meteo">${allMeteo.slice(0,3).join('')}</span>`:''}
+                  ${duree?`<span class="sortie-chip chip-duree">⏱ ${duree}</span>`:''}
+                  ${maxStars?`<span class="sortie-chip chip-stars">${'⭐'.repeat(maxStars)}</span>`:''}
+                </div>
+                ${!isCapotSortie&&especesSummary?`<div style="font-size:12px;color:var(--gris);margin-top:5px;font-style:italic">${especesSummary}${meilleurPoids?' — '+meilleurPoids:''}</div>`:''}
+              </div>
+              <div class="sortie-header-right">
+                <div style="font-size:11px;color:var(--gris);margin-bottom:4px">${heureDeb}</div>
+                <span class="sortie-chevron">⌄</span>
+              </div>
+            </div>
+            <div class="prises-list">${prisesHTML}
+              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px solid #f0f0f0">
+                ${shareBtn}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    } else {
+      return `
+        <div class="${cardClass}" data-key="${keyEsc}" style="animation:slideUp 0.3s ease both;animation-delay:${idx*0.04}s">
+          <div class="sortie-header" onclick="toggleSortie('${keyEsc}')">
+            <div class="sortie-header-left">
+              <div class="sortie-date-line">${jour}</div>
+              ${ref.lieu?`<div class="sortie-lieu">📍 ${ref.lieu}</div>`:''}
+              <div class="sortie-chips">
+                ${isCapotSortie?'<span class="sortie-chip chip-capot">🚫 Capot</span>':`<span class="sortie-chip chip-prises">${nbPrises} prise${nbPrises>1?'s':''}</span>`}
+                ${hasTrophy?'<span class="sortie-chip chip-trophy">🏆 Trophée</span>':''}
+                ${allMeteo.length?`<span class="sortie-chip chip-meteo">${allMeteo.join(' ')}</span>`:''}
+                ${duree?`<span class="sortie-chip chip-duree">⏱ ${duree}</span>`:''}
+                ${maxStars?`<span class="sortie-chip chip-stars">${'⭐'.repeat(maxStars)}</span>`:''}
+              </div>
+              ${!isCapotSortie&&especesSummary?`<div style="font-size:12px;color:var(--gris);margin-top:5px;font-style:italic">${especesSummary}${meilleurPoids?' — '+meilleurPoids:''}</div>`:''}
+            </div>
+            <div class="sortie-header-right">
+              <div style="font-size:11px;color:var(--gris);margin-bottom:4px">${heureDeb}</div>
+              <div style="display:flex;gap:6px;justify-content:flex-end;margin-bottom:6px">
+                ${shareBtn}
+                ${deleteSortieBtn}
+              </div>
+              <span class="sortie-chevron">⌄</span>
+            </div>
+          </div>
+          <div class="prises-list">${prisesHTML}</div>
+        </div>`;
+    }
+  }).join('');
+
+  // Swipe mobile sur les cartes sortie
+  if(isMobile){
+    document.querySelectorAll('.sortie-card').forEach(card=>{
+      let sx=0,cx=0,d=false;
+      card.addEventListener('touchstart',e=>{
+        // Ne pas swiper si on clique sur un bouton interne
+        if(e.target.closest('button,a,.prise-del-btn')) return;
+        sx=e.touches[0].clientX; d=true;
+      },{passive:true});
+      card.addEventListener('touchmove',e=>{
+        if(!d) return;
+        cx=Math.min(0,Math.max(e.touches[0].clientX-sx,-120));
+        card.style.transform=`translateX(${cx}px)`;
+      },{passive:true});
+      card.addEventListener('touchend',()=>{
+        d=false;
+        card.style.transform=cx<-80?'translateX(-90px)':'';
+        cx=0;
+      });
+    });
+  }
+}
+
+function calcDuree(dateStr, heureFin){
+  try{
+    const start=new Date(dateStr);
+    const [h,m]=heureFin.split(':').map(Number);
+    const end=new Date(dateStr); end.setHours(h,m,0,0);
+    let diff=(end-start)/60000;
+    if(diff<0) diff+=1440;
+    if(diff<=0||diff>1440) return '';
+    const hh=Math.floor(diff/60), mm=diff%60;
+    return hh>0?`${hh}h${mm>0?mm+'min':''}`:`${mm}min`;
+  }catch{return '';}
+}
+
+function formatPoids(kg){
+  if(kg==null) return '';
+  const val=kg>100?kg/1000:kg;
+  return val<1?(val*1000).toFixed(0)+' g':val.toFixed(3).replace(/\.?0+$/,'')+' kg';
+}
+
+// ════════════════════════════════════════════════════════
+//  STATS & GRAPHIQUES
+// ════════════════════════════════════════════════════════
+function updateAllStats(){
+  const nbSorties=new Set(entries.map(sortieKey)).size;
+  const prises=entries.filter(e=>!e.capot);
+  const records=prises.filter(e=>e.poids!=null);
+  const recKg=records.length?Math.max(...records.map(e=>e.poids>100?e.poids/1000:e.poids)):null;
+  const rec=recKg!=null?formatPoids(recKg):'—';
+  const species=new Set(prises.map(e=>e.espece)).size;
+  const mTotal=document.getElementById('m-total'); if(mTotal) mTotal.textContent=nbSorties;
+  const mPoissons=document.getElementById('m-poissons'); if(mPoissons) mPoissons.textContent=prises.length;
+  const mr=document.getElementById('m-record'); if(mr) mr.textContent=rec;
+  const st=document.getElementById('s-total'); if(st) st.textContent=nbSorties;
+  const sr=document.getElementById('s-record'); if(sr) sr.textContent=rec;
+}
+
+function updateStats(){
+  const el=document.getElementById('stats-content');
+  if(!entries.length){
+    el.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">📊</span><p>Pas encore de données.</p></div>`;
+    return;
+  }
+  const prises=entries.filter(e=>!e.capot);
+  const capots=entries.filter(e=>e.capot);
+  const nbSorties=new Set(entries.map(sortieKey)).size;
+  const nbSortiesAvecPrise=new Set(prises.map(sortieKey)).size;
+  const allKeys=new Set(entries.map(sortieKey));
+  const priseKeys=new Set(prises.map(sortieKey));
+  const capotOnlyKeys=[...allKeys].filter(k=>!priseKeys.has(k));
+  const tauxReussite=nbSorties?Math.round(nbSortiesAvecPrise/nbSorties*100):0;
+
+  // Espèces pour barres + camembert
+  const sp={};prises.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+(e.nbPoissons||1);});
+  const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
+  const totalPoissons=Object.values(sp).reduce((a,b)=>a+b,0);
+  const maxC=sorted.length?sorted[0][1]:1;
+
+  // Records
+  const wP=[...prises].filter(e=>e.poids!=null).sort((a,b)=>{
+    const ka=a.poids>100?a.poids/1000:a.poids, kb=b.poids>100?b.poids/1000:b.poids; return kb-ka;
+  });
+  const wT=[...prises].filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
+
+  // Spot favori
+  const lx={};entries.forEach(e=>{if(e.lieu)lx[e.lieu]=(lx[e.lieu]||0)+1;});
+  const tL=Object.entries(lx).sort((a,b)=>b[1]-a[1])[0];
+
+  // Meilleure heure
+  const heures=prises.filter(e=>e.date).map(e=>new Date(e.date).getHours());
+  const hCount={}; heures.forEach(h=>hCount[h]=(hCount[h]||0)+1);
+  const bestH=Object.entries(hCount).sort((a,b)=>b[1]-a[1])[0];
+
+  // ── Meilleure saison (par trimestre)
+  const saisons={printemps:0,ete:0,automne:0,hiver:0};
+  const saisonNames={printemps:'🌸 Printemps',ete:'☀️ Été',automne:'🍂 Automne',hiver:'❄️ Hiver'};
+  prises.filter(e=>e.date).forEach(e=>{
+    const m=new Date(e.date).getMonth();
+    if(m>=2&&m<=4) saisons.printemps++;
+    else if(m>=5&&m<=7) saisons.ete++;
+    else if(m>=8&&m<=10) saisons.automne++;
+    else saisons.hiver++;
+  });
+  const bestSaison=Object.entries(saisons).sort((a,b)=>b[1]-a[1])[0];
+
+  // ── Comparaison N vs N-1
+  const now=new Date();
+  const yearN=now.getFullYear(), yearN1=yearN-1;
+  const entriesN=entries.filter(e=>e.date&&e.date.startsWith(String(yearN)));
+  const entriesN1=entries.filter(e=>e.date&&e.date.startsWith(String(yearN1)));
+  const prisesN=entriesN.filter(e=>!e.capot), prisesN1=entriesN1.filter(e=>!e.capot);
+  const sortiesN=new Set(entriesN.map(sortieKey)).size;
+  const sortiesN1=new Set(entriesN1.map(sortieKey)).size;
+  const recordN=prisesN.filter(e=>e.poids!=null).sort((a,b)=>(b.poids>100?b.poids/1000:b.poids)-(a.poids>100?a.poids/1000:a.poids))[0];
+  const recordN1=prisesN1.filter(e=>e.poids!=null).sort((a,b)=>(b.poids>100?b.poids/1000:b.poids)-(a.poids>100?a.poids/1000:a.poids))[0];
+  const tauxN=sortiesN?Math.round(new Set(prisesN.map(sortieKey)).size/sortiesN*100):0;
+  const tauxN1=sortiesN1?Math.round(new Set(prisesN1.map(sortieKey)).size/sortiesN1*100):0;
+  function arrow(n,p){return n>p?'<span class="cmp-arrow up">▲</span>':n<p?'<span class="cmp-arrow down">▼</span>':'<span class="cmp-arrow eq">═</span>';}
+
+  // Couleurs camembert
+  const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
+
+  const moisData=getMoisData();
+
+  el.innerHTML=`
+    <div class="stat-card">
+      <div class="stat-card-title">📋 Résumé</div>
+      <div class="record-item"><span class="record-icon">🎣</span><div class="record-info"><div class="species">Sorties totales</div></div><span class="record-value">${nbSorties}</span></div>
+      <div class="record-item"><span class="record-icon">🐟</span><div class="record-info"><div class="species">Sorties avec prise</div><div class="detail">${prises.length} poisson${prises.length>1?'s':''} au total</div></div><span class="record-value">${nbSortiesAvecPrise}</span></div>
+      <div class="record-item"><span class="record-icon">🚫</span><div class="record-info"><div class="species">Capots</div></div><span class="record-value">${capotOnlyKeys.length}</span></div>
+      <div class="record-item"><span class="record-icon">🎯</span><div class="record-info"><div class="species">Taux de réussite</div></div><span class="record-value">${tauxReussite}%</span></div>
+      ${bestH?`<div class="record-item"><span class="record-icon">⏰</span><div class="record-info"><div class="species">Meilleure heure</div><div class="detail">${bestH[1]} prise${bestH[1]>1?'s':''}</div></div><span class="record-value">${bestH[0]}h</span></div>`:''}
+      ${bestSaison&&bestSaison[1]>0?`<div class="record-item"><span class="record-icon">📅</span><div class="record-info"><div class="species">Meilleure saison</div><div class="detail">${bestSaison[1]} prise${bestSaison[1]>1?'s':''}</div></div><span class="record-value" style="font-size:14px">${saisonNames[bestSaison[0]]}</span></div>`:''}
+      ${tL?`<div class="record-item"><span class="record-icon">📍</span><div class="record-info"><div class="species">Spot favori</div><div class="detail">${tL[1]} sortie${tL[1]>1?'s':''}</div></div><span class="record-value" style="font-size:13px;max-width:110px;text-align:right">${tL[0]}</span></div>`:''}
+      <div class="record-item"><span class="record-icon">🏆</span><div class="record-info"><div class="species">Trophées</div></div><span class="record-value">${prises.filter(e=>e.trophy).length}</span></div>
+      <div class="record-item"><span class="record-icon">↩️</span><div class="record-info"><div class="species">Remises à l'eau</div></div><span class="record-value">${prises.filter(e=>e.relache).length}</span></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-title">📅 Sorties par mois (12 mois)</div>
+      <div class="chart-wrap"><canvas id="chart-mois" width="600" height="180"></canvas></div>
+    </div>
+
+    ${sorted.length?`
+    <div class="stat-card">
+      <div class="stat-card-title">🥧 Répartition par espèce</div>
+      <div class="pie-wrap">
+        <div class="pie-canvas-wrap"><canvas id="chart-pie" width="160" height="160"></canvas></div>
+        <div class="pie-legend">
+          ${sorted.slice(0,8).map(([s,c],i)=>`
+            <div class="pie-legend-item">
+              <span class="pie-legend-dot" style="background:${PIE_COLORS[i%PIE_COLORS.length]}"></span>
+              <span>${s}</span>
+              <span class="pie-legend-pct">${Math.round(c/totalPoissons*100)}%</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-title">🐟 Espèces — détail</div>
+      ${sorted.map(([s,c])=>`<div class="species-bar"><span class="species-name">${s}</span><div class="bar-track"><div class="bar-fill" style="width:${c/maxC*100}%"></div></div><span class="bar-count">${c}</span></div>`).join('')}
+    </div>`:''}
+
+    ${wP.length||wT.length?`
+    <div class="stat-card">
+      <div class="stat-card-title">🏆 Records personnels</div>
+      ${wP[0]?`<div class="record-item"><span class="record-icon">⚖️</span><div class="record-info"><div class="species">${wP[0].espece}</div><div class="detail">${wP[0].lieu||'Lieu non précisé'} — ${wP[0].date?new Date(wP[0].date).toLocaleDateString('fr-FR'):''}</div></div><span class="record-value">${formatPoids(wP[0].poids>100?wP[0].poids/1000:wP[0].poids)}</span></div>`:''}
+      ${wT[0]?`<div class="record-item"><span class="record-icon">📏</span><div class="record-info"><div class="species">${wT[0].espece}</div><div class="detail">${wT[0].lieu||'Lieu non précisé'}</div></div><span class="record-value">${wT[0].taille} cm</span></div>`:''}
+    </div>`:''}
+
+    ${(sortiesN>0||sortiesN1>0)?`
+    <div class="stat-card">
+      <div class="stat-card-title">📊 Comparaison ${yearN} vs ${yearN1}</div>
+      <div class="cmp-year-header">
+        <span class="cmp-year-badge current">${yearN}</span>
+        <span class="cmp-year-badge prev">${yearN1}</span>
+      </div>
+      <div class="cmp-row"><span class="cmp-label">Sorties</span>${arrow(sortiesN,sortiesN1)}<span class="cmp-val current">${sortiesN}</span><span class="cmp-val prev">${sortiesN1}</span></div>
+      <div class="cmp-row"><span class="cmp-label">Prises</span>${arrow(prisesN.length,prisesN1.length)}<span class="cmp-val current">${prisesN.length}</span><span class="cmp-val prev">${prisesN1.length}</span></div>
+      <div class="cmp-row"><span class="cmp-label">Taux réussite</span>${arrow(tauxN,tauxN1)}<span class="cmp-val current">${tauxN}%</span><span class="cmp-val prev">${tauxN1}%</span></div>
+      <div class="cmp-row"><span class="cmp-label">Meilleur poids</span>${arrow(recordN?.poids||0,recordN1?.poids||0)}<span class="cmp-val current" style="font-size:13px">${recordN?formatPoids(recordN.poids>100?recordN.poids/1000:recordN.poids):'—'}</span><span class="cmp-val prev" style="font-size:13px">${recordN1?formatPoids(recordN1.poids>100?recordN1.poids/1000:recordN1.poids):'—'}</span></div>
+    </div>`:''}
+
+    <div class="stat-card">
+      <div class="stat-card-title">🎯 Taux de réussite par mois</div>
+      <div class="chart-wrap"><canvas id="chart-taux" width="600" height="180"></canvas></div>
+    </div>`;
+
+  setTimeout(()=>{
+    drawMoisChart(moisData);
+    drawTauxChart(moisData);
+    if(sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
+  }, 50);
+}
+
+function getMoisData(){
+  const now=new Date();
+  const data=[];
+  for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});
+    const mEntries=entries.filter(e=>e.date&&e.date.startsWith(key));
+    // Compter les sorties (groupes), pas les prises
+    const mSorties=new Set(mEntries.map(sortieKey)).size;
+    const mPriseKeys=new Set(mEntries.filter(e=>!e.capot).map(sortieKey));
+    const mTotal=mSorties;
+    const mAvecPrise=mPriseKeys.size;
+    data.push({label,total:mTotal,prises:mAvecPrise,taux:mTotal?Math.round(mAvecPrise/mTotal*100):0});
+  }
+  return data;
+}
+
+function drawMoisChart(data){
+  const canvas=document.getElementById('chart-mois'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth, H=canvas.offsetHeight;
+  canvas.width=W; canvas.height=H;
+  const pad={t:10,r:10,b:30,l:28};
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  const maxVal=Math.max(...data.map(d=>d.total),1);
+  const bw=cw/data.length*0.6, gap=cw/data.length;
+  ctx.clearRect(0,0,W,H);
+  const isDark=document.body.classList.contains('dark');
+  const textCol=isDark?'#8a96b0':'#8a96b0';
+  const gridCol=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  // grille
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ch*(1-i/4);
+    ctx.strokeStyle=gridCol; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
+    if(i>0){ctx.fillStyle=textCol;ctx.font='10px DM Sans';ctx.textAlign='right';ctx.fillText(Math.round(maxVal*i/4),pad.l-4,y+3);}
+  }
+  // barres
+  data.forEach((d,i)=>{
+    const x=pad.l+i*gap+gap/2-bw/2;
+    const h=d.total?(d.total/maxVal)*ch:0;
+    const y=pad.t+ch-h;
+    const grad=ctx.createLinearGradient(0,y,0,y+h);
+    grad.addColorStop(0,'#2e6db4'); grad.addColorStop(1,'#e8609a');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.roundRect?ctx.roundRect(x,y,bw,h,4):ctx.rect(x,y,bw,h);
+    ctx.fill();
+    // label mois
+    ctx.fillStyle=textCol; ctx.font='9px DM Sans'; ctx.textAlign='center';
+    ctx.fillText(d.label,x+bw/2,H-6);
+  });
+}
+
+function drawTauxChart(data){
+  const canvas=document.getElementById('chart-taux'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth, H=canvas.offsetHeight;
+  canvas.width=W; canvas.height=H;
+  const pad={t:10,r:10,b:30,l:28};
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  const isDark=document.body.classList.contains('dark');
+  const textCol=isDark?'#8a96b0':'#8a96b0';
+  const gridCol=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  ctx.clearRect(0,0,W,H);
+  // grille 0-100%
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ch*(1-i/4);
+    ctx.strokeStyle=gridCol; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
+    ctx.fillStyle=textCol;ctx.font='10px DM Sans';ctx.textAlign='right';
+    ctx.fillText(i*25+'%',pad.l-4,y+3);
+  }
+  // ligne courbe
+  const pts=data.map((d,i)=>({
+    x:pad.l+i*(cw/(data.length-1||1)),
+    y:pad.t+ch*(1-d.taux/100)
+  }));
+  // aire
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,pad.t+ch);
+  pts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(pts[pts.length-1].x,pad.t+ch);
+  ctx.closePath();
+  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
+  grad.addColorStop(0,'rgba(232,96,154,0.25)');
+  grad.addColorStop(1,'rgba(232,96,154,0)');
+  ctx.fillStyle=grad; ctx.fill();
+  // ligne
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
+  pts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle='#e8609a'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+  // points
+  pts.forEach((p,i)=>{
+    if(data[i].total===0) return;
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2);
+    ctx.fillStyle='#e8609a'; ctx.fill();
+    ctx.fillStyle=textCol; ctx.font='9px DM Sans'; ctx.textAlign='center';
+    ctx.fillText(data[i].label,p.x,H-6);
+  });
+}
+
+// ── CAMEMBERT ESPÈCES ──────────────────────────────────
+function drawPieChart(sorted, total, colors){
+  const canvas=document.getElementById('chart-pie'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2, cy=H/2, r=Math.min(W,H)/2-6;
+  let angle=-Math.PI/2;
+  sorted.forEach(([,c],i)=>{
+    const slice=(c/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,angle,angle+slice);
+    ctx.closePath();
+    ctx.fillStyle=colors[i%colors.length];
+    ctx.fill();
+    ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+    angle+=slice;
+  });
+  // Trou central (donut)
+  ctx.beginPath(); ctx.arc(cx,cy,r*0.52,0,Math.PI*2);
+  ctx.fillStyle=document.body.classList.contains('dark')?'#0f2147':'white';
+  ctx.fill();
+  // Texte central
+  ctx.fillStyle=document.body.classList.contains('dark')?'#d0e0f8':'#1a2035';
+  ctx.font=`bold 22px Playfair Display`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(total,cx,cy-6);
+  ctx.font='10px DM Sans'; ctx.fillStyle='#8a96b0';
+  ctx.fillText('poissons',cx,cy+10);
+}
+
+// ════════════════════════════════════════════════════════
+//  CARNET D'APPÂTS
+// ════════════════════════════════════════════════════════
+let appats=JSON.parse(localStorage.getItem('peche-appats')||'[]');
+// Appâts par défaut si vide
+if(!appats.length){
+  appats=['Bouillette','Ver de terre','Maïs','Cuillère','Leurre souple','Mouche sèche','Vairon','Asticot','Crevette','Pain'].map((n,i)=>({id:i+1,nom:n}));
+  localStorage.setItem('peche-appats',JSON.stringify(appats));
+}
+
+function renderAppatsForm(){
+  const grid=document.getElementById('appats-form-grid');
+  if(!grid) return;
+  const current=document.getElementById('f-appat')?.value||'';
+  grid.innerHTML=appats.map(a=>`
+    <button type="button" class="appat-tag${current===a.nom?' selected':''}" onclick="selectAppat('${a.nom.replace(/'/g,"\\'")}')">
+      🪱 ${a.nom}
+    </button>`).join('');
+}
+
+function selectAppat(nom){
+  const input=document.getElementById('f-appat');
+  if(!input) return;
+  input.value=input.value===nom?'':nom;
+  renderAppatsForm();
+}
+
+function renderAppatsPage(){
+  const el=document.getElementById('appats-page-content');
+  if(!el) return;
+  // Fréquences d'utilisation
+  const freq={};
+  entries.filter(e=>e.appat).forEach(e=>{ freq[e.appat]=(freq[e.appat]||0)+1; });
+
+  el.innerHTML=`
+    <div class="stat-card" style="margin-bottom:14px">
+      <div class="stat-card-title">➕ Ajouter un appât</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="new-appat-name" class="form-input" placeholder="Nom de l'appât…" style="flex:1">
+        <button type="button" onclick="addAppat()" style="padding:10px 16px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Ajouter</button>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-title">🪱 Mes appâts (${appats.length})</div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        ${appats.map(a=>{
+          const uses=freq[a.nom]||0;
+          return `
+          <div class="appat-list-row">
+            <span style="font-size:22px">🪱</span>
+            <div style="flex:1">
+              <div class="appat-list-nom">${a.nom}</div>
+              <div style="font-size:11px;color:var(--gris);margin-top:2px">Utilisé ${uses} fois${uses>0?' dans le carnet':''}</div>
+            </div>
+            <button type="button" onclick="deleteAppat(${a.id})" style="font-size:11px;color:var(--rouge);background:#fee;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600">✕</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    ${Object.keys(freq).length?`
+    <div class="stat-card">
+      <div class="stat-card-title">📊 Appâts les plus utilisés</div>
+      ${Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([nom,n])=>`
+        <div class="species-bar">
+          <span class="species-name" style="width:120px">${nom}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${n/Math.max(...Object.values(freq))*100}%"></div></div>
+          <span class="bar-count">${n}</span>
+        </div>`).join('')}
+    </div>`:''}`;
+}
+
+function addAppat(){
+  const input=document.getElementById('new-appat-name');
+  const nom=(input?.value||'').trim();
+  if(!nom){showToast('⚠️ Entrez un nom');return;}
+  if(appats.find(a=>a.nom.toLowerCase()===nom.toLowerCase())){showToast('⚠️ Appât déjà présent');return;}
+  appats.push({id:Date.now(),nom});
+  localStorage.setItem('peche-appats',JSON.stringify(appats));
+  if(input) input.value='';
+  renderAppatsPage(); renderAppatsForm();
+  showToast('🪱 Appât ajouté !');
+}
+
+function deleteAppat(id){
+  appats=appats.filter(a=>a.id!==id);
+  localStorage.setItem('peche-appats',JSON.stringify(appats));
+  renderAppatsPage(); renderAppatsForm();
+  showToast('🗑 Appât supprimé');
+}
+
+// ════════════════════════════════════════════════════════
+//  SPOTS — enrichi avec historique météo
+// ════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════
+//  GÉOLOCALISATION & SPOTS
+// ════════════════════════════════════════════════════════
+function geoLocate(){
+  const btn=document.getElementById('geo-btn');
+  if(!navigator.geolocation){showToast('❌ GPS non disponible');return;}
+  btn.textContent='📡 Localisation…'; btn.disabled=true;
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const {latitude:lat,longitude:lng}=pos.coords;
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+        .then(r=>r.json())
+        .then(data=>{
+          const addr=data.address||{};
+          const nom=addr.leisure||addr.water||addr.natural||addr.village||addr.town||addr.city||addr.hamlet||`${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+          document.getElementById('f-lieu').value=nom;
+          btn.textContent='✅ Position obtenue'; btn.disabled=false;
+          if(!spots.find(s=>s.nom===nom)){
+            if(confirm(`📍 Enregistrer "${nom}" comme spot favori ?`)){
+              spots.unshift({id:Date.now(),nom,lat,lng});
+              localStorage.setItem('peche-spots',JSON.stringify(spots));
+              renderSpotsForm(); renderSpotsPage();
+              showToast('⭐ Spot enregistré !');
+            }
+          }
+        })
+        .catch(()=>{
+          document.getElementById('f-lieu').value=`${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+          btn.textContent='📡 Utiliser ma position GPS'; btn.disabled=false;
+        });
+    },
+    ()=>{ btn.textContent='📡 Utiliser ma position GPS'; btn.disabled=false; showToast('❌ GPS indisponible'); },
+    {timeout:10000,enableHighAccuracy:true}
+  );
+}
+
+function renderSpotsForm(){
+  const box=document.getElementById('spots-favoris-box');
+  const list=document.getElementById('spots-list');
+  if(!spots.length){box.style.display='none';return;}
+  box.style.display='block';
+  list.innerHTML=spots.map(s=>`
+    <div class="spot-chip" onclick="useSpot('${s.nom.replace(/'/g,"\\'")}')">
+      📍 <span style="flex:1">${s.nom}</span>
+      <button type="button" class="spot-del" onclick="deleteSpot(${s.id},event)">✕</button>
+    </div>`).join('');
+}
+function useSpot(nom){ document.getElementById('f-lieu').value=nom; showToast(`📍 ${nom}`); }
+function deleteSpot(id,e){
+  e.stopPropagation();
+  spots=spots.filter(s=>s.id!==id);
+  localStorage.setItem('peche-spots',JSON.stringify(spots));
+  renderSpotsForm(); renderSpotsPage(); updateMap();
+}
+function addManualSpot(){
+  const input=document.getElementById('new-spot-name');
+  const nom=(input?.value||'').trim();
+  if(!nom){showToast('⚠️ Entrez un nom');return;}
+  if(spots.find(s=>s.nom===nom)){showToast('⚠️ Spot déjà enregistré');return;}
+  spots.unshift({id:Date.now(),nom,lat:null,lng:null});
+  localStorage.setItem('peche-spots',JSON.stringify(spots));
+  if(input) input.value='';
+  renderSpotsForm(); renderSpotsPage();
+  showToast('⭐ Spot ajouté !');
+}
+
+// ── CARTE LEAFLET ──
+function initMap(){
+  if(leafletMap) return; // déjà initialisée
+  const container=document.getElementById('map-container');
+  if(!container) return;
+  // Spots avec coordonnées GPS
+  const spotsGeo=spots.filter(s=>s.lat&&s.lng);
+  // Centre par défaut : France
+  let center=[46.5,2.5], zoom=5;
+  if(spotsGeo.length){
+    center=[spotsGeo[0].lat,spotsGeo[0].lng]; zoom=12;
+  }
+  leafletMap=L.map('map-container').setView(center,zoom);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',maxZoom:19
+  }).addTo(leafletMap);
+  updateMap();
+}
+
+function updateMap(){
+  if(!leafletMap) return;
+  mapMarkers.forEach(m=>m.remove()); mapMarkers=[];
+  const spotsGeo=spots.filter(s=>s.lat&&s.lng);
+  spotsGeo.forEach(s=>{
+    const sorties=entries.filter(e=>e.lieu===s.nom).length;
+    const icon=L.divIcon({
+      html:`<div style="background:linear-gradient(135deg,#2e6db4,#e8609a);width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center">
+        <span style="transform:rotate(45deg);font-size:14px">📍</span></div>`,
+      iconSize:[32,32], iconAnchor:[16,32], popupAnchor:[0,-32], className:''
+    });
+    const marker=L.marker([s.lat,s.lng],{icon}).addTo(leafletMap);
+    marker.bindPopup(`<div class="map-spot-popup"><strong>${s.nom}</strong>
+      <span class="popup-badge">${sorties} sortie${sorties>1?'s':''}</span>
+      <br><small style="color:#888">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</small></div>`);
+    mapMarkers.push(marker);
+  });
+  if(spotsGeo.length===1) leafletMap.setView([spotsGeo[0].lat,spotsGeo[0].lng],13);
+  else if(spotsGeo.length>1){
+    const group=L.featureGroup(mapMarkers);
+    leafletMap.fitBounds(group.getBounds().pad(0.2));
+  }
+}
+
+function renderSpotsPage(){
+  const el=document.getElementById('spots-page-content');
+  if(!el) return;
+  const addHtml=`
+    <div class="stat-card" style="margin-bottom:14px">
+      <div class="stat-card-title">➕ Ajouter un spot manuellement</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="new-spot-name" class="form-input" placeholder="Nom du spot…" style="flex:1">
+        <button type="button" onclick="addManualSpot()" style="padding:10px 16px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Ajouter</button>
+      </div>
+    </div>`;
+
+  const mapHtml=`
+    <div class="stat-card" style="margin-bottom:14px">
+      <div class="stat-card-title">🗺 Carte de mes spots</div>
+      <div id="map-container"></div>
+      ${spots.filter(s=>s.lat&&s.lng).length===0?`<p style="font-size:12px;color:var(--gris);margin-top:8px;text-align:center">Utilisez le GPS pour afficher vos spots sur la carte</p>`:''}
+    </div>`;
+
+  const listHtml=spots.length?`
+    <div class="stat-card">
+      <div class="stat-card-title">📍 Mes spots (${spots.length})</div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        ${spots.map(s=>{
+          const sortiesSpot=entries.filter(e=>e.lieu===s.nom);
+          const prisesSpot=sortiesSpot.filter(e=>!e.capot);
+          const hasCoords=s.lat&&s.lng;
+          // Historique météo : conditions par sortie
+          const meteoHist=sortiesSpot.filter(e=>e.date&&e.meteo&&e.meteo.length).slice(0,5);
+          const meteoHtml=meteoHist.length?`
+            <div style="margin-top:8px">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:6px">🌤 Historique météo</div>
+              ${meteoHist.map(e=>{
+                const d=new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+                const prisesJ=prisesSpot.filter(p=>p.date&&p.date.slice(0,10)===e.date.slice(0,10)).length;
+                return `<div class="meteo-spot-row">
+                  <span class="meteo-spot-date">${d}</span>
+                  <div class="meteo-spot-info">
+                    <span>${e.meteo.join(' ')}</span>
+                    ${e.tempAir?`<span style="color:var(--gris);margin-left:6px">🌡${e.tempAir}°</span>`:''}
+                    ${e.tempEau?`<span style="color:var(--gris);margin-left:4px">💧${e.tempEau}°</span>`:''}
+                    <span style="color:var(--gris);margin-left:6px;font-size:11px">${prisesJ} prise${prisesJ>1?'s':''}</span>
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>`:''
+          ;
+          return `
+          <div style="background:var(--bleu-clair);border-radius:12px;padding:14px">
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:${meteoHtml?'10px':'0'}">
+              <span style="font-size:26px">📍</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:var(--eau-profonde);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.nom}</div>
+                <div style="font-size:12px;color:var(--gris);margin-top:3px">${sortiesSpot.length} sortie${sortiesSpot.length>1?'s':''} — ${prisesSpot.length} prise${prisesSpot.length>1?'s':''}</div>
+                ${hasCoords?`<div style="font-size:11px;color:#aab;margin-top:2px">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</div>`:''}
+              </div>
+              <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
+                ${hasCoords?`<a href="https://maps.google.com/?q=${s.lat},${s.lng}" target="_blank" style="font-size:11px;color:var(--eau-claire);font-weight:600;text-decoration:none;padding:4px 10px;background:white;border-radius:8px">🗺 Maps</a>`:''}
+                <button type="button" onclick="deleteSpot(${s.id},event)" style="font-size:11px;color:var(--rouge);background:#fee;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600">✕</button>
+              </div>
+            </div>
+            ${meteoHtml}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:'';
+
+  el.innerHTML=addHtml+mapHtml+listHtml;
+  leafletMap=null;
+  setTimeout(()=>{ initMap(); },100);
+}
+
+// ════════════════════════════════════════════════════════
+//  PARTAGE DE FICHE — niveau sortie
+// ════════════════════════════════════════════════════════
+function openShareSortie(ids){
+  const prises=ids.map(id=>entries.find(e=>e.id===id)).filter(Boolean);
+  if(!prises.length) return;
+  const ref=prises[0];
+  const prisesReelles=prises.filter(e=>!e.capot);
+  const isCapot=prises.every(e=>e.capot);
+  const date=ref.date?new Date(ref.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'';
+  const heure=ref.date?new Date(ref.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+
+  // Titre sortie
+  const titre=isCapot?'🚫 Capot (bredouille)':
+    prisesReelles.map(e=>e.espece).filter((v,i,a)=>a.indexOf(v)===i).join(', ');
+  document.getElementById('sc-species').textContent=titre;
+  document.getElementById('sc-lieu').textContent=ref.lieu?'📍 '+ref.lieu:'';
+  document.getElementById('sc-date').innerHTML=`${date}<br>${heure}`;
+
+  // Stats
+  const totalPoissons=prisesReelles.length;
+  const avecPoids=prisesReelles.filter(e=>e.poids!=null).sort((a,b)=>{
+    const ka=a.poids>100?a.poids/1000:a.poids, kb=b.poids>100?b.poids/1000:b.poids; return kb-ka;
+  });
+  const maxStars=Math.max(...prises.map(e=>e.stars||0));
+  const allMeteo=[...new Set(prises.flatMap(e=>e.meteo||[]))];
+  const avecFin=prises.filter(e=>e.heureFin);
+  const duree=avecFin.length&&ref.date?calcDuree(ref.date,avecFin[avecFin.length-1].heureFin):'';
+
+  const stats=[];
+  if(totalPoissons>0) stats.push({val:String(totalPoissons),lbl:'Poissons'});
+  if(avecPoids[0]) stats.push({val:formatPoids(avecPoids[0].poids>100?avecPoids[0].poids/1000:avecPoids[0].poids),lbl:'Meilleur'});
+  if(duree) stats.push({val:duree,lbl:'Durée'});
+  if(allMeteo.length) stats.push({val:allMeteo.join(' '),lbl:'Météo'});
+  if(maxStars) stats.push({val:'⭐'.repeat(maxStars),lbl:'Note'});
+
+  document.getElementById('sc-stats').innerHTML=stats.map(s=>`
+    <div class="share-stat"><span class="val">${s.val}</span><span class="lbl">${s.lbl}</span></div>`).join('');
+
+  // Notes
+  const allNotes=prisesReelles.filter(e=>e.notes).map(e=>e.notes).join(' — ');
+  const notesEl=document.getElementById('sc-notes');
+  if(allNotes){notesEl.textContent='"'+allNotes.slice(0,120)+'"';notesEl.style.display='block';}
+  else notesEl.style.display='none';
+
+  // Stocker les ids pour le partage texte
+  document.getElementById('share-wrap').dataset.ids=JSON.stringify(ids);
+  document.getElementById('share-wrap').classList.add('open');
+}
+
+// Garde la compat avec l'ancien openShare(id) au cas où
+function openShare(id){ openShareSortie([id]); }
+function closeShare(e){ if(e.target===document.getElementById('share-wrap')) closeShareBtn(); }
+function closeShareBtn(){ document.getElementById('share-wrap').classList.remove('open'); }
+function copyShareText(){
+  const species=document.getElementById('sc-species').textContent;
+  const lieu=document.getElementById('sc-lieu').textContent;
+  const date=document.getElementById('sc-date').innerText.replace('\n',' ');
+  const stats=[...document.querySelectorAll('.share-stat')].map(s=>`${s.querySelector('.lbl').textContent}: ${s.querySelector('.val').textContent}`).join(' | ');
+  const notes=document.getElementById('sc-notes');
+  const text=`🎣 ${species}\n${lieu} — ${date}\n${stats}${notes.style.display!=='none'?'\n'+notes.textContent:''}\n\n📱 Carnet de Pêche`;
+  navigator.clipboard.writeText(text).then(()=>showToast('📋 Copié !')).catch(()=>showToast('❌ Erreur copie'));
+}
+
+// ════════════════════════════════════════════════════════
+//  ÉDITION D'UNE PRISE
+// ════════════════════════════════════════════════════════
+function openEditEntry(id){
+  const e=entries.find(x=>x.id===id); if(!e) return;
+  document.getElementById('edit-id').value=id;
+  // Espèce : si valeur pas dans la liste → sélectionner "Autre" + afficher champ
+  const knownSpecies=['Carpe','Brochet','Truite fario','Truite arc-en-ciel','Sandre','Perche','Gardon','Rotengle','Tanche','Anguille','Black-bass','Silure','Barbeau','Chevesne','Ablette','Alose'];
+  const editSel=document.getElementById('edit-espece');
+  const editAutre=document.getElementById('edit-espece-autre');
+  if(e.espece&&!knownSpecies.includes(e.espece)){
+    editSel.value='Autre';
+    editAutre.style.display='block';
+    editAutre.value=e.espece;
+  } else {
+    editSel.value=e.espece||'';
+    editAutre.style.display='none';
+    editAutre.value='';
+  }
+  document.getElementById('edit-taille').value=e.taille||'';
+  document.getElementById('edit-poids').value=e.poids!=null?(e.poids>100?(e.poids/1000).toFixed(3):e.poids):'';
+  document.getElementById('edit-technique').value=e.technique||'';
+  document.getElementById('edit-appat').value=e.appat||'';
+  document.getElementById('edit-profondeur').value=e.profondeur||'';
+  document.getElementById('edit-stars').value=e.stars||0;
+  document.getElementById('edit-notes').value=e.notes||'';
+  document.getElementById('edit-trophy').checked=!!e.trophy;
+  document.getElementById('edit-relache').checked=!!e.relache;
+  document.getElementById('edit-wrap').classList.add('open');
+}
+function closeEdit(){
+  document.getElementById('edit-wrap').classList.remove('open');
+  const editAutre=document.getElementById('edit-espece-autre');
+  if(editAutre){editAutre.style.display='none';editAutre.value='';}
+}
+function closeEditOnOverlay(ev){ if(ev.target===document.getElementById('edit-wrap')) closeEdit(); }
+
+function saveEditEntry(){
+  const id=parseInt(document.getElementById('edit-id').value);
+  const idx=entries.findIndex(e=>e.id===id); if(idx===-1) return;
+  const poidsVal=document.getElementById('edit-poids').value;
+  entries[idx]={
+    ...entries[idx],
+    espece:getEspece('edit-espece','edit-espece-autre')||entries[idx].espece,
+    taille:document.getElementById('edit-taille').value||null,
+    poids:poidsVal?parseFloat(poidsVal):null,
+    technique:document.getElementById('edit-technique').value,
+    appat:document.getElementById('edit-appat').value,
+    profondeur:document.getElementById('edit-profondeur').value||null,
+    stars:parseInt(document.getElementById('edit-stars').value)||0,
+    notes:document.getElementById('edit-notes').value,
+    trophy:document.getElementById('edit-trophy').checked,
+    relache:document.getElementById('edit-relache').checked,
+  };
+  localStorage.setItem('peche-entries',JSON.stringify(entries));
+  closeEdit(); renderJournal(); updateAllStats();
+  showToast('✅ Prise modifiée !');
+}
+
+// ════════════════════════════════════════════════════════
+//  PARAMÈTRES — personnalisation du nom
+// ════════════════════════════════════════════════════════
+function getPecheurNom(){
+  return localStorage.getItem('pecheur-nom')||'Bruno LARIVE';
+}
+
+function renderParametresPage(){
+  const el=document.getElementById('parametres-content'); if(!el) return;
+  const nom=getPecheurNom();
+  el.innerHTML=`
+    <div class="stat-card" style="margin-bottom:14px">
+      <div class="stat-card-title">👤 Identité du pêcheur</div>
+      <div class="settings-row">
+        <div class="settings-label">Votre nom
+          <span class="settings-sub">Utilisé dans les rapports PDF et fiches image exportées</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <input type="text" id="param-nom" class="form-input" value="${nom}" placeholder="Prénom NOM" style="flex:1">
+        <button type="button" onclick="saveNom()" style="padding:10px 18px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Enregistrer</button>
+      </div>
+      <div style="margin-top:12px;padding:12px;background:var(--bleu-clair);border-radius:10px;font-size:12px;color:var(--eau-claire)">
+        Aperçu : <strong>${nom}</strong> — Carnet de Pêche Personnel
+      </div>
+    </div>
+    <div class="stat-card" style="margin-bottom:14px">
+      <div class="stat-card-title">🎨 Apparence</div>
+      <div class="settings-row">
+        <div class="settings-label">Mode sombre
+          <span class="settings-sub">Suit automatiquement les préférences du téléphone</span>
+        </div>
+        <button type="button" onclick="toggleDarkMode();renderParametresPage()" style="padding:8px 16px;background:var(--bleu-clair);color:var(--eau-claire);border:none;border-radius:20px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px">
+          ${document.body.classList.contains('dark')?'☀️ Mode clair':'🌙 Mode sombre'}
+        </button>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-title">🗑 Données</div>
+      <div class="settings-row">
+        <div class="settings-label">Réinitialiser toutes les données
+          <span class="settings-sub">Supprime sorties, spots et appâts — irréversible</span>
+        </div>
+        <button type="button" onclick="resetAllData()" style="padding:8px 14px;background:#fee;color:var(--rouge);border:1px solid #fcc;border-radius:20px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;white-space:nowrap">
+          🗑 Réinitialiser
+        </button>
+      </div>
+    </div>`;
+}
+
+function saveNom(){
+  const nom=(document.getElementById('param-nom')?.value||'').trim();
+  if(!nom){showToast('⚠️ Entrez votre nom');return;}
+  localStorage.setItem('pecheur-nom',nom);
+  // NE PAS modifier À propos — le nom dans À propos reste celui du code
+  renderParametresPage();
+  showToast('✅ Nom enregistré pour les rapports !');
+}
+
+function resetAllData(){
+  if(!confirm('⚠️ Supprimer TOUTES les données ?\n\nCette action est irréversible.')) return;
+  if(!confirm('Confirmez-vous la suppression complète ?')) return;
+  localStorage.removeItem('peche-entries');
+  localStorage.removeItem('peche-spots');
+  localStorage.removeItem('peche-appats');
+  entries=[]; spots=[]; appats=[];
+  renderJournal(); updateAllStats(); renderSpotsForm();
+  switchView('journal');
+  showToast('🗑 Données réinitialisées');
+}
+
+// ════════════════════════════════════════════════════════
+//  RAPPORT DE SAISON
+// ════════════════════════════════════════════════════════
+function renderRapportPage(){
+  const el=document.getElementById('rapport-content');
+  if(!el) return;
+  const annee=new Date().getFullYear();
+  const prises=entries.filter(e=>!e.capot);
+  const nbSorties=new Set(entries.map(sortieKey)).size;
+  el.innerHTML=`
+    <div class="stat-card" style="margin-bottom:14px">
+      <div class="stat-card-title">📄 Rapport & Export</div>
+      <p style="font-size:13px;color:var(--gris);margin-bottom:20px;line-height:1.6">
+        Exportez votre carnet de pêche en différents formats.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button type="button" class="export-btn pdf" onclick="exportPDF()" style="border-radius:12px">
+          <span class="eb-icon">📄</span>
+          <span class="eb-text"><span class="eb-title">Rapport PDF saison ${annee}</span><span class="eb-sub">Bilan complet avec stats et records</span></span>
+        </button>
+        <button type="button" class="export-btn img" onclick="exportFicheImage()" style="border-radius:12px">
+          <span class="eb-icon">🖼</span>
+          <span class="eb-text"><span class="eb-title">Fiche image (dernière sortie)</span><span class="eb-sub">Image à partager sur WhatsApp…</span></span>
+        </button>
+        <button type="button" class="export-btn csv" onclick="exportCSV()" style="border-radius:12px">
+          <span class="eb-icon">📊</span>
+          <span class="eb-text"><span class="eb-title">Export CSV</span><span class="eb-sub">Ouvrir dans Excel ou Google Sheets</span></span>
+        </button>
+        <button type="button" class="export-btn" style="background:linear-gradient(135deg,#1b3a6b,#2e6db4);border-radius:12px" onclick="exportData()">
+          <span class="eb-icon">💾</span>
+          <span class="eb-text"><span class="eb-title">Sauvegarde JSON</span><span class="eb-sub">Backup complet — spots inclus</span></span>
+        </button>
+      </div>
+    </div>`;
+}
+
+function openExport(){ document.getElementById('export-wrap').classList.add('open'); }
+function closeExport(){ document.getElementById('export-wrap').classList.remove('open'); }
+function closeExportOnOverlay(e){ if(e.target===document.getElementById('export-wrap')) closeExport(); }
+
+// ── EXPORT CSV ────────────────────────────────────────
+function exportCSV(){
+  if(!entries.length){showToast('⚠️ Aucune donnée');return;}
+  const headers=['Date','Heure','Espèce','Taille (cm)','Poids (kg)','Lieu','Technique','Appât','Profondeur (m)','Météo','Temp Air','Temp Eau','Lune','Note','Trophée','Remis à l\'eau','Capot','Notes'];
+  const rows=entries.map(e=>[
+    e.date?e.date.slice(0,10):'',
+    e.date?e.date.slice(11,16):'',
+    e.espece||'',
+    e.taille||'',
+    e.poids!=null?(e.poids>100?e.poids/1000:e.poids).toFixed(3):'',
+    e.lieu||'',
+    e.technique||'',
+    e.appat||'',
+    e.profondeur||'',
+    (e.meteo||[]).join(' '),
+    e.tempAir||'',
+    e.tempEau||'',
+    e.lune||'',
+    e.stars||'',
+    e.trophy?'Oui':'',
+    e.relache?'Oui':'',
+    e.capot?'Oui':'',
+    (e.notes||'').replace(/,/g,';')
+  ].map(v=>`"${v}"`).join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`carnet-peche-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('📊 CSV exporté !');
+  closeExport();
+}
+
+// ── EXPORT IMAGE FICHE SORTIE ────────────────────────
+function exportFicheImage(){
+  // Trouver la dernière sortie non-capot
+  const dernieres=entries.filter(e=>!e.capot);
+  if(!dernieres.length){showToast('⚠️ Aucune prise enregistrée');return;}
+  const ref=dernieres[0];
+  const key=sortieKey(ref);
+  const groupe=entries.filter(e=>sortieKey(e)===key&&!e.capot);
+
+  const canvas=document.getElementById('share-canvas');
+  canvas.width=800; canvas.height=480;
+  const ctx=canvas.getContext('2d');
+  const W=800, H=480;
+
+  // Fond dégradé
+  const grad=ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#0f2147'); grad.addColorStop(1,'#1b3a6b');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+
+  // Vague décorative
+  ctx.fillStyle='rgba(46,109,180,0.2)';
+  ctx.beginPath(); ctx.ellipse(W/2,H+60,W*0.7,120,0,0,Math.PI*2); ctx.fill();
+
+  // Bandeau rose en haut
+  ctx.fillStyle='rgba(232,96,154,0.15)';
+  ctx.fillRect(0,0,W,8);
+
+  // Emoji hameçon
+  ctx.font='56px serif'; ctx.textAlign='left';
+  ctx.fillText('🎣',40,80);
+
+  // Titre espèces
+  const especes=groupe.map(e=>e.espece).filter((v,i,a)=>a.indexOf(v)===i).join(', ');
+  ctx.fillStyle='white';
+  ctx.font='bold 32px Georgia, serif';
+  ctx.fillText(especes.slice(0,40),110,65);
+
+  // Lieu et date
+  const date=ref.date?new Date(ref.date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
+  ctx.font='16px DM Sans, sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.65)';
+  ctx.fillText((ref.lieu?'📍 '+ref.lieu+' — ':'')+date,110,92);
+
+  // Ligne séparatrice
+  ctx.strokeStyle='rgba(232,96,154,0.5)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(40,110); ctx.lineTo(W-40,110); ctx.stroke();
+
+  // Stats en grille
+  const avecPoids=groupe.filter(e=>e.poids!=null).sort((a,b)=>(b.poids>100?b.poids/1000:b.poids)-(a.poids>100?a.poids/1000:a.poids));
+  const avecTaille=groupe.filter(e=>e.taille).sort((a,b)=>b.taille-a.taille);
+  const allMeteo=[...new Set(groupe.flatMap(e=>e.meteo||[]))];
+  const maxStars=Math.max(...groupe.map(e=>e.stars||0));
+  const avecFin=groupe.filter(e=>e.heureFin);
+  const duree=avecFin.length&&ref.date?calcDuree(ref.date,avecFin[avecFin.length-1].heureFin):'';
+
+  const stats=[];
+  stats.push({icon:'🐟',label:'Prises',val:String(groupe.length)});
+  if(avecPoids[0]) stats.push({icon:'⚖️',label:'Meilleur poids',val:formatPoids(avecPoids[0].poids>100?avecPoids[0].poids/1000:avecPoids[0].poids)});
+  if(avecTaille[0]) stats.push({icon:'📏',label:'Meilleure taille',val:avecTaille[0].taille+' cm'});
+  if(duree) stats.push({icon:'⏱',label:'Durée',val:duree});
+  if(allMeteo.length) stats.push({icon:'🌤',label:'Météo',val:allMeteo.slice(0,3).join(' ')});
+  if(ref.tempEau) stats.push({icon:'💧',label:'Temp. eau',val:ref.tempEau+'°C'});
+
+  const cols=3, cardW=220, cardH=90, startX=40, startY=130, gapX=20, gapY=16;
+  stats.slice(0,6).forEach((s,i)=>{
+    const col=i%cols, row=Math.floor(i/cols);
+    const x=startX+col*(cardW+gapX), y=startY+row*(cardH+gapY);
+    // Carte fond
+    ctx.fillStyle='rgba(255,255,255,0.07)';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(x,y,cardW,cardH,10);
+    else ctx.rect(x,y,cardW,cardH);
+    ctx.fill();
+    // Icône + valeur
+    ctx.font='22px serif'; ctx.textAlign='left'; ctx.fillStyle='white';
+    ctx.fillText(s.icon,x+14,y+32);
+    ctx.font='bold 22px Georgia, serif'; ctx.fillStyle='#f0c0d8';
+    ctx.fillText(s.val.slice(0,16),x+44,y+34);
+    ctx.font='11px DM Sans, sans-serif'; ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.fillText(s.label,x+14,y+60);
+  });
+
+  // Note étoiles
+  if(maxStars){
+    ctx.font='20px serif'; ctx.textAlign='left'; ctx.fillStyle='white';
+    ctx.fillText('⭐'.repeat(maxStars),40,H-50);
+  }
+
+  // Footer
+  ctx.fillStyle='rgba(255,255,255,0.3)';
+  ctx.font='13px DM Sans, sans-serif'; ctx.textAlign='right';
+  ctx.fillText(`🎣 Carnet de Pêche — ${getPecheurNom()}`,W-40,H-30);
+
+  // Télécharger
+  canvas.toBlob(blob=>{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`prise-${(especes.slice(0,20)).replace(/[^a-z0-9]/gi,'-')}-${new Date().toISOString().slice(0,10)}.png`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('🖼 Image téléchargée !');
+  },'image/png');
+  closeExport();
+}
+
+// ── EXPORT PDF ────────────────────────────────────────
+function exportPDF(){
+  if(!entries.length){showToast('⚠️ Aucune donnée');return;}
+  const annee=new Date().getFullYear();
+  const prises=entries.filter(e=>!e.capot);
+  const nbSorties=new Set(entries.map(sortieKey)).size;
+  const records=prises.filter(e=>e.poids!=null).sort((a,b)=>(b.poids>100?b.poids/1000:b.poids)-(a.poids>100?a.poids/1000:a.poids));
+  const sp={};prises.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+(e.nbPoissons||1);});
+  const sortedSp=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
+  const lx={};entries.forEach(e=>{if(e.lieu)lx[e.lieu]=(lx[e.lieu]||0)+1;});
+  const spotFavori=Object.entries(lx).sort((a,b)=>b[1]-a[1])[0];
+  const tauxReussite=nbSorties?Math.round(new Set(prises.map(sortieKey)).size/nbSorties*100):0;
+
+  // Générer les 20 dernières sorties
+  const groups=groupEnSorties(entries).slice(0,20);
+
+  const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+  <title>Rapport de pêche ${annee}</title>
+  <style>
+    body{font-family:'Georgia',serif;margin:0;padding:32px;color:#1a2035;background:white;}
+    h1{font-size:28px;color:#0f2147;border-bottom:3px solid #e8609a;padding-bottom:10px;margin-bottom:6px;}
+    h2{font-size:16px;color:#2e6db4;margin:24px 0 10px;text-transform:uppercase;letter-spacing:1px;font-family:'DM Sans',sans-serif;}
+    .subtitle{font-size:13px;color:#8a96b0;margin-bottom:28px;font-family:'DM Sans',sans-serif;}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+    .stat-box{background:#e8f0fb;border-radius:10px;padding:14px;text-align:center;}
+    .stat-box .val{font-size:28px;font-weight:bold;color:#0f2147;display:block;}
+    .stat-box .lbl{font-size:11px;color:#8a96b0;text-transform:uppercase;letter-spacing:0.8px;}
+    table{width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Sans',sans-serif;margin-bottom:20px;}
+    th{background:#0f2147;color:white;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;}
+    td{padding:7px 10px;border-bottom:1px solid #eee;}
+    tr:nth-child(even) td{background:#f8f9ff;}
+    .badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:bold;}
+    .badge-rose{background:#fce4f0;color:#e8609a;}
+    .badge-bleu{background:#e8f0fb;color:#2e6db4;}
+    .footer{margin-top:40px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#aaa;text-align:center;font-family:'DM Sans',sans-serif;}
+    @media print{body{padding:16px;}}
+  </style></head><body>
+  <h1>🎣 Rapport de Pêche ${annee}</h1>
+  <div class="subtitle">${getPecheurNom()} — Généré le ${new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</div>
+  <div class="stats-grid">
+    <div class="stat-box"><span class="val">${nbSorties}</span><span class="lbl">Sorties</span></div>
+    <div class="stat-box"><span class="val">${prises.length}</span><span class="lbl">Prises</span></div>
+    <div class="stat-box"><span class="val">${tauxReussite}%</span><span class="lbl">Réussite</span></div>
+    <div class="stat-box"><span class="val">${records[0]?formatPoids(records[0].poids>100?records[0].poids/1000:records[0].poids):'—'}</span><span class="lbl">Record</span></div>
+  </div>
+  ${sortedSp.length?`<h2>🐟 Espèces capturées</h2>
+  <table><tr><th>Espèce</th><th>Nb prises</th><th>% du total</th></tr>
+  ${sortedSp.map(([s,c])=>`<tr><td>${s}</td><td>${c}</td><td>${Math.round(c/prises.length*100)}%</td></tr>`).join('')}
+  </table>`:''}
+  ${spotFavori?`<h2>📍 Spot favori : ${spotFavori[0]} (${spotFavori[1]} sortie${spotFavori[1]>1?'s':''})</h2>`:''}
+  <h2>📖 Journal des sorties (20 dernières)</h2>
+  <table>
+    <tr><th>Date</th><th>Lieu</th><th>Espèces</th><th>Prises</th><th>Meilleur poids</th><th>Météo</th></tr>
+    ${groups.map(g=>{
+      const ref=g[0];
+      const pr=g.filter(e=>!e.capot);
+      const ww=pr.filter(e=>e.poids!=null).sort((a,b)=>(b.poids>100?b.poids/1000:b.poids)-(a.poids>100?a.poids/1000:a.poids));
+      const date=ref.date?new Date(ref.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
+      const especes=[...new Set(pr.map(e=>e.espece))].join(', ')||'—';
+      const meteo=[...new Set(g.flatMap(e=>e.meteo||[]))].join(' ')||'—';
+      return `<tr>
+        <td>${date}</td><td>${ref.lieu||'—'}</td>
+        <td>${especes}</td><td>${g.every(e=>e.capot)?'<span class="badge badge-bleu">Capot</span>':pr.length}</td>
+        <td>${ww[0]?formatPoids(ww[0].poids>100?ww[0].poids/1000:ww[0].poids):'—'}</td>
+        <td>${meteo}</td>
+      </tr>`;
+    }).join('')}
+  </table>
+  <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.0</div>
+  </body></html>`;
+
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank');
+  if(win){
+    setTimeout(()=>{ win.print(); URL.revokeObjectURL(url); },800);
+    showToast('📄 Rapport ouvert — imprimez en PDF');
+  } else {
+    // Fallback : téléchargement direct
+    const a=document.createElement('a');
+    a.href=url; a.download=`rapport-peche-${annee}.html`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('📄 Rapport téléchargé !');
+  }
+  closeExport();
+}
+function exportData(){
+  if(!entries.length){showToast('⚠️ Aucune donnée à exporter');return;}
+  const data={version:2,exportDate:new Date().toISOString(),entries,spots};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`carnet-peche-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast(`📤 ${entries.length} sortie(s) exportée(s) !`);
+}
+function importData(event){
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      const imported=data.entries||data;
+      if(!Array.isArray(imported)) throw new Error();
+      const existingIds=new Set(entries.map(e=>e.id));
+      const nouveaux=imported.filter(e=>!existingIds.has(e.id));
+      entries=[...nouveaux,...entries];
+      localStorage.setItem('peche-entries',JSON.stringify(entries));
+      // Import spots si présents
+      if(data.spots&&Array.isArray(data.spots)){
+        const existSpotIds=new Set(spots.map(s=>s.id));
+        const newSpots=data.spots.filter(s=>!existSpotIds.has(s.id));
+        spots=[...newSpots,...spots];
+        localStorage.setItem('peche-spots',JSON.stringify(spots));
+      }
+      renderJournal(); updateAllStats(); renderSpotsForm();
+      showToast(`📥 ${nouveaux.length} sortie(s) importée(s) !`);
+    }catch{showToast('❌ Fichier invalide');}
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ════════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+let rt;
+window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJournal,200); });
+
+// ════════════════════════════════════════════════════════
+//  SERVICE WORKER — version par date de déploiement
+//  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
+// ════════════════════════════════════════════════════════
+const BUILD_DATE = '20260330'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      // L'URL versionnée force Chrome à recharger sw.js si BUILD_DATE change
+      const swUrl = `./sw.js?v=${BUILD_DATE}`;
+      const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' });
+
+      // Envoyer la version au SW pour qu'il purge l'ancien cache
+      const sendVersion = (worker) => {
+        if (worker) worker.postMessage({ type: 'SET_VERSION', version: BUILD_DATE });
+      };
+
+      sendVersion(reg.active);
+      sendVersion(reg.waiting);
+
+      // SW en attente → activer immédiatement
+      if (reg.waiting) {
+        reg.waiting.postMessage('SKIP_WAITING');
+      }
+
+      // Nouveau SW installé en arrière-plan → activer immédiatement
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed') {
+            sendVersion(newWorker);
+            newWorker.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+
+      // Forcer la vérification toutes les 2 minutes
+      setInterval(() => reg.update(), 2 * 60 * 1000);
+
+      console.log(`[App] SW enregistré — Build ${BUILD_DATE}`);
+
+    } catch (err) {
+      console.warn('[App] SW échec:', err);
+    }
+
+    // Nouveau SW actif → rechargement automatique de la page
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('[App] Nouveau SW actif — rechargement');
+      window.location.reload();
+    });
+
+    // Message RELOAD envoyé par le SW quand version change
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'RELOAD') {
+        console.log('[App] SW demande rechargement — nouvelle version');
+        window.location.reload();
+      }
+    });
+  });
+}
+
+function showUpdateBanner() {}
+function applyUpdate() { window.location.reload(); }
+
+// ── MODALE À PROPOS ──
+function openInfo(){ document.getElementById('info-wrap').classList.add('open'); }
+function closeInfo(){ document.getElementById('info-wrap').classList.remove('open'); }
+function closeInfoOnOverlay(e){ if(e.target===document.getElementById('info-wrap')) closeInfo(); }
+
+init();
+</script>
 </body>
 </html>
