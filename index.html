@@ -502,19 +502,75 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .page-content{padding:16px 12px 90px;}
   .cards-grid{grid-template-columns:1fr;}
   .stats-grid{grid-template-columns:1fr;}
-  /* Stats responsive mobile */
-  .stat-card{padding:14px 12px;}
-  .species-name{width:80px;font-size:12px;}
-  .record-value{font-size:16px;}
+  /* Stats : carousel sur mobile */
+  .stats-grid{
+    display:block;
+    position:relative;
+  }
+  .stats-carousel-wrap{
+    overflow:hidden;
+    width:100%;
+  }
+  .stats-carousel-track{
+    display:flex;
+    transition:transform 0.35s cubic-bezier(.4,0,.2,1);
+    align-items:flex-start;
+  }
+  .stats-carousel-track .stat-card{
+    min-width:100%;
+    width:100%;
+    flex-shrink:0;
+    box-sizing:border-box;
+    margin:0;
+  }
+  .stats-nav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding:14px 0 4px;
+  }
+  .stats-nav-btn{
+    width:40px;height:40px;
+    border-radius:50%;border:none;
+    background:linear-gradient(135deg,var(--eau-claire),var(--rose));
+    color:white;font-size:18px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(46,109,180,0.3);
+    transition:opacity 0.15s,transform 0.1s;
+    flex-shrink:0;
+  }
+  .stats-nav-btn:active{transform:scale(0.93);}
+  .stats-nav-btn:disabled{opacity:0.3;cursor:default;}
+  .stats-nav-dots{display:flex;gap:6px;align-items:center;}
+  .stats-nav-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:#ddd;transition:all 0.2s;cursor:pointer;
+  }
+  .stats-nav-dot.active{background:var(--rose);width:18px;border-radius:4px;}
+  body.dark .stats-nav-dot{background:#2a4080;}
+  body.dark .stats-nav-dot.active{background:var(--rose);}
+  .stats-slide-label{
+    font-size:10px;color:var(--gris);text-align:center;
+    margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px;
+  }
+  /* Fix record items sur mobile */
+  .record-item{gap:8px;}
   .record-icon{font-size:20px;}
-  .pie-wrap{flex-direction:column;align-items:flex-start;}
-  .pie-canvas-wrap{align-self:center;}
-  .pie-legend{min-width:unset;width:100%;}
-  .cmp-val{font-size:13px;min-width:36px;}
-  .cmp-label{font-size:12px;}
-  .chart-wrap{height:140px;}
+  .record-value{font-size:16px;min-width:fit-content;}
   .record-info .species{font-size:13px;}
   .record-info .detail{font-size:11px;}
+  /* Fix barres espèces */
+  .species-name{width:70px;font-size:11px;}
+  .bar-count{font-size:11px;}
+  /* Fix camembert */
+  .pie-wrap{flex-direction:column;align-items:center;}
+  .pie-legend{width:100%;min-width:unset;margin-top:10px;}
+  .pie-legend-item{font-size:11px;}
+  /* Fix comparaison */
+  .cmp-label{font-size:12px;}
+  .cmp-val{font-size:13px;min-width:32px;}
+  .chart-wrap{height:140px;}
   .form-layout{grid-template-columns:1fr;}
   .form-card{padding:16px;}
   .form-card-title{font-size:13px;margin-bottom:12px;}
@@ -1668,76 +1724,168 @@ function updateStats(){
   const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
 
   const moisData=getMoisData();
+  const isMobile=window.innerWidth<768;
 
-  el.innerHTML=`
-    <div class="stat-card">
+  // Construire les sections comme slides
+  const slides=[];
+
+  // Slide 1 : Résumé
+  slides.push({
+    label:'📋 Résumé',
+    html:`<div class="stat-card">
       <div class="stat-card-title">📋 Résumé</div>
       <div class="record-item"><span class="record-icon">🎣</span><div class="record-info"><div class="species">Sorties totales</div></div><span class="record-value">${nbSorties}</span></div>
       <div class="record-item"><span class="record-icon">🐟</span><div class="record-info"><div class="species">Sorties avec prise</div><div class="detail">${prises.length} poisson${prises.length>1?'s':''} au total</div></div><span class="record-value">${nbSortiesAvecPrise}</span></div>
       <div class="record-item"><span class="record-icon">🚫</span><div class="record-info"><div class="species">Capots</div></div><span class="record-value">${capotOnlyKeys.length}</span></div>
       <div class="record-item"><span class="record-icon">🎯</span><div class="record-info"><div class="species">Taux de réussite</div></div><span class="record-value">${tauxReussite}%</span></div>
       ${bestH?`<div class="record-item"><span class="record-icon">⏰</span><div class="record-info"><div class="species">Meilleure heure</div><div class="detail">${bestH[1]} prise${bestH[1]>1?'s':''}</div></div><span class="record-value">${bestH[0]}h</span></div>`:''}
-      ${bestSaison&&bestSaison[1]>0?`<div class="record-item"><span class="record-icon">📅</span><div class="record-info"><div class="species">Meilleure saison</div><div class="detail">${bestSaison[1]} prise${bestSaison[1]>1?'s':''}</div></div><span class="record-value" style="font-size:14px">${saisonNames[bestSaison[0]]}</span></div>`:''}
-      ${tL?`<div class="record-item"><span class="record-icon">📍</span><div class="record-info"><div class="species">Spot favori</div><div class="detail">${tL[1]} sortie${tL[1]>1?'s':''}</div></div><span class="record-value" style="font-size:13px;max-width:110px;text-align:right">${tL[0]}</span></div>`:''}
+      ${bestSaison&&bestSaison[1]>0?`<div class="record-item"><span class="record-icon">📅</span><div class="record-info"><div class="species">Meilleure saison</div><div class="detail">${bestSaison[1]} prise${bestSaison[1]>1?'s':''}</div></div><span class="record-value" style="font-size:13px">${saisonNames[bestSaison[0]]}</span></div>`:''}
+      ${tL?`<div class="record-item"><span class="record-icon">📍</span><div class="record-info"><div class="species">Spot favori</div><div class="detail">${tL[1]} sortie${tL[1]>1?'s':''}</div></div><span class="record-value" style="font-size:13px;max-width:90px;text-align:right">${tL[0]}</span></div>`:''}
       <div class="record-item"><span class="record-icon">🏆</span><div class="record-info"><div class="species">Trophées</div></div><span class="record-value">${prises.filter(e=>e.trophy).length}</span></div>
       <div class="record-item"><span class="record-icon">↩️</span><div class="record-info"><div class="species">Remises à l'eau</div></div><span class="record-value">${prises.filter(e=>e.relache).length}</span></div>
-    </div>
+    </div>`
+  });
 
-    <div class="stat-card">
+  // Slide 2 : Activité mensuelle
+  slides.push({
+    label:'📅 Activité',
+    html:`<div class="stat-card">
       <div class="stat-card-title">📅 Sorties par mois (12 mois)</div>
       <div class="chart-wrap"><canvas id="chart-mois" width="600" height="180"></canvas></div>
-    </div>
+    </div>`
+  });
 
-    ${sorted.length?`
-    <div class="stat-card">
-      <div class="stat-card-title">🥧 Répartition par espèce</div>
-      <div class="pie-wrap">
-        <div class="pie-canvas-wrap"><canvas id="chart-pie" width="160" height="160"></canvas></div>
-        <div class="pie-legend">
-          ${sorted.slice(0,8).map(([s,c],i)=>`
-            <div class="pie-legend-item">
-              <span class="pie-legend-dot" style="background:${PIE_COLORS[i%PIE_COLORS.length]}"></span>
-              <span>${s}</span>
-              <span class="pie-legend-pct">${Math.round(c/totalPoissons*100)}%</span>
-            </div>`).join('')}
+  // Slide 3 : Espèces
+  if(sorted.length){
+    slides.push({
+      label:'🥧 Espèces',
+      html:`<div class="stat-card">
+        <div class="stat-card-title">🥧 Répartition par espèce</div>
+        <div class="pie-wrap">
+          <div class="pie-canvas-wrap"><canvas id="chart-pie" width="160" height="160"></canvas></div>
+          <div class="pie-legend">
+            ${sorted.slice(0,8).map(([s,c],i)=>`
+              <div class="pie-legend-item">
+                <span class="pie-legend-dot" style="background:${PIE_COLORS[i%PIE_COLORS.length]}"></span>
+                <span>${s}</span>
+                <span class="pie-legend-pct">${Math.round(c/totalPoissons*100)}%</span>
+              </div>`).join('')}
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card-title">🐟 Espèces — détail</div>
-      ${sorted.map(([s,c])=>`<div class="species-bar"><span class="species-name">${s}</span><div class="bar-track"><div class="bar-fill" style="width:${c/maxC*100}%"></div></div><span class="bar-count">${c}</span></div>`).join('')}
-    </div>`:''}
+        <div style="margin-top:14px">
+          ${sorted.map(([s,c])=>`<div class="species-bar"><span class="species-name">${s}</span><div class="bar-track"><div class="bar-fill" style="width:${c/maxC*100}%"></div></div><span class="bar-count">${c}</span></div>`).join('')}
+        </div>
+      </div>`
+    });
+  }
 
-    ${wP.length||wT.length?`
-    <div class="stat-card">
-      <div class="stat-card-title">🏆 Records personnels</div>
-      ${wP[0]?`<div class="record-item"><span class="record-icon">⚖️</span><div class="record-info"><div class="species">${wP[0].espece}</div><div class="detail">${wP[0].lieu||'Lieu non précisé'} — ${wP[0].date?new Date(wP[0].date).toLocaleDateString('fr-FR'):''}</div></div><span class="record-value">${formatPoids(wP[0].poids>100?wP[0].poids/1000:wP[0].poids)}</span></div>`:''}
-      ${wT[0]?`<div class="record-item"><span class="record-icon">📏</span><div class="record-info"><div class="species">${wT[0].espece}</div><div class="detail">${wT[0].lieu||'Lieu non précisé'}</div></div><span class="record-value">${wT[0].taille} cm</span></div>`:''}
-    </div>`:''}
+  // Slide 4 : Records
+  if(wP.length||wT.length){
+    slides.push({
+      label:'🏆 Records',
+      html:`<div class="stat-card">
+        <div class="stat-card-title">🏆 Records personnels</div>
+        ${wP[0]?`<div class="record-item"><span class="record-icon">⚖️</span><div class="record-info"><div class="species">${wP[0].espece}</div><div class="detail">${wP[0].lieu||'Lieu non précisé'} — ${wP[0].date?new Date(wP[0].date).toLocaleDateString('fr-FR'):''}</div></div><span class="record-value">${formatPoids(wP[0].poids>100?wP[0].poids/1000:wP[0].poids)}</span></div>`:''}
+        ${wT[0]?`<div class="record-item"><span class="record-icon">📏</span><div class="record-info"><div class="species">${wT[0].espece}</div><div class="detail">${wT[0].lieu||'Lieu non précisé'}</div></div><span class="record-value">${wT[0].taille} cm</span></div>`:''}
+      </div>`
+    });
+  }
 
-    ${(sortiesN>0||sortiesN1>0)?`
-    <div class="stat-card">
-      <div class="stat-card-title">📊 Comparaison ${yearN} vs ${yearN1}</div>
-      <div class="cmp-year-header">
-        <span class="cmp-year-badge current">${yearN}</span>
-        <span class="cmp-year-badge prev">${yearN1}</span>
-      </div>
-      <div class="cmp-row"><span class="cmp-label">Sorties</span>${arrow(sortiesN,sortiesN1)}<span class="cmp-val current">${sortiesN}</span><span class="cmp-val prev">${sortiesN1}</span></div>
-      <div class="cmp-row"><span class="cmp-label">Prises</span>${arrow(prisesN.length,prisesN1.length)}<span class="cmp-val current">${prisesN.length}</span><span class="cmp-val prev">${prisesN1.length}</span></div>
-      <div class="cmp-row"><span class="cmp-label">Taux réussite</span>${arrow(tauxN,tauxN1)}<span class="cmp-val current">${tauxN}%</span><span class="cmp-val prev">${tauxN1}%</span></div>
-      <div class="cmp-row"><span class="cmp-label">Meilleur poids</span>${arrow(recordN?.poids||0,recordN1?.poids||0)}<span class="cmp-val current" style="font-size:13px">${recordN?formatPoids(recordN.poids>100?recordN.poids/1000:recordN.poids):'—'}</span><span class="cmp-val prev" style="font-size:13px">${recordN1?formatPoids(recordN1.poids>100?recordN1.poids/1000:recordN1.poids):'—'}</span></div>
-    </div>`:''}
+  // Slide 5 : Comparaison N vs N-1
+  if(sortiesN>0||sortiesN1>0){
+    slides.push({
+      label:`📊 ${yearN} vs ${yearN1}`,
+      html:`<div class="stat-card">
+        <div class="stat-card-title">📊 Comparaison ${yearN} vs ${yearN1}</div>
+        <div class="cmp-year-header">
+          <span class="cmp-year-badge current">${yearN}</span>
+          <span class="cmp-year-badge prev">${yearN1}</span>
+        </div>
+        <div class="cmp-row"><span class="cmp-label">Sorties</span>${arrow(sortiesN,sortiesN1)}<span class="cmp-val current">${sortiesN}</span><span class="cmp-val prev">${sortiesN1}</span></div>
+        <div class="cmp-row"><span class="cmp-label">Prises</span>${arrow(prisesN.length,prisesN1.length)}<span class="cmp-val current">${prisesN.length}</span><span class="cmp-val prev">${prisesN1.length}</span></div>
+        <div class="cmp-row"><span class="cmp-label">Taux réussite</span>${arrow(tauxN,tauxN1)}<span class="cmp-val current">${tauxN}%</span><span class="cmp-val prev">${tauxN1}%</span></div>
+        <div class="cmp-row"><span class="cmp-label">Meilleur poids</span>${arrow(recordN?.poids||0,recordN1?.poids||0)}<span class="cmp-val current">${recordN?formatPoids(recordN.poids>100?recordN.poids/1000:recordN.poids):'—'}</span><span class="cmp-val prev">${recordN1?formatPoids(recordN1.poids>100?recordN1.poids/1000:recordN1.poids):'—'}</span></div>
+      </div>`
+    });
+  }
 
-    <div class="stat-card">
+  // Slide 6 : Taux de réussite
+  slides.push({
+    label:'🎯 Taux',
+    html:`<div class="stat-card">
       <div class="stat-card-title">🎯 Taux de réussite par mois</div>
       <div class="chart-wrap"><canvas id="chart-taux" width="600" height="180"></canvas></div>
-    </div>`;
+    </div>`
+  });
+
+  // Rendu : carousel sur mobile, grille sur desktop
+  if(isMobile){
+    el.innerHTML=`
+      <div class="stats-slide-label" id="stats-slide-label">${slides[0].label}</div>
+      <div class="stats-carousel-wrap">
+        <div class="stats-carousel-track" id="stats-track">
+          ${slides.map(s=>s.html).join('')}
+        </div>
+      </div>
+      <div class="stats-nav">
+        <button type="button" class="stats-nav-btn" id="stats-prev" onclick="statsNav(-1)" disabled>◀</button>
+        <div class="stats-nav-dots" id="stats-dots">
+          ${slides.map((_,i)=>`<div class="stats-nav-dot${i===0?' active':''}" onclick="statsGoTo(${i})"></div>`).join('')}
+        </div>
+        <button type="button" class="stats-nav-btn" id="stats-next" onclick="statsNav(1)">▶</button>
+      </div>`;
+    window._statsSlides=slides;
+    window._statsIdx=0;
+  } else {
+    el.innerHTML=`
+      <div class="stats-grid" style="display:grid;grid-template-columns:1fr;gap:14px">
+        ${slides.map(s=>s.html).join('')}
+      </div>`;
+  }
 
   setTimeout(()=>{
     drawMoisChart(moisData);
     drawTauxChart(moisData);
     if(sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
   }, 50);
+}
+
+// ── CAROUSEL STATS (mobile) ──────────────────────────────
+function statsNav(dir){
+  const slides=window._statsSlides||[];
+  const idx=Math.max(0,Math.min((window._statsIdx||0)+dir, slides.length-1));
+  statsGoTo(idx);
+}
+
+function statsGoTo(idx){
+  const slides=window._statsSlides||[];
+  if(!slides.length) return;
+  idx=Math.max(0,Math.min(idx,slides.length-1));
+  window._statsIdx=idx;
+  const track=document.getElementById('stats-track');
+  const prev=document.getElementById('stats-prev');
+  const next=document.getElementById('stats-next');
+  const label=document.getElementById('stats-slide-label');
+  const dots=document.querySelectorAll('.stats-nav-dot');
+  if(track) track.style.transform=`translateX(-${idx*100}%)`;
+  if(prev) prev.disabled=(idx===0);
+  if(next) next.disabled=(idx===slides.length-1);
+  if(label) label.textContent=slides[idx].label;
+  dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
+  // Redessiner les graphiques si on navigue vers une slide avec canvas
+  setTimeout(()=>{
+    const moisData=getMoisData();
+    if(document.getElementById('chart-mois')) drawMoisChart(moisData);
+    if(document.getElementById('chart-taux')) drawTauxChart(moisData);
+    if(document.getElementById('chart-pie')){
+      const prises=entries.filter(e=>!e.capot);
+      const sp={};prises.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+(e.nbPoissons||1);});
+      const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
+      const total=Object.values(sp).reduce((a,b)=>a+b,0);
+      const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
+      if(sorted.length) drawPieChart(sorted,total,PIE_COLORS);
+    }
+  },60);
 }
 
 function getMoisData(){
