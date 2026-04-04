@@ -610,23 +610,6 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 .menu-popup-small:active{background:var(--bleu-clair);}
 
 
-/* ── MODALE GPS ─── */
-.geo-wrap{display:none;position:fixed;inset:0;z-index:800;background:rgba(10,22,40,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;}
-.geo-wrap.open{display:flex;}
-.geo-modal{background:white;border-radius:20px;padding:32px 24px 24px;max-width:320px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:popupUp 0.22s cubic-bezier(.34,1.4,.64,1) both;text-align:center;}
-body.dark .geo-modal{background:#0f2147;color:#e0e8f4;}
-.geo-modal-icon{font-size:40px;margin-bottom:12px;}
-.geo-modal-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--texte);margin-bottom:8px;font-weight:700;}
-body.dark .geo-modal-title{color:#e0e8f4;}
-.geo-modal-sub{font-size:13px;color:var(--gris);margin-bottom:24px;line-height:1.5;}
-.geo-modal-btns{display:flex;flex-direction:column;gap:9px;}
-.geo-btn-choice{width:100%;padding:12px 16px;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity 0.15s,transform 0.1s;}
-.geo-btn-choice:active{transform:scale(0.97);}
-.geo-btn-always{background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;box-shadow:0 4px 14px rgba(46,109,180,0.25);}
-.geo-btn-once{background:var(--bleu-clair);color:var(--eau-claire);}
-body.dark .geo-btn-once{background:#1a3060;color:#90c0ff;}
-.geo-btn-never{background:none;color:var(--gris);font-size:13px;font-weight:500;}
-.geo-btn-never:hover{color:var(--rouge);}
 
 /* ── MODALE CONFIRMATION ─── */
 .confirm-wrap{display:none;position:fixed;inset:0;z-index:800;background:rgba(10,22,40,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;}
@@ -1107,20 +1090,6 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
   </div>
 </div>
 
-
-<!-- MODALE PERMISSION GPS -->
-<div class="geo-wrap" id="geo-wrap">
-  <div class="geo-modal">
-    <div class="geo-modal-icon">📡</div>
-    <div class="geo-modal-title">Autoriser la position ?</div>
-    <div class="geo-modal-sub" id="geo-modal-sub">Cette application souhaite accéder à votre position GPS pour renseigner votre lieu de pêche.</div>
-    <div class="geo-modal-btns">
-      <button type="button" class="geo-btn-choice geo-btn-always"  onclick="geoChoice('always')">📍 Toujours autoriser</button>
-      <button type="button" class="geo-btn-choice geo-btn-once"   onclick="geoChoice('once')">✅ Que cette fois-ci</button>
-      <button type="button" class="geo-btn-choice geo-btn-never"  onclick="geoChoice('never')">🚫 Jamais</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODALE CONFIRMATION SUPPRESSION -->
 <div class="confirm-wrap" id="confirm-wrap">
@@ -2301,25 +2270,16 @@ function deleteAppat(id){
 // ════════════════════════════════════════════════════════
 //  GÉOLOCALISATION & SPOTS
 // ════════════════════════════════════════════════════════
-function geoLocate(){
+async function geoLocate(){
   if(!navigator.geolocation){showToast('❌ GPS non disponible');return;}
-  // Si déjà autorisé en "toujours", déclencher directement
-  const perm=localStorage.getItem('geo-permission');
-  if(perm==='always'){
-    _doGeoLocate();
-  } else {
-    document.getElementById('geo-wrap').classList.add('open');
-  }
-}
-
-function geoChoice(choice){
-  document.getElementById('geo-wrap').classList.remove('open');
-  if(choice==='never'){
-    showToast('🚫 Position GPS refusée');
-    return;
-  }
-  if(choice==='always'){
-    localStorage.setItem('geo-permission','always');
+  if(navigator.permissions){
+    try {
+      const status = await navigator.permissions.query({name:'geolocation'});
+      if(status.state==='denied'){
+        showToast('❌ GPS bloqué — autorisez-le dans les paramètres du navigateur');
+        return;
+      }
+    } catch(e){}
   }
   _doGeoLocate();
 }
