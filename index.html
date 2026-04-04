@@ -1146,14 +1146,25 @@ function openDB() {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = e => {
       const d = e.target.result;
-      if (!d.objectStoreNames.contains(STORES.entries))  d.createObjectStore(STORES.entries,  { keyPath: 'id' });
-      if (!d.objectStoreNames.contains(STORES.spots))    d.createObjectStore(STORES.spots,    { keyPath: 'id' });
-      if (!d.objectStoreNames.contains(STORES.appats))   d.createObjectStore(STORES.appats,   { keyPath: 'id' });
+      // Créer les stores manquants — safe pour migration v1→v2
+      if (!d.objectStoreNames.contains(STORES.entries))    d.createObjectStore(STORES.entries,    { keyPath: 'id' });
+      if (!d.objectStoreNames.contains(STORES.spots))      d.createObjectStore(STORES.spots,      { keyPath: 'id' });
+      if (!d.objectStoreNames.contains(STORES.appats))     d.createObjectStore(STORES.appats,     { keyPath: 'id' });
       if (!d.objectStoreNames.contains(STORES.categories)) d.createObjectStore(STORES.categories, { keyPath: 'id' });
-      if (!d.objectStoreNames.contains(STORES.settings)) d.createObjectStore(STORES.settings, { keyPath: 'key' });
+      if (!d.objectStoreNames.contains(STORES.settings))   d.createObjectStore(STORES.settings,   { keyPath: 'key' });
     };
-    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onsuccess = e => {
+      db = e.target.result;
+      // Si une autre instance bloque la mise à jour, forcer la fermeture
+      db.onversionchange = () => { db.close(); };
+      resolve(db);
+    };
     req.onerror   = e => reject(e.target.error);
+    // Une ancienne instance ouverte bloque la migration → forcer
+    req.onblocked = () => {
+      console.warn('[DB] Migration bloquée par une autre instance — rechargement…');
+      window.location.reload();
+    };
   });
 }
 
@@ -1246,16 +1257,21 @@ async function init(){
   try {
     await openDB();
     // Charger toutes les données depuis IndexedDB
-    const [loadedEntries, loadedSpots, loadedAppats, loadedCats] = await Promise.all([
+    const [loadedEntries, loadedSpots, loadedAppats] = await Promise.all([
       dbGetAll(STORES.entries),
       dbGetAll(STORES.spots),
-      dbGetAll(STORES.appats),
-      dbGetAll(STORES.categories)
+      dbGetAll(STORES.appats)
     ]);
-    entries    = loadedEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    spots      = loadedSpots;
-    appats     = loadedAppats;
-    categories = loadedCats;
+    entries = loadedEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    spots   = loadedSpots;
+    appats  = loadedAppats;
+    // Catégories — store ajouté en v2, peut ne pas exister sur ancienne DB
+    try {
+      categories = await dbGetAll(STORES.categories);
+    } catch(e) {
+      console.warn('[DB] Store categories non disponible:', e);
+      categories = [];
+    }
     // Catégories par défaut
     if (!categories.length) {
       categories = [
