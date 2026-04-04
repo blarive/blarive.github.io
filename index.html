@@ -318,6 +318,34 @@ body.dark .appat-list-row{border-color:#1a3060;}
 .appat-list-nom{font-size:14px;font-weight:500;color:var(--texte);}
 body.dark .appat-list-nom{color:white;}
 
+/* ── POPUP CATÉGORIE APPÂTS ─── */
+.appat-cat-wrap{display:none;position:fixed;inset:0;z-index:700;background:rgba(10,22,40,0.72);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;padding-bottom:0;}
+.appat-cat-wrap.open{display:flex;}
+.appat-cat-modal{background:white;border-radius:22px 22px 0 0;padding:20px 20px 36px;width:100%;max-width:480px;box-shadow:0 -8px 40px rgba(0,0,0,0.2);max-height:70vh;overflow-y:auto;animation:slideUpModal 0.3s cubic-bezier(.2,.8,.3,1) both;}
+body.dark .appat-cat-modal{background:#0f2147;color:#e0e8f4;}
+.appat-cat-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
+body.dark .appat-cat-handle{background:#2a4080;}
+.appat-cat-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--eau-profonde);margin-bottom:4px;}
+body.dark .appat-cat-title{color:#d0e0f8;}
+.appat-cat-sub{font-size:11px;color:var(--gris);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;}
+.appat-cat-items{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.appat-cat-item{padding:8px 16px;border-radius:20px;border:1.5px solid var(--bleu-clair);background:var(--bleu-clair);color:var(--eau-claire);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.appat-cat-item:hover{border-color:var(--eau-claire);background:white;}
+.appat-cat-item.selected{background:var(--eau-claire);color:white;border-color:var(--eau-claire);}
+body.dark .appat-cat-item{background:#1a3060;color:white;border-color:#2a4080;}
+body.dark .appat-cat-item:hover{border-color:var(--eau-claire);}
+body.dark .appat-cat-item.selected{background:var(--eau-claire);border-color:var(--eau-claire);}
+.appat-cat-empty{font-size:13px;color:var(--gris);font-style:italic;padding:8px 0;}
+.appat-cat-close{width:100%;padding:12px;border:1.5px solid #ddd;border-radius:12px;background:none;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--gris);}
+body.dark .appat-cat-close{border-color:#2a4080;color:#8a96b0;}
+/* Tags catégories dans le formulaire */
+.appat-cat-tag{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:500;background:var(--bleu-clair);color:var(--eau-claire);border:1.5px solid transparent;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.appat-cat-tag:hover{border-color:var(--eau-claire);}
+.appat-cat-tag.has-selection{background:var(--eau-claire);color:white;border-color:var(--eau-claire);}
+body.dark .appat-cat-tag{background:#1a3060;color:white;border-color:#2a4080;}
+body.dark .appat-cat-tag.has-selection{background:var(--eau-claire);border-color:var(--eau-claire);}
+.appat-cat-tag .cat-arrow{font-size:10px;opacity:0.7;}
+
 /* ── MÉTÉO PAR SPOT ─── */
 .meteo-spot-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0;}
 .meteo-spot-row:last-child{border-bottom:none;}
@@ -974,6 +1002,17 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
       <button type="button" class="menu-popup-small" onclick="toggleDarkMode();closeMenu()" style="grid-column:1/-1">🌙 Mode sombre</button>
       <button type="button" class="menu-popup-small" onclick="openInfo();closeMenu()" style="grid-column:1/-1;opacity:0.75">ℹ️ À propos</button>
     </div>
+  </div>
+</div>
+
+<!-- POPUP CATÉGORIE APPÂTS -->
+<div class="appat-cat-wrap" id="appat-cat-wrap" onclick="closeAppatCatOnOverlay(event)">
+  <div class="appat-cat-modal">
+    <div class="appat-cat-handle"></div>
+    <div class="appat-cat-title" id="appat-cat-modal-title"></div>
+    <div class="appat-cat-sub">Sélectionnez un appât</div>
+    <div class="appat-cat-items" id="appat-cat-modal-items"></div>
+    <button type="button" class="appat-cat-close" onclick="closeAppatCat()">Fermer</button>
   </div>
 </div>
 
@@ -2273,10 +2312,28 @@ function renderAppatsForm(){
   const grid=document.getElementById('appats-form-grid');
   if(!grid) return;
   const current=document.getElementById('f-appat')?.value||'';
-  grid.innerHTML=appats.map(a=>`
-    <button type="button" class="appat-tag${current===a.nom?' selected':''}" onclick="selectAppat('${a.nom.replace(/'/g,"\\'")}')">
-      🪱 ${a.nom}
-    </button>`).join('');
+
+  // Afficher les catégories comme boutons — si pas de catégorie, fallback legacy
+  if(categories && categories.length){
+    grid.innerHTML=categories.map(cat=>{
+      // Vérifier si l'appât sélectionné appartient à cette catégorie
+      const hasSel=cat.appats&&cat.appats.includes(current);
+      return `<button type="button" class="appat-cat-tag${hasSel?' has-selection':''}"
+        onclick="openAppatCatPopup(${cat.id})">
+        ${cat.nom}${hasSel?` <span style="font-size:10px;opacity:0.8">✓ ${current}</span>`:''}
+        <span class="cat-arrow">▼</span>
+      </button>`;
+    }).join('');
+  } else {
+    // Fallback : afficher les appâts legacy s'il n'y a pas de catégorie
+    grid.innerHTML=appats.map(a=>`
+      <button type="button" class="appat-tag${current===a.nom?' selected':''}" onclick="selectAppat('${a.nom.replace(/'/g,"\\'")}')">
+        🪱 ${a.nom}
+      </button>`).join('');
+    if(!appats.length){
+      grid.innerHTML='<span style="font-size:12px;color:var(--gris);font-style:italic">Aucun appât — créez des catégories dans le Carnet d\'appâts</span>';
+    }
+  }
 }
 
 function selectAppat(nom){
@@ -2284,6 +2341,42 @@ function selectAppat(nom){
   if(!input) return;
   input.value=input.value===nom?'':nom;
   renderAppatsForm();
+}
+
+// ── POPUP SÉLECTION APPÂT PAR CATÉGORIE ──
+function openAppatCatPopup(catId){
+  const cat=categories.find(c=>c.id===catId);
+  if(!cat) return;
+  const current=document.getElementById('f-appat')?.value||'';
+  document.getElementById('appat-cat-modal-title').textContent=cat.nom;
+  const itemsEl=document.getElementById('appat-cat-modal-items');
+  if(!cat.appats||!cat.appats.length){
+    itemsEl.innerHTML='<span class="appat-cat-empty">Aucun appât dans cette catégorie.<br>Ajoutez-en depuis le Carnet d\'appâts.</span>';
+  } else {
+    itemsEl.innerHTML=cat.appats.map(nom=>`
+      <button type="button" class="appat-cat-item${current===nom?' selected':''}"
+        onclick="selectAppatFromPopup('${nom.replace(/'/g,"\\'")}')">
+        ${nom}
+      </button>`).join('');
+  }
+  document.getElementById('appat-cat-wrap').classList.add('open');
+}
+
+function selectAppatFromPopup(nom){
+  const input=document.getElementById('f-appat');
+  if(input){
+    input.value=input.value===nom?'':nom;
+  }
+  closeAppatCat();
+  renderAppatsForm();
+}
+
+function closeAppatCat(){
+  document.getElementById('appat-cat-wrap').classList.remove('open');
+}
+
+function closeAppatCatOnOverlay(e){
+  if(e.target===document.getElementById('appat-cat-wrap')) closeAppatCat();
 }
 
 function renderAppatsPage(){
