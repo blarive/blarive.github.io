@@ -2343,7 +2343,7 @@ function addCategorie(){
 function deleteCategorie(id){
   showConfirm({
     title: 'Supprimer cette catégorie ?',
-    sub: 'Les appâts qu'elle contient seront aussi supprimés.',
+    sub: "Les appâts qu'elle contient seront aussi supprimés.",
     icon: '📁',
     btnLabel: 'Supprimer',
     onConfirm: ()=>{
@@ -2358,10 +2358,10 @@ function deleteCategorie(id){
 function addAppatToCat(catId){
   const input=document.getElementById(`new-appat-cat-${catId}`);
   const nom=(input?.value||'').trim();
-  if(!nom){showToast('⚠️ Entrez un nom d'appât');return;}
+  if(!nom){showToast("⚠️ Entrez un nom d'appât");return;}
   const cat=categories.find(c=>c.id===catId);
   if(!cat) return;
-  if(cat.appats.find(n=>n.toLowerCase()===nom.toLowerCase())){showToast('⚠️ Appât déjà dans cette catégorie');return;}
+  if(cat.appats.find(n=>n.toLowerCase()===nom.toLowerCase())){showToast("⚠️ Appât déjà dans cette catégorie");return;}
   cat.appats.push(nom);
   saveCategories().catch(e=>console.error('[DB] saveCategories:', e));
   if(input) input.value='';
