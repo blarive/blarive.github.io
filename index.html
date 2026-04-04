@@ -1097,7 +1097,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
     <div class="confirm-sub" id="confirm-sub"></div>
     <div class="confirm-btns">
       <button type="button" class="confirm-btn-cancel" onclick="closeConfirm()">Annuler</button>
-      <button type="button" class="confirm-btn-delete" id="confirm-btn-delete">Supprimer</button>
+      <button type="button" class="confirm-btn-delete" id="confirm-btn-delete" onclick="if(_confirmCallback){closeConfirm();_confirmCallback();}else{closeConfirm();}">Supprimer</button>
     </div>
   </div>
 </div>
@@ -3040,10 +3040,8 @@ function showConfirm({ title = 'Confirmer la suppression ?', sub = '', icon = 'ð
   document.getElementById('confirm-title').textContent = title;
   document.getElementById('confirm-sub').textContent = sub;
   document.getElementById('confirm-icon').textContent = icon;
-  const btn = document.getElementById('confirm-btn-delete');
-  btn.textContent = btnLabel;
+  document.getElementById('confirm-btn-delete').textContent = btnLabel;
   _confirmCallback = onConfirm;
-  btn.onclick = () => { closeConfirm(); if (_confirmCallback) _confirmCallback(); };
   document.getElementById('confirm-wrap').classList.add('open');
 }
 
