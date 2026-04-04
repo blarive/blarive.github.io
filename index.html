@@ -611,6 +611,29 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 
 
 
+
+/* ── CATÉGORIES APPÂTS ─── */
+.cat-block{margin-bottom:14px;}
+.cat-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bleu-clair);border-radius:12px;margin-bottom:8px;}
+body.dark .cat-header{background:#1a3060;}
+.cat-title{font-size:13px;font-weight:700;color:var(--eau-profonde);flex:1;}
+body.dark .cat-title{color:#d0e0f8;}
+.cat-del-btn{background:none;border:none;color:var(--gris);font-size:16px;cursor:pointer;padding:2px 4px;}
+.cat-del-btn:hover{color:var(--rouge);}
+.cat-appats-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:0 4px 6px;}
+.cat-appat-row{display:flex;align-items:center;gap:6px;background:white;border:1.5px solid #e0e8f5;border-radius:10px;padding:6px 10px;}
+body.dark .cat-appat-row{background:#0f2147;border-color:#2a4080;}
+.cat-appat-nom{font-size:13px;font-weight:500;color:var(--texte);flex:1;}
+body.dark .cat-appat-nom{color:#e0e8f4;}
+.cat-appat-uses{font-size:11px;color:var(--gris);}
+.cat-appat-del{background:none;border:none;color:var(--gris);font-size:14px;cursor:pointer;padding:0 2px;}
+.cat-appat-del:hover{color:var(--rouge);}
+.add-appat-inline{display:flex;gap:6px;margin-top:6px;padding:0 4px;}
+.add-cat-form{display:flex;gap:8px;margin-bottom:14px;}
+/* Tags appâts dans formulaire de prise — par catégorie */
+.appat-cat-section{margin-bottom:10px;}
+.appat-cat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:5px;display:block;}
+
 /* ── MODALE CONFIRMATION ─── */
 .confirm-wrap{display:none;position:fixed;inset:0;z-index:800;background:rgba(10,22,40,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;}
 .confirm-wrap.open{display:flex;}
@@ -1115,8 +1138,8 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
 // ════════════════════════════════════════════════════════
 let db = null;
 const DB_NAME = 'CarnetPeche';
-const DB_VERSION = 1;
-const STORES = { entries: 'entries', spots: 'spots', appats: 'appats', settings: 'settings' };
+const DB_VERSION = 2;
+const STORES = { entries: 'entries', spots: 'spots', appats: 'appats', categories: 'categories', settings: 'settings' };
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -1126,6 +1149,7 @@ function openDB() {
       if (!d.objectStoreNames.contains(STORES.entries))  d.createObjectStore(STORES.entries,  { keyPath: 'id' });
       if (!d.objectStoreNames.contains(STORES.spots))    d.createObjectStore(STORES.spots,    { keyPath: 'id' });
       if (!d.objectStoreNames.contains(STORES.appats))   d.createObjectStore(STORES.appats,   { keyPath: 'id' });
+      if (!d.objectStoreNames.contains(STORES.categories)) d.createObjectStore(STORES.categories, { keyPath: 'id' });
       if (!d.objectStoreNames.contains(STORES.settings)) d.createObjectStore(STORES.settings, { keyPath: 'key' });
     };
     req.onsuccess = e => { db = e.target.result; resolve(db); };
@@ -1191,13 +1215,15 @@ function dbDeleteSetting(key) {
 }
 
 // Alias pratiques
-async function saveEntries() { await dbSaveAll(STORES.entries, entries); }
-async function saveSpots()   { await dbSaveAll(STORES.spots, spots); }
-async function saveAppats()  { await dbSaveAll(STORES.appats, appats); }
+async function saveEntries()    { await dbSaveAll(STORES.entries, entries); }
+async function saveSpots()      { await dbSaveAll(STORES.spots, spots); }
+async function saveAppats()     { await dbSaveAll(STORES.appats, appats); }
+async function saveCategories() { await dbSaveAll(STORES.categories, categories); }
 
 // ── STATE ─────────────────────────────────────────────────
-let entries = [];
-let spots   = [];
+let entries    = [];
+let spots      = [];
+let categories = [];
 let currentFilter='tous', currentStars=0, selectedMeteo=[];
 let isTrophy=false, isRelache=false, isCapot=false;
 let currentPhotos = []; // Tableau de photos compressées (base64)
@@ -1220,18 +1246,29 @@ async function init(){
   try {
     await openDB();
     // Charger toutes les données depuis IndexedDB
-    const [loadedEntries, loadedSpots, loadedAppats] = await Promise.all([
+    const [loadedEntries, loadedSpots, loadedAppats, loadedCats] = await Promise.all([
       dbGetAll(STORES.entries),
       dbGetAll(STORES.spots),
-      dbGetAll(STORES.appats)
+      dbGetAll(STORES.appats),
+      dbGetAll(STORES.categories)
     ]);
-    // Trier entries par date desc
-    entries = loadedEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    spots   = loadedSpots;
-    appats  = loadedAppats;
-    // Appâts par défaut si vide
+    entries    = loadedEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    spots      = loadedSpots;
+    appats     = loadedAppats;
+    categories = loadedCats;
+    // Catégories par défaut
+    if (!categories.length) {
+      categories = [
+        { id: 1, nom: '🪱 Au toc',   appats: ['Ver de terre', 'Ver de vase', 'Asticot', 'Insecte', 'Crevette'] },
+        { id: 2, nom: '🎣 Au leurre', appats: ['Leurre souple', 'Leurre dur', 'Cuillère', 'Poisson nageur', 'Jig'] },
+        { id: 3, nom: '🌽 Au posé',   appats: ['Maïs', 'Bouillette', 'Pain', 'Pâte', 'Vairon mort'] },
+        { id: 4, nom: '🪰 Mouche',    appats: ['Mouche sèche', 'Nymphe', 'Streamer', 'Emergente'] }
+      ];
+      await saveCategories();
+    }
+    // Appâts plats (legacy) : migrer depuis ancien format si vide
     if (!appats.length) {
-      appats = ['Bouillette','Ver de terre','Maïs','Cuillère','Leurre souple','Mouche sèche','Vairon','Asticot','Crevette','Pain'].map((n,i)=>({id:i+1,nom:n}));
+      appats = categories.flatMap(c => c.appats.map((n,i) => ({id: Date.now()+i, nom:n, categorieId: c.id})));
       await saveAppats();
     }
     // Dark mode — preference conservée dans localStorage (petit, non critique)
@@ -2203,48 +2240,59 @@ function selectAppat(nom){
 function renderAppatsPage(){
   const el=document.getElementById('appats-page-content');
   if(!el) return;
-  // Fréquences d'utilisation
   const freq={};
   entries.filter(e=>e.appat).forEach(e=>{ freq[e.appat]=(freq[e.appat]||0)+1; });
 
-  el.innerHTML=`
+  // Bloc ajout catégorie
+  const addCatHtml=`
     <div class="stat-card" style="margin-bottom:14px">
-      <div class="stat-card-title">➕ Ajouter un appât</div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="new-appat-name" class="form-input" placeholder="Nom de l'appât…" style="flex:1">
-        <button type="button" onclick="addAppat()" style="padding:10px 16px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Ajouter</button>
+      <div class="stat-card-title">📁 Nouvelle catégorie</div>
+      <div class="add-cat-form">
+        <input type="text" id="new-cat-name" class="form-input" placeholder="ex. 🪱 Au toc, 🎣 Au leurre…" style="flex:1">
+        <button type="button" onclick="addCategorie()" style="padding:10px 16px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">Créer</button>
       </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card-title">🪱 Mes appâts (${appats.length})</div>
-      <div style="display:flex;flex-direction:column;gap:2px">
-        ${appats.map(a=>{
-          const uses=freq[a.nom]||0;
-          return `
-          <div class="appat-list-row">
-            <span style="font-size:22px">🪱</span>
-            <div style="flex:1">
-              <div class="appat-list-nom">${a.nom}</div>
-              <div style="font-size:11px;color:var(--gris);margin-top:2px">Utilisé ${uses} fois${uses>0?' dans le carnet':''}</div>
-            </div>
-            <button type="button" onclick="deleteAppat(${a.id})" style="font-size:11px;color:var(--rouge);background:#fee;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600">✕</button>
+    </div>`;
+
+  // Blocs par catégorie
+  const catsHtml=categories.map(cat=>`
+    <div class="stat-card cat-block" style="margin-bottom:14px">
+      <div class="cat-header">
+        <span class="cat-title">${cat.nom}</span>
+        <button type="button" class="cat-del-btn" onclick="deleteCategorie(${cat.id})" title="Supprimer la catégorie">🗑</button>
+      </div>
+      <div class="cat-appats-wrap">
+        ${(cat.appats||[]).map(nom=>{
+          const uses=freq[nom]||0;
+          return `<div class="cat-appat-row">
+            <span class="cat-appat-nom">${nom}</span>
+            ${uses?`<span class="cat-appat-uses">${uses}×</span>`:''}
+            <button type="button" class="cat-appat-del" onclick="deleteAppatFromCat(${cat.id},'${nom.replace(/'/g,"\'")}')">✕</button>
           </div>`;
         }).join('')}
       </div>
-    </div>
-    ${Object.keys(freq).length?`
+      <div class="add-appat-inline">
+        <input type="text" class="form-input" id="new-appat-cat-${cat.id}" placeholder="Ajouter un appât…" style="flex:1;font-size:13px;padding:8px 12px" onkeydown="if(event.key==='Enter')addAppatToCat(${cat.id})">
+        <button type="button" onclick="addAppatToCat(${cat.id})" style="padding:8px 14px;background:var(--bleu-clair);color:var(--eau-claire);border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">➕</button>
+      </div>
+    </div>`).join('');
+
+  // Stats utilisation
+  const statsHtml=Object.keys(freq).length?`
     <div class="stat-card">
       <div class="stat-card-title">📊 Appâts les plus utilisés</div>
-      ${Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([nom,n])=>`
+      ${Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([nom,n])=>`
         <div class="species-bar">
-          <span class="species-name" style="width:120px">${nom}</span>
+          <span class="species-name" style="width:130px">${nom}</span>
           <div class="bar-track"><div class="bar-fill" style="width:${n/Math.max(...Object.values(freq))*100}%"></div></div>
           <span class="bar-count">${n}</span>
         </div>`).join('')}
-    </div>`:''}`;
+    </div>`:'';
+
+  el.innerHTML=addCatHtml+catsHtml+statsHtml;
 }
 
 function addAppat(){
+  // Legacy — kept for compatibility
   const input=document.getElementById('new-appat-name');
   const nom=(input?.value||'').trim();
   if(!nom){showToast('⚠️ Entrez un nom');return;}
@@ -2259,6 +2307,57 @@ function addAppat(){
 function deleteAppat(id){
   appats=appats.filter(a=>a.id!==id);
   saveAppats().catch(e=>console.error('[DB] saveAppats:', e));
+  renderAppatsPage(); renderAppatsForm();
+  showToast('🗑 Appât supprimé');
+}
+
+// ── GESTION CATÉGORIES ──────────────────────────────────
+function addCategorie(){
+  const input=document.getElementById('new-cat-name');
+  const nom=(input?.value||'').trim();
+  if(!nom){showToast('⚠️ Entrez un nom de catégorie');return;}
+  if(categories.find(c=>c.nom.toLowerCase()===nom.toLowerCase())){showToast('⚠️ Catégorie déjà existante');return;}
+  categories.push({id:Date.now(),nom,appats:[]});
+  saveCategories().catch(e=>console.error('[DB] saveCategories:', e));
+  if(input) input.value='';
+  renderAppatsPage(); renderAppatsForm();
+  showToast('📁 Catégorie créée !');
+}
+
+function deleteCategorie(id){
+  showConfirm({
+    title: 'Supprimer cette catégorie ?',
+    sub: 'Les appâts qu'elle contient seront aussi supprimés.',
+    icon: '📁',
+    btnLabel: 'Supprimer',
+    onConfirm: ()=>{
+      categories=categories.filter(c=>c.id!==id);
+      saveCategories().catch(e=>console.error('[DB] saveCategories:', e));
+      renderAppatsPage(); renderAppatsForm();
+      showToast('🗑 Catégorie supprimée');
+    }
+  });
+}
+
+function addAppatToCat(catId){
+  const input=document.getElementById(`new-appat-cat-${catId}`);
+  const nom=(input?.value||'').trim();
+  if(!nom){showToast('⚠️ Entrez un nom d'appât');return;}
+  const cat=categories.find(c=>c.id===catId);
+  if(!cat) return;
+  if(cat.appats.find(n=>n.toLowerCase()===nom.toLowerCase())){showToast('⚠️ Appât déjà dans cette catégorie');return;}
+  cat.appats.push(nom);
+  saveCategories().catch(e=>console.error('[DB] saveCategories:', e));
+  if(input) input.value='';
+  renderAppatsPage(); renderAppatsForm();
+  showToast('🪱 Appât ajouté !');
+}
+
+function deleteAppatFromCat(catId, nom){
+  const cat=categories.find(c=>c.id===catId);
+  if(!cat) return;
+  cat.appats=cat.appats.filter(n=>n!==nom);
+  saveCategories().catch(e=>console.error('[DB] saveCategories:', e));
   renderAppatsPage(); renderAppatsForm();
   showToast('🗑 Appât supprimé');
 }
@@ -2659,9 +2758,10 @@ function resetAllData(){
       await Promise.all([
         dbSaveAll(STORES.entries, []),
         dbSaveAll(STORES.spots, []),
-        dbSaveAll(STORES.appats, [])
+        dbSaveAll(STORES.appats, []),
+        dbSaveAll(STORES.categories, [])
       ]).catch(e=>console.error('[DB] resetAllData:', e));
-      entries=[]; spots=[]; appats=[];
+      entries=[]; spots=[]; appats=[]; categories=[];
       renderJournal(); updateAllStats(); renderSpotsForm();
       switchView('journal');
       showToast('🗑 Données réinitialisées');
