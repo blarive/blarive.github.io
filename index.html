@@ -1078,8 +1078,94 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 // ════════════════════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════════════════════
-let entries = JSON.parse(localStorage.getItem('peche-entries')||'[]');
-let spots   = JSON.parse(localStorage.getItem('peche-spots')||'[]');
+// ════════════════════════════════════════════════════════
+//  IndexedDB — couche de persistance
+// ════════════════════════════════════════════════════════
+let db = null;
+const DB_NAME = 'CarnetPeche';
+const DB_VERSION = 1;
+const STORES = { entries: 'entries', spots: 'spots', appats: 'appats', settings: 'settings' };
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORES.entries))  d.createObjectStore(STORES.entries,  { keyPath: 'id' });
+      if (!d.objectStoreNames.contains(STORES.spots))    d.createObjectStore(STORES.spots,    { keyPath: 'id' });
+      if (!d.objectStoreNames.contains(STORES.appats))   d.createObjectStore(STORES.appats,   { keyPath: 'id' });
+      if (!d.objectStoreNames.contains(STORES.settings)) d.createObjectStore(STORES.settings, { keyPath: 'key' });
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+function dbGetAll(store) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+function dbSaveAll(store, items) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    const os = tx.objectStore(store);
+    // Clear then put all
+    const clearReq = os.clear();
+    clearReq.onsuccess = () => {
+      let done = 0;
+      if (!items.length) { tx.oncomplete = resolve; return; }
+      items.forEach(item => {
+        const r = os.put(item);
+        r.onsuccess = () => { done++; if (done === items.length) { /* wait for tx */ } };
+        r.onerror = () => reject(r.error);
+      });
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    };
+    clearReq.onerror = () => reject(clearReq.error);
+  });
+}
+
+function dbGetSetting(key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORES.settings, 'readonly');
+    const req = tx.objectStore(STORES.settings).get(key);
+    req.onsuccess = () => resolve(req.result ? req.result.value : null);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+function dbSetSetting(key, value) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORES.settings, 'readwrite');
+    const req = tx.objectStore(STORES.settings).put({ key, value });
+    req.onsuccess = () => resolve();
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+function dbDeleteSetting(key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORES.settings, 'readwrite');
+    const req = tx.objectStore(STORES.settings).delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+// Alias pratiques
+async function saveEntries() { await dbSaveAll(STORES.entries, entries); }
+async function saveSpots()   { await dbSaveAll(STORES.spots, spots); }
+async function saveAppats()  { await dbSaveAll(STORES.appats, appats); }
+
+// ── STATE ─────────────────────────────────────────────────
+let entries = [];
+let spots   = [];
 let currentFilter='tous', currentStars=0, selectedMeteo=[];
 let isTrophy=false, isRelache=false, isCapot=false;
 let currentPhotos = []; // Tableau de photos compressées (base64)
@@ -1098,12 +1184,33 @@ const topbarTitles={
 // ════════════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════════════
-function init(){
-  // Dark mode auto
-  if(localStorage.getItem('dark')==='1'||
-     (localStorage.getItem('dark')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
-    document.body.classList.add('dark');
-    updateDarkBtn(true);
+async function init(){
+  try {
+    await openDB();
+    // Charger toutes les données depuis IndexedDB
+    const [loadedEntries, loadedSpots, loadedAppats] = await Promise.all([
+      dbGetAll(STORES.entries),
+      dbGetAll(STORES.spots),
+      dbGetAll(STORES.appats)
+    ]);
+    // Trier entries par date desc
+    entries = loadedEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    spots   = loadedSpots;
+    appats  = loadedAppats;
+    // Appâts par défaut si vide
+    if (!appats.length) {
+      appats = ['Bouillette','Ver de terre','Maïs','Cuillère','Leurre souple','Mouche sèche','Vairon','Asticot','Crevette','Pain'].map((n,i)=>({id:i+1,nom:n}));
+      await saveAppats();
+    }
+    // Dark mode — preference conservée dans localStorage (petit, non critique)
+    if(localStorage.getItem('dark')==='1'||
+       (localStorage.getItem('dark')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
+      document.body.classList.add('dark');
+      updateDarkBtn(true);
+    }
+  } catch(err) {
+    console.error('[DB] Erreur ouverture IndexedDB:', err);
+    showToast('⚠️ Erreur base de données');
   }
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('f-date').value=now.toISOString().slice(0,16);
@@ -1363,7 +1470,7 @@ function saveEntry(){
     photos: [...currentPhotos] // Stocker les photos compressées
   };
   entries.unshift(entry);
-  localStorage.setItem('peche-entries',JSON.stringify(entries));
+  saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
   resetForm(); updateAllStats();
   showToast(isCapot?'😔 Capot enregistré…':'🎣 Sortie enregistrée !');
   switchView('journal'); renderJournal();
@@ -1419,7 +1526,7 @@ function groupEnSorties(filtered){
 function deleteEntry(id){
   if(!confirm('Supprimer cette prise ?')) return;
   entries=entries.filter(e=>e.id!==id);
-  localStorage.setItem('peche-entries',JSON.stringify(entries));
+  saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
   renderJournal(); updateAllStats();
   showToast('🗑 Prise supprimée');
 }
@@ -1428,7 +1535,7 @@ function deleteSortie(ids){
   if(!confirm(`Supprimer cette sortie et ses ${ids.length} prise(s) ?`)) return;
   const set=new Set(ids);
   entries=entries.filter(e=>!set.has(e.id));
-  localStorage.setItem('peche-entries',JSON.stringify(entries));
+  saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
   renderJournal(); updateAllStats();
   showToast('🗑 Sortie supprimée');
 }
@@ -2027,12 +2134,7 @@ function drawPieChart(sorted, total, colors){
 // ════════════════════════════════════════════════════════
 //  CARNET D'APPÂTS
 // ════════════════════════════════════════════════════════
-let appats=JSON.parse(localStorage.getItem('peche-appats')||'[]');
-// Appâts par défaut si vide
-if(!appats.length){
-  appats=['Bouillette','Ver de terre','Maïs','Cuillère','Leurre souple','Mouche sèche','Vairon','Asticot','Crevette','Pain'].map((n,i)=>({id:i+1,nom:n}));
-  localStorage.setItem('peche-appats',JSON.stringify(appats));
-}
+let appats = []; // Chargé depuis IndexedDB dans init()
 
 function renderAppatsForm(){
   const grid=document.getElementById('appats-form-grid');
@@ -2101,7 +2203,7 @@ function addAppat(){
   if(!nom){showToast('⚠️ Entrez un nom');return;}
   if(appats.find(a=>a.nom.toLowerCase()===nom.toLowerCase())){showToast('⚠️ Appât déjà présent');return;}
   appats.push({id:Date.now(),nom});
-  localStorage.setItem('peche-appats',JSON.stringify(appats));
+  saveAppats().catch(e=>console.error('[DB] saveAppats:', e));
   if(input) input.value='';
   renderAppatsPage(); renderAppatsForm();
   showToast('🪱 Appât ajouté !');
@@ -2109,7 +2211,7 @@ function addAppat(){
 
 function deleteAppat(id){
   appats=appats.filter(a=>a.id!==id);
-  localStorage.setItem('peche-appats',JSON.stringify(appats));
+  saveAppats().catch(e=>console.error('[DB] saveAppats:', e));
   renderAppatsPage(); renderAppatsForm();
   showToast('🗑 Appât supprimé');
 }
@@ -2138,7 +2240,7 @@ function geoLocate(){
           if(!spots.find(s=>s.nom===nom)){
             if(confirm(`📍 Enregistrer "${nom}" comme spot favori ?`)){
               spots.unshift({id:Date.now(),nom,lat,lng});
-              localStorage.setItem('peche-spots',JSON.stringify(spots));
+              saveSpots().catch(e=>console.error('[DB] saveSpots:', e));
               renderSpotsForm(); renderSpotsPage();
               showToast('⭐ Spot enregistré !');
             }
@@ -2169,7 +2271,7 @@ function useSpot(nom){ document.getElementById('f-lieu').value=nom; showToast(`�
 function deleteSpot(id,e){
   e.stopPropagation();
   spots=spots.filter(s=>s.id!==id);
-  localStorage.setItem('peche-spots',JSON.stringify(spots));
+  saveSpots().catch(e=>console.error('[DB] saveSpots:', e));
   renderSpotsForm(); renderSpotsPage(); updateMap();
 }
 function addManualSpot(){
@@ -2178,7 +2280,7 @@ function addManualSpot(){
   if(!nom){showToast('⚠️ Entrez un nom');return;}
   if(spots.find(s=>s.nom===nom)){showToast('⚠️ Spot déjà enregistré');return;}
   spots.unshift({id:Date.now(),nom,lat:null,lng:null});
-  localStorage.setItem('peche-spots',JSON.stringify(spots));
+  saveSpots().catch(e=>console.error('[DB] saveSpots:', e));
   if(input) input.value='';
   renderSpotsForm(); renderSpotsPage();
   showToast('⭐ Spot ajouté !');
@@ -2417,7 +2519,7 @@ function saveEditEntry(){
     trophy:document.getElementById('edit-trophy').checked,
     relache:document.getElementById('edit-relache').checked,
   };
-  localStorage.setItem('peche-entries',JSON.stringify(entries));
+  saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
   closeEdit(); renderJournal(); updateAllStats();
   showToast('✅ Prise modifiée !');
 }
@@ -2475,17 +2577,20 @@ function renderParametresPage(){
 function saveNom(){
   const nom=(document.getElementById('param-nom')?.value||'').trim();
   if(!nom){showToast('⚠️ Entrez votre nom');return;}
-  localStorage.setItem('pecheur-nom',nom);
+  localStorage.setItem('pecheur-nom',nom); // Petite préférence, ok en localStorage
   renderParametresPage();
   showToast('✅ Nom enregistré pour les rapports !');
 }
 
-function resetAllData(){
+async function resetAllData(){
   if(!confirm('⚠️ Supprimer TOUTES les données ?\n\nCette action est irréversible.')) return;
   if(!confirm('Confirmez-vous la suppression complète ?')) return;
-  localStorage.removeItem('peche-entries');
-  localStorage.removeItem('peche-spots');
-  localStorage.removeItem('peche-appats');
+  // Vider IndexedDB
+  await Promise.all([
+    dbSaveAll(STORES.entries, []),
+    dbSaveAll(STORES.spots, []),
+    dbSaveAll(STORES.appats, [])
+  ]).catch(e=>console.error('[DB] resetAllData:', e));
   entries=[]; spots=[]; appats=[];
   renderJournal(); updateAllStats(); renderSpotsForm();
   switchView('journal');
@@ -2777,13 +2882,13 @@ function importData(event){
       const existingIds=new Set(entries.map(e=>e.id));
       const nouveaux=imported.filter(e=>!existingIds.has(e.id));
       entries=[...nouveaux,...entries];
-      localStorage.setItem('peche-entries',JSON.stringify(entries));
+      saveEntries().catch(e=>console.error('[DB] import entries:', e));
       // Import spots si présents
       if(data.spots&&Array.isArray(data.spots)){
         const existSpotIds=new Set(spots.map(s=>s.id));
         const newSpots=data.spots.filter(s=>!existSpotIds.has(s.id));
         spots=[...newSpots,...spots];
-        localStorage.setItem('peche-spots',JSON.stringify(spots));
+        saveSpots().catch(e=>console.error('[DB] import spots:', e));
       }
       renderJournal(); updateAllStats(); renderSpotsForm();
       showToast(`📥 ${nouveaux.length} sortie(s) importée(s) !`);
@@ -2809,7 +2914,7 @@ window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJou
 //  SERVICE WORKER — version par date de déploiement
 //  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
-const BUILD_DATE = '20260403'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+const BUILD_DATE = '20260404'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
