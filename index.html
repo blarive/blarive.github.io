@@ -608,6 +608,22 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 .menu-popup-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .menu-popup-small{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:none;background:#f8f9ff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--texte);transition:background 0.15s;}
 .menu-popup-small:active{background:var(--bleu-clair);}
+
+/* ── MODALE CONFIRMATION ─── */
+.confirm-wrap{display:none;position:fixed;inset:0;z-index:800;background:rgba(10,22,40,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;}
+.confirm-wrap.open{display:flex;}
+.confirm-modal{background:white;border-radius:20px;padding:32px 28px 24px;max-width:320px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:popupUp 0.22s cubic-bezier(.34,1.4,.64,1) both;text-align:center;}
+body.dark .confirm-modal{background:#0f2147;color:#e0e8f4;}
+.confirm-icon{font-size:40px;margin-bottom:12px;display:block;}
+.confirm-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--texte);margin-bottom:6px;font-weight:700;}
+body.dark .confirm-title{color:#e0e8f4;}
+.confirm-sub{font-size:13px;color:var(--gris);margin-bottom:24px;line-height:1.5;}
+.confirm-btns{display:flex;flex-direction:column;gap:10px;align-items:center;}
+.confirm-btn-delete{width:100%;padding:13px 20px;background:linear-gradient(135deg,#c0392b,#e74c3c);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:transform 0.15s,opacity 0.15s;box-shadow:0 4px 14px rgba(192,57,43,0.3);}
+.confirm-btn-delete:hover{opacity:0.9;}.confirm-btn-delete:active{transform:scale(0.97);}
+.confirm-btn-cancel{background:none;border:none;color:var(--gris);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;padding:6px 12px;border-radius:8px;transition:color 0.15s;}
+.confirm-btn-cancel:hover{color:var(--texte);}
+body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
 </style>
 </head>
 <body>
@@ -1072,6 +1088,20 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
   </div>
 </div>
 
+
+<!-- MODALE CONFIRMATION SUPPRESSION -->
+<div class="confirm-wrap" id="confirm-wrap">
+  <div class="confirm-modal">
+    <div class="confirm-icon" id="confirm-icon">🗑</div>
+    <div class="confirm-title" id="confirm-title">Confirmer la suppression ?</div>
+    <div class="confirm-sub" id="confirm-sub"></div>
+    <div class="confirm-btns">
+      <button type="button" class="confirm-btn-cancel" onclick="closeConfirm()">Annuler</button>
+      <button type="button" class="confirm-btn-delete" id="confirm-btn-delete">Supprimer</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1524,20 +1554,35 @@ function groupEnSorties(filtered){
 }
 
 function deleteEntry(id){
-  if(!confirm('Supprimer cette prise ?')) return;
-  entries=entries.filter(e=>e.id!==id);
-  saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
-  renderJournal(); updateAllStats();
-  showToast('🗑 Prise supprimée');
+  showConfirm({
+    title: 'Supprimer cette prise ?',
+    sub: 'Cette action est irréversible.',
+    icon: '🎣',
+    btnLabel: 'Supprimer',
+    onConfirm: () => {
+      entries=entries.filter(e=>e.id!==id);
+      saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
+      renderJournal(); updateAllStats();
+      showToast('🗑 Prise supprimée');
+    }
+  });
 }
 
 function deleteSortie(ids){
-  if(!confirm(`Supprimer cette sortie et ses ${ids.length} prise(s) ?`)) return;
-  const set=new Set(ids);
-  entries=entries.filter(e=>!set.has(e.id));
-  saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
-  renderJournal(); updateAllStats();
-  showToast('🗑 Sortie supprimée');
+  const nb = ids.length;
+  showConfirm({
+    title: 'Supprimer cette sortie ?',
+    sub: `${nb} prise${nb>1?'s':''} sera${nb>1?'ont':''} supprimée${nb>1?'s':''} définitivement.`,
+    icon: '🗑',
+    btnLabel: 'Supprimer la sortie',
+    onConfirm: () => {
+      const set=new Set(ids);
+      entries=entries.filter(e=>!set.has(e.id));
+      saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
+      renderJournal(); updateAllStats();
+      showToast('🗑 Sortie supprimée');
+    }
+  });
 }
 
 function toggleSortie(key){
@@ -2582,19 +2627,25 @@ function saveNom(){
   showToast('✅ Nom enregistré pour les rapports !');
 }
 
-async function resetAllData(){
-  if(!confirm('⚠️ Supprimer TOUTES les données ?\n\nCette action est irréversible.')) return;
-  if(!confirm('Confirmez-vous la suppression complète ?')) return;
-  // Vider IndexedDB
-  await Promise.all([
-    dbSaveAll(STORES.entries, []),
-    dbSaveAll(STORES.spots, []),
-    dbSaveAll(STORES.appats, [])
-  ]).catch(e=>console.error('[DB] resetAllData:', e));
-  entries=[]; spots=[]; appats=[];
-  renderJournal(); updateAllStats(); renderSpotsForm();
-  switchView('journal');
-  showToast('🗑 Données réinitialisées');
+function resetAllData(){
+  showConfirm({
+    title: 'Réinitialiser toutes les données ?',
+    sub: 'Sorties, spots et appâts seront effacés définitivement. Cette action est irréversible.',
+    icon: '⚠️',
+    btnLabel: '🗑 Tout supprimer',
+    onConfirm: async () => {
+      // Vider IndexedDB
+      await Promise.all([
+        dbSaveAll(STORES.entries, []),
+        dbSaveAll(STORES.spots, []),
+        dbSaveAll(STORES.appats, [])
+      ]).catch(e=>console.error('[DB] resetAllData:', e));
+      entries=[]; spots=[]; appats=[];
+      renderJournal(); updateAllStats(); renderSpotsForm();
+      switchView('journal');
+      showToast('🗑 Données réinitialisées');
+    }
+  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -2979,6 +3030,35 @@ function applyUpdate() { window.location.reload(); }
 function openInfo(){ document.getElementById('info-wrap').classList.add('open'); }
 function closeInfo(){ document.getElementById('info-wrap').classList.remove('open'); }
 function closeInfoOnOverlay(e){ if(e.target===document.getElementById('info-wrap')) closeInfo(); }
+
+// ════════════════════════════════════════════════════════
+//  MODALE CONFIRMATION PERSONNALISÉE
+// ════════════════════════════════════════════════════════
+let _confirmCallback = null;
+
+function showConfirm({ title = 'Confirmer la suppression ?', sub = '', icon = '🗑', btnLabel = 'Supprimer', onConfirm }) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-sub').textContent = sub;
+  document.getElementById('confirm-icon').textContent = icon;
+  const btn = document.getElementById('confirm-btn-delete');
+  btn.textContent = btnLabel;
+  _confirmCallback = onConfirm;
+  btn.onclick = () => { closeConfirm(); if (_confirmCallback) _confirmCallback(); };
+  document.getElementById('confirm-wrap').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-wrap').classList.remove('open');
+  _confirmCallback = null;
+}
+
+// Fermer sur clic overlay
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('confirm-wrap').addEventListener('click', e => {
+    if (e.target === document.getElementById('confirm-wrap')) closeConfirm();
+  });
+});
+
 
 init();
 </script>
