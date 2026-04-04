@@ -266,6 +266,17 @@ body.dark .settings-label{color:#e0e8f4;}
 .sortie-del-bg{position:absolute;top:0;right:0;bottom:0;width:90px;background:var(--rouge);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:white;font-size:20px;cursor:pointer;border-radius:var(--radius);}
 .sortie-del-bg span{font-size:10px;font-weight:600;}
 
+/* ── SÉLECTEUR MILIEU (Rivière / Mer) ─── */
+.milieu-btns{display:flex;gap:8px;margin-bottom:8px;}
+.milieu-btn{flex:1;padding:11px 14px;border:1.5px solid #dde3f0;border-radius:10px;background:white;color:var(--gris);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s;text-align:center;}
+.milieu-btn.active{background:var(--eau-profonde);border-color:var(--eau-profonde);color:white;}
+.milieu-btn:hover:not(.active){background:var(--bleu-clair);border-color:var(--eau-claire);color:var(--eau-claire);}
+body.dark .milieu-btn{background:#0f2147;border-color:#2a4080;color:#8a96b0;}
+body.dark .milieu-btn.active{background:var(--eau-claire);border-color:var(--eau-claire);color:white;}
+.espece-display{padding:11px 14px;border:1.5px solid var(--eau-claire);border-radius:10px;background:var(--bleu-clair);color:var(--eau-profonde);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.espece-display::after{content:'✎';font-size:12px;color:var(--gris);}
+body.dark .espece-display{background:#1a3060;border-color:var(--eau-claire);color:#d0e0f8;}
+
 /* ── FORM ─── */
 .form-layout{display:grid;grid-template-columns:1fr;gap:0;}
 .form-card{background:white;border-radius:var(--radius);padding:24px;box-shadow:0 1px 6px rgba(0,0,0,0.06);margin-bottom:16px;}
@@ -772,15 +783,12 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
           <div id="prise-fields">
             <div class="form-group">
               <label class="form-label">🐟 Espèce</label>
-              <select class="form-select" id="f-espece" onchange="toggleAutreEspece('f-espece','f-espece-autre')">
-                <option value="">— Sélectionner —</option>
-                <option>Carpe</option><option>Brochet</option><option>Truite fario</option>
-                <option>Truite arc-en-ciel</option><option>Sandre</option><option>Perche</option>
-                <option>Gardon</option><option>Rotengle</option><option>Tanche</option>
-                <option>Anguille</option><option>Black-bass</option><option>Silure</option>
-                <option>Barbeau</option><option>Chevesne</option><option>Ablette</option>
-                <option>Alose</option><option>Autre</option>
-              </select>
+              <div class="milieu-btns">
+                <button type="button" class="milieu-btn active" id="btn-riviere" onclick="openEspecePopup('riviere')">🏞 Rivière</button>
+                <button type="button" class="milieu-btn" id="btn-mer" onclick="openEspecePopup('mer')">🌊 Mer</button>
+              </div>
+              <input type="hidden" id="f-espece">
+              <div id="f-espece-display" class="espece-display" style="display:none" onclick="openEspecePopup(currentMilieu)"></div>
               <input type="text" class="form-input" id="f-espece-autre" placeholder="Précisez l'espèce…" style="display:none;margin-top:8px">
             </div>
             <div class="form-row">
@@ -969,6 +977,17 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
       <button type="button" class="menu-popup-small" onclick="toggleDarkMode();closeMenu()" style="grid-column:1/-1">🌙 Mode sombre</button>
       <button type="button" class="menu-popup-small" onclick="openInfo();closeMenu()" style="grid-column:1/-1;opacity:0.75">ℹ️ À propos</button>
     </div>
+  </div>
+</div>
+
+<!-- POPUP ESPÈCE (Rivière / Mer) -->
+<div class="appat-cat-wrap" id="espece-popup-wrap" onclick="closeEspecePopupOnOverlay(event)">
+  <div class="appat-cat-modal">
+    <div class="appat-cat-handle"></div>
+    <div class="appat-cat-title" id="espece-popup-title"></div>
+    <div class="appat-cat-sub">Sélectionnez une espèce</div>
+    <div class="appat-cat-items" id="espece-popup-items"></div>
+    <button type="button" class="appat-cat-close" onclick="closeEspecePopup()">Fermer</button>
   </div>
 </div>
 
@@ -1501,6 +1520,62 @@ function popupNav(name){
 // ════════════════════════════════════════════════════════
 //  FORM
 // ════════════════════════════════════════════════════════
+// ── MILIEU RIVIÈRE / MER ────────────────────────────────
+const ESPECES_RIVIERE = [
+  'Carpe','Brochet','Truite fario','Truite arc-en-ciel','Sandre','Perche',
+  'Gardon','Rotengle','Tanche','Anguille','Black-bass','Silure',
+  'Barbeau','Chevesne','Ablette','Alose','Autre'
+];
+const ESPECES_MER = [
+  'Loup (Bar)','Daurade royale','Sar','Pageot','Rouget barbet','Mulet',
+  'Maquereau','Bonite','Sériole','Mérou','Girelle','Rascasse',
+  'Poulpe','Seiche','Chapon','Sole','Turbot','Congre','Autre'
+];
+
+let currentMilieu = 'riviere';
+
+function openEspecePopup(milieu) {
+  currentMilieu = milieu;
+  document.getElementById('btn-riviere').classList.toggle('active', milieu === 'riviere');
+  document.getElementById('btn-mer').classList.toggle('active', milieu === 'mer');
+  const liste = milieu === 'mer' ? ESPECES_MER : ESPECES_RIVIERE;
+  const current = document.getElementById('f-espece').value;
+  document.getElementById('espece-popup-title').textContent = milieu === 'mer' ? '🌊 Poissons de mer — Méditerranée' : '🏞 Poissons d\'eau douce';
+  document.getElementById('espece-popup-items').innerHTML = liste.map(nom => `
+    <button type="button" class="appat-cat-item${current===nom?' selected':''}"
+      onclick="selectEspece('${nom.replace(/'/g,"\\'")}')">
+      ${nom}
+    </button>`).join('');
+  document.getElementById('espece-popup-wrap').classList.add('open');
+}
+
+function selectEspece(nom) {
+  closeEspecePopup();
+  const inp = document.getElementById('f-espece');
+  const autre = document.getElementById('f-espece-autre');
+  const display = document.getElementById('f-espece-display');
+  if (nom === 'Autre') {
+    inp.value = 'Autre';
+    display.style.display = 'none';
+    autre.style.display = 'block';
+    autre.focus();
+  } else {
+    inp.value = nom;
+    display.style.display = 'flex';
+    display.textContent = nom;
+    autre.style.display = 'none';
+    autre.value = '';
+  }
+}
+
+function closeEspecePopup() {
+  document.getElementById('espece-popup-wrap').classList.remove('open');
+}
+
+function closeEspecePopupOnOverlay(e) {
+  if (e.target === document.getElementById('espece-popup-wrap')) closeEspecePopup();
+}
+
 // ── Gestion "Autre" espèce ──────────────────────────────
 function toggleAutreEspece(selectId, inputId){
   const sel=document.getElementById(selectId);
@@ -1516,12 +1591,10 @@ function toggleAutreEspece(selectId, inputId){
 }
 
 function getEspece(selectId, inputId){
-  const sel=document.getElementById(selectId);
-  const inp=document.getElementById(inputId);
-  if(sel.value==='Autre'){
-    return (inp?.value||'').trim()||'Autre';
-  }
-  return sel.value;
+  const val = document.getElementById('f-espece').value;
+  const autre = document.getElementById('f-espece-autre');
+  if(val === 'Autre') return (autre?.value||'').trim()||'Autre';
+  return val;
 }
 
 function setStar(n){
@@ -1543,7 +1616,10 @@ function toggleCapot(btn){
   f.style.opacity=isCapot?'0.35':'1'; f.style.pointerEvents=isCapot?'none':'';
   sg.style.opacity=isCapot?'0.35':'1'; sg.style.pointerEvents=isCapot?'none':'';
   if(isCapot){
-    ['f-espece','f-taille','f-poids','f-technique'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-espece').value='';
+    document.getElementById('f-espece-display').style.display='none';
+    document.getElementById('f-espece-autre').style.display='none';
+    ['f-taille','f-poids','f-technique'].forEach(id=>document.getElementById(id).value='');
   }
 }
 
@@ -1593,7 +1669,12 @@ function resetForm(){
   const gb=document.getElementById('geo-btn');
   if(gb){gb.textContent='📡 Utiliser ma position GPS';gb.disabled=false;}
   selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false;
-  resetPhotos(); // Réinitialiser les photos
+  currentMilieu='riviere';
+  document.getElementById('btn-riviere').classList.add('active');
+  document.getElementById('btn-mer').classList.remove('active');
+  const disp=document.getElementById('f-espece-display');
+  if(disp){disp.style.display='none';disp.textContent='';}
+  resetPhotos();
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('f-date').value=now.toISOString().slice(0,16);
 }
