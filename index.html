@@ -1097,7 +1097,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
     <div class="confirm-sub" id="confirm-sub"></div>
     <div class="confirm-btns">
       <button type="button" class="confirm-btn-cancel" onclick="closeConfirm()">Annuler</button>
-      <button type="button" class="confirm-btn-delete" id="confirm-btn-delete" onclick="if(_confirmCallback){closeConfirm();_confirmCallback();}else{closeConfirm();}">Supprimer</button>
+      <button type="button" class="confirm-btn-delete" id="confirm-btn-delete" onclick="const cb=_confirmCallback;closeConfirm();if(cb)cb();">Supprimer</button>
     </div>
   </div>
 </div>
