@@ -18,6 +18,8 @@
 <!-- Leaflet.js pour la carte interactive -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- IndexedDB wrapper (idb) -->
+<script src="https://cdn.jsdelivr.net/npm/idb@8.0.0/build/iife/index-min.js"></script>
 <style>
 :root {
   --eau:#1b3a6b; --eau-profonde:#0f2147; --eau-claire:#2e6db4;
@@ -1043,7 +1045,7 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
   <div class="info-modal">
     <div class="info-logo">🎣</div>
     <h2>Carnet de Pêche</h2>
-    <span class="info-version">Version V 1.1</span>
+    <span class="info-version">Version V 1.2</span>
     <div class="info-desc">Application personnelle de suivi<br>des sorties et prises de pêche</div>
     <div class="info-divider"></div>
     <div class="info-author" id="info-author-name">Bruno LARIVE</div>
@@ -1076,13 +1078,139 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 
 <script>
 // ════════════════════════════════════════════════════════
+//  INDEXEDDB - GESTION DES PHOTOS (stockage illimité)
+// ════════════════════════════════════════════════════════
+let photoDB = null;
+let photoCache = new Map(); // Cache pour éviter de recharger les photos
+
+async function initPhotoDB() {
+  if (!window.idb) {
+    console.warn('idb non chargé, fallback sur localStorage');
+    return null;
+  }
+  
+  try {
+    const db = await window.idb.openDB('PecheDB', 2, {
+      upgrade(db, oldVersion, newVersion, transaction) {
+        // Version 1 : création du store photos
+        if (oldVersion < 1) {
+          const store = db.createObjectStore('photos', { keyPath: 'id' });
+          store.createIndex('sortieId', 'sortieId');
+          store.createIndex('dateAdded', 'dateAdded');
+        }
+        // Version 2 : ajout d'un index pour la migration
+        if (oldVersion < 2) {
+          const store = transaction.objectStore('photos');
+          if (!store.indexNames.contains('dateAdded')) {
+            store.createIndex('dateAdded', 'dateAdded');
+          }
+        }
+      }
+    });
+    return db;
+  } catch (err) {
+    console.error('Erreur IndexedDB:', err);
+    return null;
+  }
+}
+
+// Sauvegarder les photos d'une sortie dans IndexedDB
+async function savePhotosToIndexedDB(sortieId, photos) {
+  if (!photoDB || !photos || photos.length === 0) return false;
+  
+  try {
+    const tx = photoDB.transaction('photos', 'readwrite');
+    for (let i = 0; i < photos.length; i++) {
+      await tx.store.add({
+        id: `${sortieId}_${i}_${Date.now()}`,
+        sortieId: sortieId,
+        image: photos[i],
+        order: i,
+        dateAdded: Date.now()
+      });
+    }
+    await tx.done;
+    // Vider le cache pour cette sortie
+    photoCache.delete(sortieId);
+    return true;
+  } catch (err) {
+    console.error('Erreur sauvegarde photos:', err);
+    return false;
+  }
+}
+
+// Récupérer les photos d'une sortie depuis IndexedDB
+async function getPhotosFromIndexedDB(sortieId) {
+  if (!photoDB) return [];
+  
+  // Vérifier le cache
+  if (photoCache.has(sortieId)) {
+    return photoCache.get(sortieId);
+  }
+  
+  try {
+    const index = photoDB.transaction('photos').store.index('sortieId');
+    const photos = await index.getAll(sortieId);
+    const sorted = photos.sort((a, b) => a.order - b.order).map(p => p.image);
+    photoCache.set(sortieId, sorted);
+    return sorted;
+  } catch (err) {
+    console.error('Erreur récupération photos:', err);
+    return [];
+  }
+}
+
+// Supprimer les photos d'une sortie
+async function deletePhotosFromIndexedDB(sortieId) {
+  if (!photoDB) return false;
+  
+  try {
+    const index = photoDB.transaction('photos', 'readwrite').store.index('sortieId');
+    const photos = await index.getAll(sortieId);
+    const tx = photoDB.transaction('photos', 'readwrite');
+    for (const photo of photos) {
+      await tx.store.delete(photo.id);
+    }
+    await tx.done;
+    photoCache.delete(sortieId);
+    return true;
+  } catch (err) {
+    console.error('Erreur suppression photos:', err);
+    return false;
+  }
+}
+
+// Migration des anciennes données localStorage vers IndexedDB
+async function migrateLegacyPhotos() {
+  const entries = JSON.parse(localStorage.getItem('peche-entries') || '[]');
+  let migrated = 0;
+  
+  for (const entry of entries) {
+    if (entry.photos && entry.photos.length > 0 && !entry._photosMigrated) {
+      const success = await savePhotosToIndexedDB(entry.id, entry.photos);
+      if (success) {
+        // Marquer comme migré et supprimer les photos du localStorage
+        entry._photosMigrated = true;
+        delete entry.photos;
+        migrated++;
+      }
+    }
+  }
+  
+  if (migrated > 0) {
+    localStorage.setItem('peche-entries', JSON.stringify(entries));
+    showToast(`📸 ${migrated} sortie(s) migrée(s) vers le nouveau stockage photos`);
+  }
+}
+
+// ════════════════════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════════════════════
 let entries = JSON.parse(localStorage.getItem('peche-entries')||'[]');
 let spots   = JSON.parse(localStorage.getItem('peche-spots')||'[]');
 let currentFilter='tous', currentStars=0, selectedMeteo=[];
 let isTrophy=false, isRelache=false, isCapot=false;
-let currentPhotos = []; // Tableau de photos compressées (base64)
+let currentPhotos = []; // Tableau de photos compressées (base64) temporaires
 let leafletMap=null, mapMarkers=[];
 
 const topbarTitles={
@@ -1098,7 +1226,15 @@ const topbarTitles={
 // ════════════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════════════
-function init(){
+async function init(){
+  // Initialiser IndexedDB
+  photoDB = await initPhotoDB();
+  
+  // Migration des anciennes données
+  if (photoDB) {
+    await migrateLegacyPhotos();
+  }
+  
   // Dark mode auto
   if(localStorage.getItem('dark')==='1'||
      (localStorage.getItem('dark')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
@@ -1338,12 +1474,13 @@ function toggleCapot(btn){
   }
 }
 
-function saveEntry(){
+async function saveEntry(){
   const espece=getEspece('f-espece','f-espece-autre');
   if(!isCapot&&!espece){showToast('⚠️ Sélectionne une espèce !');return;}
   const poidsVal=document.getElementById('f-poids').value;
+  const entryId = Date.now();
   const entry={
-    id:Date.now(),
+    id: entryId,
     date:document.getElementById('f-date').value,
     heureFin:document.getElementById('f-heure-fin').value||null,
     espece:isCapot?'🚫 Capot':espece,
@@ -1359,9 +1496,15 @@ function saveEntry(){
     tempEau:document.getElementById('f-temp-eau').value||null,
     lune:document.getElementById('f-lune').value,
     stars:currentStars, trophy:isCapot?false:isTrophy, relache:isCapot?false:isRelache,
-    capot:isCapot, notes:document.getElementById('f-notes').value, 
-    photos: [...currentPhotos] // Stocker les photos compressées
+    capot:isCapot, notes:document.getElementById('f-notes').value,
+    _photosMigrated: true // Marquer que les photos sont dans IndexedDB
   };
+  
+  // Sauvegarder les photos dans IndexedDB si disponibles
+  if (currentPhotos.length > 0 && photoDB) {
+    await savePhotosToIndexedDB(entryId, currentPhotos);
+  }
+  
   entries.unshift(entry);
   localStorage.setItem('peche-entries',JSON.stringify(entries));
   resetForm(); updateAllStats();
@@ -1416,17 +1559,27 @@ function groupEnSorties(filtered){
   });
 }
 
-function deleteEntry(id){
+async function deleteEntry(id){
   if(!confirm('Supprimer cette prise ?')) return;
+  // Supprimer les photos associées dans IndexedDB
+  if (photoDB) {
+    await deletePhotosFromIndexedDB(id);
+  }
   entries=entries.filter(e=>e.id!==id);
   localStorage.setItem('peche-entries',JSON.stringify(entries));
   renderJournal(); updateAllStats();
   showToast('🗑 Prise supprimée');
 }
 
-function deleteSortie(ids){
+async function deleteSortie(ids){
   if(!confirm(`Supprimer cette sortie et ses ${ids.length} prise(s) ?`)) return;
   const set=new Set(ids);
+  // Supprimer les photos associées dans IndexedDB
+  if (photoDB) {
+    for (const id of ids) {
+      await deletePhotosFromIndexedDB(id);
+    }
+  }
   entries=entries.filter(e=>!set.has(e.id));
   localStorage.setItem('peche-entries',JSON.stringify(entries));
   renderJournal(); updateAllStats();
@@ -1438,7 +1591,7 @@ function toggleSortie(key){
   if(card) card.classList.toggle('open');
 }
 
-function renderJournal(){
+async function renderJournal(){
   const search=document.getElementById('search-input').value.toLowerCase();
   let filtered=entries.filter(e=>{
     if(currentFilter==='trophy') return e.trophy;
@@ -1456,8 +1609,15 @@ function renderJournal(){
 
   const isMobile=window.innerWidth<768;
   const sorties=groupEnSorties(filtered);
+  
+  // Pour chaque sortie, récupérer les photos depuis IndexedDB
+  const sortiesWithPhotos = await Promise.all(sorties.map(async (prises) => {
+    const firstPrise = prises[0];
+    const photos = await getPhotosFromIndexedDB(firstPrise.id);
+    return { prises, groupPhotos: photos };
+  }));
 
-  list.innerHTML=sorties.map((prises,idx)=>{
+  list.innerHTML=sortiesWithPhotos.map(({prises, groupPhotos}, idx)=>{
     const ref=prises[0]; // Première prise du groupe pour les infos générales
     const ids=prises.map(e=>e.id);
     const key=sortieKey(ref);
@@ -1492,7 +1652,7 @@ function renderJournal(){
     const especesSummary=Object.entries(especesCount).map(([sp,n])=>n>1?`${n}× ${sp}`:sp).join(', ');
 
     // Cartes des prises individuelles
-    const prisesHTML=prises.map(e=>{
+    const prisesHTML = await Promise.all(prises.map(async (e) => {
       const h=e.date?new Date(e.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
       const tags=[];
       if(e.technique) tags.push(`🎣 ${e.technique}`);
@@ -1501,10 +1661,13 @@ function renderJournal(){
       if(e.relache) tags.push("↩️ R.à l'eau");
       if(e.trophy) tags.push('🏆 Trophée');
       
+      // Récupérer les photos de cette prise spécifique
+      const prisePhotos = await getPhotosFromIndexedDB(e.id);
+      
       // Photos miniatures
-      const photosHtml = e.photos && e.photos.length ? `
+      const photosHtml = prisePhotos && prisePhotos.length ? `
         <div class="prise-photo-grid">
-          ${e.photos.slice(0,3).map(p => `<img class="prise-photo-mini" src="${p}" alt="photo" onclick="event.stopPropagation();viewFullImage('${p}')">`).join('')}
+          ${prisePhotos.slice(0,3).map(p => `<img class="prise-photo-mini" src="${p}" alt="photo" onclick="event.stopPropagation();viewFullImage('${p}')">`).join('')}
         </div>
       ` : '';
       
@@ -1526,7 +1689,9 @@ function renderJournal(){
           <button type="button" class="prise-edit-btn" onclick="openEditEntry(${e.id})" title="Modifier cette prise">✏️</button>
           <button type="button" class="prise-del-btn" onclick="deleteEntry(${e.id})" title="Supprimer cette prise">🗑</button>
         </div>`;
-    }).join('');
+    }));
+    
+    const prisesHTMLString = (await Promise.all(prisesHTML)).join('');
 
     const cardClass=`sortie-card${hasTrophy?' has-trophy':''}${isCapotSortie?' is-capot':''}`;
     const keyEsc=key.replace(/"/g,'&quot;');
@@ -1558,7 +1723,7 @@ function renderJournal(){
                 <span class="sortie-chevron">⌄</span>
               </div>
             </div>
-            <div class="prises-list">${prisesHTML}
+            <div class="prises-list">${prisesHTMLString}
               <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px solid #f0f0f0">
                 ${shareBtn}
               </div>
@@ -1574,7 +1739,7 @@ function renderJournal(){
               ${ref.lieu?`<div class="sortie-lieu">📍 ${ref.lieu}</div>`:''}
               <div class="sortie-chips">
                 ${isCapotSortie?'<span class="sortie-chip chip-capot">🚫 Capot</span>':`<span class="sortie-chip chip-prises">${nbPrises} prise${nbPrises>1?'s':''}</span>`}
-                ${hasTrophy?'<span class="sortie-chip chip-trophy">🏆 Trophée</span>':''}
+                ${hasTrophy?'<span class="sortie-chip chip-trophy">🏆</span>':''}
                 ${allMeteo.length?`<span class="sortie-chip chip-meteo">${allMeteo.join(' ')}</span>`:''}
                 ${duree?`<span class="sortie-chip chip-duree">⏱ ${duree}</span>`:''}
                 ${maxStars?`<span class="sortie-chip chip-stars">${'⭐'.repeat(maxStars)}</span>`:''}
@@ -1590,7 +1755,7 @@ function renderJournal(){
               <span class="sortie-chevron">⌄</span>
             </div>
           </div>
-          <div class="prises-list">${prisesHTML}</div>
+          <div class="prises-list">${prisesHTMLString}</div>
         </div>`;
     }
   }).join('');
@@ -1642,7 +1807,7 @@ function formatPoids(kg){
 }
 
 // ════════════════════════════════════════════════════════
-//  STATS & GRAPHIQUES
+//  STATS & GRAPHIQUES (inchangé)
 // ════════════════════════════════════════════════════════
 function updateAllStats(){
   const nbSorties=new Set(entries.map(sortieKey)).size;
@@ -1935,7 +2100,7 @@ function drawMoisChart(data){
     grad.addColorStop(0,'#2e6db4'); grad.addColorStop(1,'#e8609a');
     ctx.fillStyle=grad;
     ctx.beginPath();
-    ctx.roundRect?ctx.roundRect(x,y,bw,h,4):ctx.rect(x,y,bw,h);
+    if(ctx.roundRect) ctx.roundRect(x,y,bw,h,4); else ctx.rect(x,y,bw,h);
     ctx.fill();
     // label mois
     ctx.fillStyle=textCol; ctx.font='9px DM Sans'; ctx.textAlign='center';
@@ -2400,7 +2565,7 @@ function closeEdit(){
 }
 function closeEditOnOverlay(ev){ if(ev.target===document.getElementById('edit-wrap')) closeEdit(); }
 
-function saveEditEntry(){
+async function saveEditEntry(){
   const id=parseInt(document.getElementById('edit-id').value);
   const idx=entries.findIndex(e=>e.id===id); if(idx===-1) return;
   const poidsVal=document.getElementById('edit-poids').value;
@@ -2480,9 +2645,18 @@ function saveNom(){
   showToast('✅ Nom enregistré pour les rapports !');
 }
 
-function resetAllData(){
+async function resetAllData(){
   if(!confirm('⚠️ Supprimer TOUTES les données ?\n\nCette action est irréversible.')) return;
   if(!confirm('Confirmez-vous la suppression complète ?')) return;
+  
+  // Supprimer toutes les photos d'IndexedDB
+  if (photoDB) {
+    const tx = photoDB.transaction('photos', 'readwrite');
+    await tx.store.clear();
+    await tx.done;
+    photoCache.clear();
+  }
+  
   localStorage.removeItem('peche-entries');
   localStorage.removeItem('peche-spots');
   localStorage.removeItem('peche-appats');
@@ -2716,7 +2890,7 @@ function exportPDF(){
     <div class="stat-box"><span class="val">${records[0]?formatPoids(records[0].poids>100?records[0].poids/1000:records[0].poids):'—'}</span><span class="lbl">Record</span></div>
   </div>
   ${sortedSp.length?`<h2>🐟 Espèces capturées</h2>
-  <table><th>Espèce</th><th>Nb prises</th><th>% du total</th><tr>
+  <tr><th>Espèce</th><th>Nb prises</th><th>% du total</th></tr>
   ${sortedSp.map(([s,c])=>`<tr><td>${s}</td><td>${c}</td><td>${Math.round(c/prises.length*100)}%</td></tr>`).join('')}
   </table>`:''}
   ${spotFavori?`<h2>📍 Spot favori : ${spotFavori[0]} (${spotFavori[1]} sortie${spotFavori[1]>1?'s':''})</h2>`:''}
@@ -2738,7 +2912,7 @@ function exportPDF(){
       </tr>`;
     }).join('')}
   </table>
-  <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.1</div>
+  <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.2</div>
   </body></html>`;
 
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
@@ -2769,13 +2943,23 @@ function exportData(){
 function importData(event){
   const file=event.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=ev=>{
+  reader.onload=async ev=>{
     try{
       const data=JSON.parse(ev.target.result);
       const imported=data.entries||data;
       if(!Array.isArray(imported)) throw new Error();
       const existingIds=new Set(entries.map(e=>e.id));
       const nouveaux=imported.filter(e=>!existingIds.has(e.id));
+      
+      // Pour chaque nouvelle entrée, vérifier s'il y a des photos dans l'import
+      for (const entry of nouveaux) {
+        if (entry.photos && entry.photos.length > 0 && photoDB) {
+          await savePhotosToIndexedDB(entry.id, entry.photos);
+          delete entry.photos;
+          entry._photosMigrated = true;
+        }
+      }
+      
       entries=[...nouveaux,...entries];
       localStorage.setItem('peche-entries',JSON.stringify(entries));
       // Import spots si présents
@@ -2802,6 +2986,24 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
+// Helper roundRect pour les graphiques
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    this.moveTo(x+r, y);
+    this.lineTo(x+w-r, y);
+    this.quadraticCurveTo(x+w, y, x+w, y+r);
+    this.lineTo(x+w, y+h-r);
+    this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    this.lineTo(x+r, y+h);
+    this.quadraticCurveTo(x, y+h, x, y+h-r);
+    this.lineTo(x, y+r);
+    this.quadraticCurveTo(x, y, x+r, y);
+    return this;
+  };
+}
+
 let rt;
 window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJournal,200); });
 
@@ -2809,16 +3011,14 @@ window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJou
 //  SERVICE WORKER — version par date de déploiement
 //  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
-const BUILD_DATE = '20260403'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+const BUILD_DATE = '20260404'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      // L'URL versionnée force Chrome à recharger sw.js si BUILD_DATE change
       const swUrl = `./sw.js?v=${BUILD_DATE}`;
       const reg = await navigator.serviceWorker.register(swUrl, { updateViaCache: 'none' });
 
-      // Envoyer la version au SW pour qu'il purge l'ancien cache
       const sendVersion = (worker) => {
         if (worker) worker.postMessage({ type: 'SET_VERSION', version: BUILD_DATE });
       };
@@ -2826,12 +3026,10 @@ if ('serviceWorker' in navigator) {
       sendVersion(reg.active);
       sendVersion(reg.waiting);
 
-      // SW en attente → activer immédiatement
       if (reg.waiting) {
         reg.waiting.postMessage('SKIP_WAITING');
       }
 
-      // Nouveau SW installé en arrière-plan → activer immédiatement
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         newWorker.addEventListener('statechange', () => {
@@ -2842,22 +3040,17 @@ if ('serviceWorker' in navigator) {
         });
       });
 
-      // Forcer la vérification toutes les 2 minutes
       setInterval(() => reg.update(), 2 * 60 * 1000);
-
       console.log(`[App] SW enregistré — Build ${BUILD_DATE}`);
-
     } catch (err) {
       console.warn('[App] SW échec:', err);
     }
 
-    // Nouveau SW actif → rechargement automatique de la page
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       console.log('[App] Nouveau SW actif — rechargement');
       window.location.reload();
     });
 
-    // Message RELOAD envoyé par le SW quand version change
     navigator.serviceWorker.addEventListener('message', event => {
       if (event.data && event.data.type === 'RELOAD') {
         console.log('[App] SW demande rechargement — nouvelle version');
