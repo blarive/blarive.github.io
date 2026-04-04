@@ -10,10 +10,6 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Carnet de Pêche</title>
-<style>
-  /* Bannière mise à jour — désactivée (rechargement automatique) */
-  .update-banner{ display:none !important; }
-</style>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
 <!-- Leaflet.js pour la carte interactive -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
@@ -663,29 +659,6 @@ body.dark .cat-appat-nom{color:#e0e8f4;}
 .appat-cat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:5px;display:block;}
 
 
-/* ── POPUP APPÂTS ─── */
-.appat-popup-wrap{display:none;position:fixed;inset:0;z-index:700;background:rgba(10,22,40,0.65);backdrop-filter:blur(5px);align-items:flex-end;justify-content:center;padding-bottom:0;}
-.appat-popup-wrap.open{display:flex;}
-.appat-popup{background:white;border-radius:22px 22px 0 0;padding:20px 20px 32px;width:100%;max-width:480px;box-shadow:0 -8px 40px rgba(0,0,0,0.18);animation:slideUpModal 0.28s cubic-bezier(.2,.8,.3,1) both;max-height:70vh;overflow-y:auto;}
-body.dark .appat-popup{background:#0f2147;}
-.appat-popup-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--eau-profonde);margin-bottom:16px;font-weight:700;text-align:center;padding-top:4px;}
-body.dark .appat-popup-title{color:#d0e0f8;}
-.appat-popup-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
-.appat-popup-item{padding:10px 18px;border-radius:20px;border:1.5px solid #dde3f0;background:var(--bleu-clair);color:var(--eau-profonde);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;}
-.appat-popup-item:hover{background:var(--eau-claire);color:white;border-color:var(--eau-claire);}
-.appat-popup-item.selected{background:var(--rose);color:white;border-color:var(--rose);}
-body.dark .appat-popup-item{background:#1a3060;border-color:#2a4080;color:#d0e0f8;}
-body.dark .appat-popup-item:hover{background:var(--eau-claire);color:white;}
-body.dark .appat-popup-item.selected{background:var(--rose);border-color:var(--rose);color:white;}
-.appat-popup-cancel{width:100%;padding:11px;border:none;border-radius:12px;background:#f0f0f0;color:var(--gris);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
-body.dark .appat-popup-cancel{background:#1a3060;color:#8a96b0;}
-/* Boutons catégorie dans le formulaire */
-.appat-cat-btn{padding:8px 14px;border-radius:20px;border:1.5px solid #dde3f0;background:white;color:var(--texte);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px;}
-.appat-cat-btn:hover{border-color:var(--eau-claire);background:var(--bleu-clair);}
-.appat-cat-btn.has-selection{border-color:var(--rose);background:var(--rose-clair);color:var(--rose);font-weight:700;}
-body.dark .appat-cat-btn{background:#0f2147;border-color:#2a4080;color:#d0e0f8;}
-body.dark .appat-cat-btn.has-selection{background:rgba(232,96,154,0.2);border-color:var(--rose);color:#ffaacc;}
-
 /* ── MODALE CONFIRMATION ─── */
 .confirm-wrap{display:none;position:fixed;inset:0;z-index:800;background:rgba(10,22,40,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;}
 .confirm-wrap.open{display:flex;}
@@ -704,12 +677,6 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
 </style>
 </head>
 <body>
-
-<!-- BANNIÈRE MISE À JOUR -->
-<div class="update-banner" id="update-banner">
-  <span>🆕 Une nouvelle version est disponible !</span>
-  <button type="button" class="update-banner-btn" onclick="applyUpdate()">Mettre à jour</button>
-</div>
 
 <!-- MOBILE HEADER -->
 <div class="mobile-header">
@@ -1190,21 +1157,9 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
   </div>
 </div>
 
-<!-- POPUP APPÂTS PAR CATÉGORIE -->
-<div class="appat-popup-wrap" id="appat-popup-wrap" onclick="if(event.target===this)closeAppatPopup()">
-  <div class="appat-popup">
-    <div class="appat-popup-title" id="appat-popup-title"></div>
-    <div class="appat-popup-list" id="appat-popup-list"></div>
-    <button type="button" class="appat-popup-cancel" onclick="closeAppatPopup()">Annuler</button>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-// ════════════════════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════════════════════
 // ════════════════════════════════════════════════════════
 //  IndexedDB — couche de persistance
 // ════════════════════════════════════════════════════════
@@ -1300,7 +1255,6 @@ function dbDeleteSetting(key) {
 // Alias pratiques
 async function saveEntries()    { await dbSaveAll(STORES.entries, entries); }
 async function saveSpots()      { await dbSaveAll(STORES.spots, spots); }
-async function saveAppats()     { await dbSaveAll(STORES.appats, appats); }
 async function saveCategories() { await dbSaveAll(STORES.categories, categories); }
 
 // ── STATE ─────────────────────────────────────────────────
@@ -1328,23 +1282,18 @@ const topbarTitles={
 async function init(){
   try {
     await openDB();
-    // Charger toutes les données depuis IndexedDB
-    const [loadedEntries, loadedSpots, loadedAppats] = await Promise.all([
+    const [loadedEntries, loadedSpots] = await Promise.all([
       dbGetAll(STORES.entries),
-      dbGetAll(STORES.spots),
-      dbGetAll(STORES.appats)
+      dbGetAll(STORES.spots)
     ]);
     entries = loadedEntries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     spots   = loadedSpots;
-    appats  = loadedAppats;
-    // Catégories — store ajouté en v2, peut ne pas exister sur ancienne DB
     try {
       categories = await dbGetAll(STORES.categories);
     } catch(e) {
       console.warn('[DB] Store categories non disponible:', e);
       categories = [];
     }
-    // Catégories par défaut
     if (!categories.length) {
       categories = [
         { id: 1, nom: '🪱 Au toc',   appats: ['Ver de terre', 'Ver de vase', 'Asticot', 'Insecte', 'Crevette'] },
@@ -1354,12 +1303,6 @@ async function init(){
       ];
       await saveCategories();
     }
-    // Appâts plats (legacy) : migrer depuis ancien format si vide
-    if (!appats.length) {
-      appats = categories.flatMap(c => c.appats.map((n,i) => ({id: Date.now()+i, nom:n, categorieId: c.id})));
-      await saveAppats();
-    }
-    // Dark mode — preference conservée dans localStorage (petit, non critique)
     if(localStorage.getItem('dark')==='1'||
        (localStorage.getItem('dark')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
       document.body.classList.add('dark');
@@ -1515,7 +1458,9 @@ function switchView(name){
     const t=b.textContent.trim().toLowerCase();
     b.classList.toggle('active',
       (name==='journal'&&t.includes('journal'))||(name==='ajouter'&&t.includes('ajouter'))||
-      (name==='stats'&&t.includes('stat'))||(name==='spots'&&t.includes('spot')));
+      (name==='stats'&&t.includes('stat'))||(name==='spots'&&t.includes('spot'))||
+      (name==='appats'&&t.includes('appât'))||(name==='rapport'&&t.includes('rapport'))||
+      (name==='parametres'&&t.includes('param')));
   });
   const titles=topbarTitles[name]||['',''];
   document.getElementById('topbar-title').innerHTML=`<small>${titles[0]}</small>${titles[1]}`;
@@ -2306,8 +2251,6 @@ function drawPieChart(sorted, total, colors){
 // ════════════════════════════════════════════════════════
 //  CARNET D'APPÂTS
 // ════════════════════════════════════════════════════════
-let appats = []; // Chargé depuis IndexedDB dans init()
-
 function renderAppatsForm(){
   const grid=document.getElementById('appats-form-grid');
   if(!grid) return;
@@ -2433,26 +2376,6 @@ function renderAppatsPage(){
   el.innerHTML=addCatHtml+catsHtml+statsHtml;
 }
 
-function addAppat(){
-  // Legacy — kept for compatibility
-  const input=document.getElementById('new-appat-name');
-  const nom=(input?.value||'').trim();
-  if(!nom){showToast('⚠️ Entrez un nom');return;}
-  if(appats.find(a=>a.nom.toLowerCase()===nom.toLowerCase())){showToast('⚠️ Appât déjà présent');return;}
-  appats.push({id:Date.now(),nom});
-  saveAppats().catch(e=>console.error('[DB] saveAppats:', e));
-  if(input) input.value='';
-  renderAppatsPage(); renderAppatsForm();
-  showToast('🪱 Appât ajouté !');
-}
-
-function deleteAppat(id){
-  appats=appats.filter(a=>a.id!==id);
-  saveAppats().catch(e=>console.error('[DB] saveAppats:', e));
-  renderAppatsPage(); renderAppatsForm();
-  showToast('🗑 Appât supprimé');
-}
-
 // ── GESTION CATÉGORIES ──────────────────────────────────
 function addCategorie(){
   const input=document.getElementById('new-cat-name');
@@ -2503,10 +2426,6 @@ function deleteAppatFromCat(catId, nom){
   renderAppatsPage(); renderAppatsForm();
   showToast('🗑 Appât supprimé');
 }
-
-// ════════════════════════════════════════════════════════
-//  SPOTS — enrichi avec historique météo
-// ════════════════════════════════════════════════════════
 
 // ════════════════════════════════════════════════════════
 //  GÉOLOCALISATION & SPOTS
@@ -3285,9 +3204,6 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
-
-function showUpdateBanner() {}
-function applyUpdate() { window.location.reload(); }
 
 // ── MODALE À PROPOS ──
 function openInfo(){ document.getElementById('info-wrap').classList.add('open'); }
