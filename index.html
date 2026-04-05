@@ -3545,9 +3545,15 @@ function exportPDF(){
   }
   closeExport();
 }
-function exportData(){
+async function exportData(){
   if(!entries.length){showToast('⚠️ Aucune donnée à exporter');return;}
-  const data={version:2,exportDate:new Date().toISOString(),entries,spots};
+  // Si un dossier de sauvegarde est configuré → écrire dedans
+  if(_backupDirHandle){
+    await doBackup(false);
+    return;
+  }
+  // Fallback : téléchargement classique
+  const data={version:2,exportDate:new Date().toISOString(),entries,spots,categories};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
