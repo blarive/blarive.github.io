@@ -791,23 +791,14 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">🎣 Technique</label>
-              <select class="form-select" id="f-technique">
-                <option value="">— Technique —</option>
-                <option>Au toc</option>
-                <option>Au toc nymphe</option>
-                <option>Au leurre</option>
-                <option>Au posé</option>
-                <option>Au ver</option>
-                <option>Au feeder</option>
-                <option>Au method feeder</option>
-                <option>En mer</option>
-              </select>
+              <label class="form-label">🎣 Technique / Catégorie d'appât</label>
+              <div class="appats-grid" id="technique-cat-grid"></div>
+              <input type="hidden" id="f-technique">
             </div>
-            <div class="form-group">
+            <div class="form-group" id="appat-group">
               <label class="form-label">🪱 Appât / Amorce</label>
               <div class="appats-grid" id="appats-form-grid"></div>
-              <input type="text" class="form-input" id="f-appat" placeholder="Appât sélectionné…" style="margin-top:8px" readonly onclick="this.removeAttribute('readonly');this.focus()">
+              <input type="text" class="form-input" id="f-appat" placeholder="Appât sélectionné…" style="margin-top:8px;display:none">
             </div>
             <div class="form-group">
               <label class="form-label">📐 Profondeur (m)</label>
@@ -1774,7 +1765,11 @@ function toggleCapot(btn){
     document.getElementById('f-espece').value='';
     document.getElementById('f-espece-display').style.display='none';
     document.getElementById('f-espece-autre').style.display='none';
-    ['f-taille','f-poids','f-technique'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-technique').value='';
+    currentTechCatId=null;
+    ['f-taille','f-poids'].forEach(id=>document.getElementById(id).value='');
+    renderTechniqueCatGrid();
+    renderAppatsInline();
   }
 }
 
@@ -1832,7 +1827,7 @@ function resetForm(){
   const mb=document.getElementById('btn-meteo-auto');
   if(mb){mb.textContent='🌤 Remplir automatiquement depuis ma position';mb.disabled=false;}
   selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false;
-  currentMilieu='riviere';
+  currentMilieu='riviere'; currentTechCatId=null;
   document.getElementById('btn-riviere').classList.add('active');
   document.getElementById('btn-mer').classList.remove('active');
   const disp=document.getElementById('f-espece-display');
@@ -2529,42 +2524,93 @@ function drawPieChart(sorted, total, colors){
 // ════════════════════════════════════════════════════════
 //  CARNET D'APPÂTS
 // ════════════════════════════════════════════════════════
-function renderAppatsForm(){
-  const grid=document.getElementById('appats-form-grid');
-  if(!grid) return;
-  const current=document.getElementById('f-appat')?.value||'';
+// ── Grille technique (catégories) + appâts inline ──
+let currentTechCatId = null; // catégorie technique sélectionnée
 
-  // Afficher les catégories comme boutons — si pas de catégorie, fallback legacy
-  if(categories && categories.length){
-    grid.innerHTML=categories.map(cat=>{
-      // Vérifier si l'appât sélectionné appartient à cette catégorie
-      const hasSel=cat.appats&&cat.appats.includes(current);
-      return `<button type="button" class="appat-cat-tag${hasSel?' has-selection':''}"
-        onclick="openAppatCatPopup(${cat.id})">
-        ${cat.nom}${hasSel?` <span style="font-size:10px;opacity:0.8">✓ ${current}</span>`:''}
-        <span class="cat-arrow">▼</span>
-      </button>`;
-    }).join('');
-  } else {
-    // Fallback : afficher les appâts legacy s'il n'y a pas de catégorie
-    grid.innerHTML=appats.map(a=>`
-      <button type="button" class="appat-tag${current===a.nom?' selected':''}" onclick="selectAppat('${a.nom.replace(/'/g,"\\'")}')">
-        🪱 ${a.nom}
-      </button>`).join('');
-    if(!appats.length){
-      grid.innerHTML='<span style="font-size:12px;color:var(--gris);font-style:italic">Aucun appât — créez des catégories dans le Carnet d\'appâts</span>';
-    }
+function renderAppatsForm(){
+  renderTechniqueCatGrid();
+  renderAppatsInline();
+}
+
+function renderTechniqueCatGrid(){
+  const grid = document.getElementById('technique-cat-grid');
+  if(!grid) return;
+  const techVal = document.getElementById('f-technique')?.value || '';
+
+  if(!categories || !categories.length){
+    grid.innerHTML = '<span style="font-size:12px;color:var(--gris);font-style:italic">Créez des catégories dans le Carnet d\'appâts</span>';
+    return;
+  }
+  grid.innerHTML = categories.map(cat => {
+    const isActive = currentTechCatId === cat.id;
+    return `<button type="button" class="appat-cat-tag${isActive ? ' has-selection' : ''}"
+      onclick="selectTechniqueCat(${cat.id})">
+      ${cat.nom}
+    </button>`;
+  }).join('');
+}
+
+function selectTechniqueCat(catId){
+  // Bascule : re-cliquer désélectionne
+  currentTechCatId = currentTechCatId === catId ? null : catId;
+  // Mettre à jour f-technique avec le nom de la catégorie
+  const cat = categories.find(c => c.id === catId);
+  const inp = document.getElementById('f-technique');
+  if(inp) inp.value = currentTechCatId ? (cat ? cat.nom : '') : '';
+  // Réinitialiser l'appât si on change de catégorie
+  const appat = document.getElementById('f-appat');
+  if(appat) appat.value = '';
+  renderTechniqueCatGrid();
+  renderAppatsInline();
+}
+
+function renderAppatsInline(){
+  const grid = document.getElementById('appats-form-grid');
+  const appGroup = document.getElementById('appat-group');
+  const appInput = document.getElementById('f-appat');
+  if(!grid) return;
+
+  if(!currentTechCatId){
+    // Aucune technique sélectionnée → masquer la section appâts
+    grid.innerHTML = '<span style="font-size:12px;color:var(--gris);font-style:italic">← Choisissez une technique pour voir les appâts</span>';
+    if(appInput) appInput.style.display = 'none';
+    return;
+  }
+
+  const cat = categories.find(c => c.id === currentTechCatId);
+  if(!cat || !cat.appats || !cat.appats.length){
+    grid.innerHTML = '<span style="font-size:12px;color:var(--gris);font-style:italic">Aucun appât dans cette catégorie — ajoutez-en dans le Carnet d\'appâts</span>';
+    if(appInput) appInput.style.display = 'none';
+    return;
+  }
+
+  const current = appInput?.value || '';
+  grid.innerHTML = cat.appats.map(nom => `
+    <button type="button" class="appat-cat-tag${current === nom ? ' has-selection' : ''}"
+      onclick="selectAppatInline('${nom.replace(/'/g,"\\'")}')">
+      ${nom}
+    </button>`).join('');
+
+  // Afficher le champ texte uniquement si un appât est sélectionné
+  if(appInput){
+    appInput.style.display = current ? 'block' : 'none';
+    if(current) appInput.value = current;
   }
 }
 
-function selectAppat(nom){
-  const input=document.getElementById('f-appat');
+function selectAppatInline(nom){
+  const input = document.getElementById('f-appat');
   if(!input) return;
-  input.value=input.value===nom?'':nom;
-  renderAppatsForm();
+  // Bascule : re-cliquer désélectionne
+  input.value = input.value === nom ? '' : nom;
+  renderAppatsInline();
 }
 
-// ── POPUP SÉLECTION APPÂT PAR CATÉGORIE ──
+function selectAppat(nom){
+  selectAppatInline(nom);
+}
+
+// Popup catégorie (conservée pour le carnet d'appâts, non utilisée dans le formulaire)
 function openAppatCatPopup(catId){
   const cat=categories.find(c=>c.id===catId);
   if(!cat) return;
@@ -2585,9 +2631,7 @@ function openAppatCatPopup(catId){
 
 function selectAppatFromPopup(nom){
   const input=document.getElementById('f-appat');
-  if(input){
-    input.value=input.value===nom?'':nom;
-  }
+  if(input) input.value=input.value===nom?'':nom;
   closeAppatCat();
   renderAppatsForm();
 }
@@ -3096,7 +3140,6 @@ async function chooseBackupFolder(){
     });
     _backupDirHandle = handle;
     await saveBackupHandle(handle);
-    await dbSetSetting('backup-slot', 0);
     showToast(`📁 Dossier "${handle.name}" configuré !`);
     renderParametresPage();
     // Faire une première sauvegarde immédiatement
@@ -3108,7 +3151,10 @@ async function chooseBackupFolder(){
   }
 }
 
-// ── Rotation des 3 fichiers ──
+// ── Rotation des 3 fichiers (snapshot) ──
+// carnetpeche-1.json = plus récent
+// carnetpeche-2.json = avant-dernier
+// carnetpeche-3.json = plus ancien (écrasé)
 async function doBackup(silent=false){
   if(!_backupDirHandle) return;
   try {
@@ -3116,11 +3162,9 @@ async function doBackup(silent=false){
     let perm = await _backupDirHandle.queryPermission({ mode:'readwrite' });
     if(perm === 'prompt'){
       if(silent){
-        // Sauvegarde auto : pas de geste utilisateur disponible → skip silencieux
         console.log('[Backup] Permission en attente — sauvegarde auto skippée');
         return;
       }
-      // Sauvegarde manuelle : on peut demander la permission
       perm = await _backupDirHandle.requestPermission({ mode:'readwrite' });
     }
     if(perm !== 'granted'){
@@ -3129,32 +3173,37 @@ async function doBackup(silent=false){
       return;
     }
 
-    // Déterminer le slot suivant (0, 1, 2 en rotation)
-    let slot = 0;
-    try { slot = (await dbGetSetting('backup-slot')) || 0; } catch(e){}
-    slot = ((parseInt(slot)||0) + 1) % 3;
-    await dbSetSetting('backup-slot', slot);
+    // Décaler : 2→3, 1→2 (en renommant via copie+suppression)
+    // IDB File System API n'a pas de rename — on copie le contenu
+    for(let i = 2; i >= 1; i--){
+      try {
+        const src = await _backupDirHandle.getFileHandle(BACKUP_FILES[i-1]).catch(()=>null);
+        if(!src) continue;
+        const srcFile = await src.getFile();
+        const srcText = await srcFile.text();
+        const dst = await _backupDirHandle.getFileHandle(BACKUP_FILES[i], { create:true });
+        const w = await dst.createWritable();
+        await w.write(srcText);
+        await w.close();
+      } catch(e){ /* fichier absent, on continue */ }
+    }
 
-    const filename = BACKUP_FILES[slot];
+    // Écrire le nouveau snapshot en position 1 (plus récent)
     const data = {
       version: 2,
       backupDate: new Date().toISOString(),
-      slot: slot + 1,
       entries,
       spots,
       categories
     };
-
-    // Écrire le fichier (écrase le précédent du même slot)
-    const fh = await _backupDirHandle.getFileHandle(filename, { create:true });
+    const fh = await _backupDirHandle.getFileHandle(BACKUP_FILES[0], { create:true });
     const writable = await fh.createWritable();
     await writable.write(JSON.stringify(data, null, 2));
     await writable.close();
 
-    if(!silent) showToast(`💾 Sauvegarde ${slot+1}/3 — ${filename}`);
-    console.log(`[Backup] ${filename} écrit`);
+    if(!silent) showToast(`💾 Snapshot sauvegardé — ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`);
+    console.log('[Backup] Snapshot écrit →', BACKUP_FILES[0]);
 
-    // Rafraîchir l'UI paramètres si visible
     const pv = document.getElementById('view-parametres');
     if(pv && pv.classList.contains('active')) renderParametresPage();
 
@@ -3168,7 +3217,6 @@ async function doBackup(silent=false){
 async function clearBackupConfig(){
   _backupDirHandle = null;
   try { await dbDeleteSetting('backup-dir-handle'); } catch(e){}
-  try { await dbDeleteSetting('backup-slot'); } catch(e){}
   renderParametresPage();
   showToast('🗑 Configuration sauvegarde supprimée');
 }
@@ -3243,7 +3291,7 @@ async function renderParametresPage(){
             <span style="font-size:20px">📁</span>
             <div>
               <div style="font-size:13px;font-weight:700;color:var(--eau-profonde)">${_backupDirHandle.name}</div>
-              <div style="font-size:11px;color:var(--gris)">Sauvegarde automatique active — rotation sur 3 fichiers</div>
+              <div style="font-size:11px;color:var(--gris)">Sauvegarde automatique active — 3 snapshots conservés</div>
             </div>
           </div>
           ${backupFilesHtml}
@@ -3254,7 +3302,7 @@ async function renderParametresPage(){
           <button type="button" onclick="clearBackupConfig()" style="padding:10px 14px;background:#fee;color:var(--rouge);border:1px solid #fcc;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;white-space:nowrap">✕</button>
         </div>` : `
         <div style="padding:14px;background:var(--bleu-clair);border-radius:10px;margin-bottom:12px;font-size:13px;color:var(--eau-claire);line-height:1.6">
-          Choisissez un dossier sur votre appareil. L'application y écrira automatiquement jusqu'à <strong>3 fichiers</strong> en rotation — le plus ancien est écrasé à chaque sauvegarde.
+          Choisissez un dossier sur votre appareil. L'application y conservera les <strong>3 derniers snapshots</strong> — à chaque sauvegarde, le plus ancien est décalé et remplacé par le nouveau.
         </div>
         <button type="button" onclick="chooseBackupFolder()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px">
           📁 Choisir le dossier de sauvegarde
