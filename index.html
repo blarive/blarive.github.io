@@ -1630,6 +1630,14 @@ function setFilter(f,btn){
   renderJournal();
 }
 
+function setSort(s){
+  currentSort=s;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('sort-'+s);
+  if(el) el.classList.add('active');
+  renderJournal();
+}
+
 function setYear(y){
   currentYear=y;
   closeYearPopup();
