@@ -692,6 +692,14 @@ body.dark .espece-heure-nom{color:#d0e0f8;}
 .espece-heure-val{font-weight:700;color:var(--rose);font-size:14px;}
 .espece-heure-detail{font-size:11px;color:var(--gris);}
 
+
+/* ── VALIDATION FORMULAIRE ─── */
+.form-input.invalid,.form-select.invalid,.espece-display.invalid{border-color:var(--rouge)!important;background:#fff5f5;}
+body.dark .form-input.invalid,body.dark .form-select.invalid,body.dark .espece-display.invalid{background:#2a1010;}
+body.dark .form-input.invalid,body.dark .form-select.invalid{background:#2a1010;}
+.field-error{font-size:11px;color:var(--rouge);margin-top:4px;font-weight:600;display:none;}
+.field-error.visible{display:block;}
+
 /* ── DRAG & DROP CATÉGORIES ─── */
 .cat-drag-handle{cursor:grab;font-size:18px;color:var(--gris);padding:2px 6px 2px 0;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;}
 .cat-drag-handle:active{cursor:grabbing;}
@@ -859,16 +867,19 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
               </div>
               <input type="hidden" id="f-espece">
               <div id="f-espece-display" class="espece-display" style="display:none" onclick="openEspecePopup(currentMilieu)"></div>
+              <span class="field-error" id="err-espece">⚠️ Sélectionne une espèce</span>
               <input type="text" class="form-input" id="f-espece-autre" placeholder="Précisez l'espèce…" style="display:none;margin-top:8px">
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">📏 Taille (cm)</label>
                 <input type="number" class="form-input" id="f-taille" placeholder="ex. 45">
+                <span class="field-error" id="err-taille">⚠️ Taille invalide (entre 0 et 500 cm)</span>
               </div>
               <div class="form-group">
                 <label class="form-label">⚖️ Poids (kg)</label>
                 <input type="number" class="form-input" id="f-poids" placeholder="ex. 1.2" step="0.001" min="0">
+                <span class="field-error" id="err-poids">⚠️ Poids invalide (entre 0 et 500 kg)</span>
               </div>
             </div>
             <div class="form-group">
@@ -888,6 +899,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
             <div class="form-group">
               <label class="form-label">🔢 Nombre de poissons</label>
               <input type="number" class="form-input" id="f-nb-poissons" placeholder="1" min="1" value="1">
+            <span class="field-error" id="err-nbpoissons">⚠️ Nombre invalide (minimum 1)</span>
             </div>
           </div><!-- /prise-fields -->
           <div class="form-group">
@@ -1244,7 +1256,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
     <div class="confirm-sub" id="confirm-sub"></div>
     <div class="confirm-btns">
       <button type="button" class="confirm-btn-cancel" onclick="closeConfirm()">Annuler</button>
-      <button type="button" class="confirm-btn-delete" id="confirm-btn-delete" onclick="const cb=_confirmCallback;closeConfirm();if(cb)cb();">Supprimer</button>
+      <button type="button" class="confirm-btn-delete" id="confirm-btn-delete" onclick="haptic('light');const cb=_confirmCallback;closeConfirm();if(cb)cb();">Supprimer</button>
     </div>
   </div>
 </div>
@@ -1393,6 +1405,21 @@ const topbarTitles={
   rapport:['Bilan & Export','Rapport de saison'],
   parametres:['Réglages','Paramètres']
 };
+
+// ════════════════════════════════════════════════════════
+//  RETOUR HAPTIQUE (Vibration API — W3C)
+// ════════════════════════════════════════════════════════
+function haptic(type){
+  if(!navigator.vibrate) return;
+  switch(type){
+    case 'light':   navigator.vibrate(10);        break; // tap léger
+    case 'medium':  navigator.vibrate(30);        break; // action confirmée
+    case 'success': navigator.vibrate([20,40,20]);break; // enregistrement
+    case 'error':   navigator.vibrate([40,30,40]);break; // erreur
+    case 'delete':  navigator.vibrate([20,20,60]);break; // suppression
+  }
+}
+
 
 // ════════════════════════════════════════════════════════
 //  INIT
@@ -1585,6 +1612,11 @@ function switchView(name){
   });
   const titles=topbarTitles[name]||['',''];
   document.getElementById('topbar-title').innerHTML=`<small>${titles[0]}</small>${titles[1]}`;
+  // Scroll to top — page-content sur desktop, window sur mobile
+  const pc=document.querySelector('.page-content');
+  if(pc) pc.scrollTop=0;
+  window.scrollTo({top:0,behavior:'instant'});
+  haptic('light');
   if(name==='stats') updateStats();
   if(name==='spots'){ renderSpotsPage(); setTimeout(initMap,200); }
   if(name==='appats') renderAppatsPage();
@@ -1880,12 +1912,58 @@ function toggleCapot(btn){
   }
 }
 
+function clearValidation(){
+  document.querySelectorAll('.form-input.invalid,.form-select.invalid').forEach(el=>el.classList.remove('invalid'));
+  document.querySelectorAll('.field-error.visible').forEach(el=>el.classList.remove('visible'));
+}
+function markInvalid(id, msgId){
+  const el=document.getElementById(id);
+  if(el) el.classList.add('invalid');
+  if(msgId){ const m=document.getElementById(msgId); if(m) m.classList.add('visible'); }
+}
+function validateEntry(){
+  clearValidation();
+  let ok=true;
+  // Date obligatoire
+  const dateVal=document.getElementById('f-date').value;
+  if(!dateVal){ markInvalid('f-date','err-date'); ok=false; }
+  else {
+    const d=new Date(dateVal);
+    const now=new Date();
+    if(isNaN(d.getTime())){ markInvalid('f-date','err-date'); ok=false; }
+    else if(d>now){ markInvalid('f-date','err-date-future'); ok=false; }
+  }
+  if(!isCapot){
+    // Espèce obligatoire
+    const espece=getEspece('f-espece','f-espece-autre');
+    if(!espece){ markInvalid('f-espece-display','err-espece'); ok=false; }
+    // Poids : si renseigné, doit être > 0 et < 500 kg
+    const poidsVal=document.getElementById('f-poids').value;
+    if(poidsVal!==''){
+      const p=parseFloat(poidsVal);
+      if(isNaN(p)||p<=0||p>500){ markInvalid('f-poids','err-poids'); ok=false; }
+    }
+    // Taille : si renseignée, doit être > 0 et < 500 cm
+    const tailleVal=document.getElementById('f-taille').value;
+    if(tailleVal!==''){
+      const t=parseFloat(tailleVal);
+      if(isNaN(t)||t<=0||t>500){ markInvalid('f-taille','err-taille'); ok=false; }
+    }
+    // Nb poissons : entier >= 1
+    const nbVal=document.getElementById('f-nb-poissons').value;
+    const nb=parseInt(nbVal);
+    if(isNaN(nb)||nb<1||nb>9999){ markInvalid('f-nb-poissons','err-nbpoissons'); ok=false; }
+  }
+  if(!ok) haptic('error');
+  return ok;
+}
+
 function saveEntry(){
   // Fermer toutes les popups éventuellement ouvertes
   closeEspecePopup();
   closeAppatCat();
+  if(!validateEntry()) return;
   const espece=getEspece('f-espece','f-espece-autre');
-  if(!isCapot&&!espece){showToast('⚠️ Sélectionne une espèce !');return;}
   const poidsVal=document.getElementById('f-poids').value;
   const entry={
     id:Date.now(),
@@ -1911,6 +1989,7 @@ function saveEntry(){
   saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
   doBackup(true).catch(()=>{}); // sauvegarde auto silencieuse
   resetForm(); updateAllStats();
+  haptic('success');
   showToast(isCapot?'😔 Capot enregistré…':'🎣 Sortie enregistrée !');
   switchView('journal'); renderJournal();
 }
@@ -1918,6 +1997,7 @@ function saveEntry(){
 function resetForm(){
   closeEspecePopup();
   closeAppatCat();
+  clearValidation();
   ['f-espece','f-taille','f-poids','f-lieu','f-technique','f-temp-air','f-temp-eau','f-lune','f-notes','f-appat','f-profondeur','f-heure-fin']
     .forEach(id=>document.getElementById(id).value='');
   const autreInp=document.getElementById('f-espece-autre');
@@ -3245,6 +3325,7 @@ function addManualSpot(){
   if(!nom){showToast('⚠️ Entrez un nom');return;}
   if(spots.find(s=>s.nom===nom)){showToast('⚠️ Spot déjà enregistré');return;}
   spots.unshift({id:Date.now(),nom,lat:null,lng:null});
+  haptic('medium');
   saveSpots().catch(e=>console.error('[DB] saveSpots:', e));
   if(input) input.value='';
   renderSpotsForm(); renderSpotsPage();
@@ -3484,6 +3565,7 @@ function saveEditEntry(){
     trophy:document.getElementById('edit-trophy').checked,
     relache:document.getElementById('edit-relache').checked,
   };
+  haptic('medium');
   saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
   closeEdit(); renderJournal(); updateAllStats();
   showToast('✅ Prise modifiée !');
