@@ -735,14 +735,12 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
     <div class="view active" id="view-journal">
       <div class="journal-toolbar">
         <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="renderJournal()"></div>
+        <select class="form-select" id="year-select" onchange="setYear(this.value)" style="width:auto;padding:9px 12px;font-size:13px;flex-shrink:0">
+          <option value="tous">Toutes les années</option>
+        </select>
       </div>
-      <div class="filter-pills">
+      <div class="filter-pills" id="filter-pills-container">
         <button type="button" class="filter-pill active" onclick="setFilter('tous',this)">Toutes</button>
-        <button type="button" class="filter-pill" onclick="setFilter('Carpe',this)">🐟 Carpe</button>
-        <button type="button" class="filter-pill" onclick="setFilter('Brochet',this)">🦈 Brochet</button>
-        <button type="button" class="filter-pill" onclick="setFilter('Truite',this)">🐠 Truite</button>
-        <button type="button" class="filter-pill" onclick="setFilter('Sandre',this)">🐡 Sandre</button>
-        <button type="button" class="filter-pill" onclick="setFilter('Perche',this)">Perche</button>
         <button type="button" class="filter-pill" onclick="setFilter('trophy',this)">🏆 Trophées</button>
         <button type="button" class="filter-pill" onclick="setFilter('capot',this)">🚫 Capots</button>
       </div>
@@ -756,7 +754,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
           <div class="form-card-title">📋 Informations principales</div>
           <div class="form-group">
             <label class="form-label">📅 Date & Heure début</label>
-            <input type="datetime-local" class="form-input" id="f-date">
+            <input type="datetime-local" class="form-input" id="f-date" onchange="onDateChange()">
           </div>
           <div class="form-group">
             <label class="form-label">⏱ Heure de fin (optionnel)</label>
@@ -832,6 +830,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
           <div class="form-card-title">🌤 Conditions & Notes</div>
           <div class="form-group">
             <label class="form-label">🌤 Météo</label>
+            <button type="button" id="btn-meteo-auto" onclick="fetchMeteoAuto()" style="margin-bottom:10px;padding:8px 14px;border:1.5px solid #c8d8f0;border-radius:10px;background:var(--bleu-clair);color:var(--eau-claire);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;width:100%;transition:all 0.15s">🌤 Remplir automatiquement depuis ma position</button>
             <div class="meteo-btns">
               <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'☀️ Soleil')">☀️ Soleil</button>
               <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'⛅ Nuageux')">⛅ Nuageux</button>
@@ -1268,7 +1267,7 @@ async function saveCategories() { await dbSaveAll(STORES.categories, categories)
 let entries    = [];
 let spots      = [];
 let categories = [];
-let currentFilter='tous', currentStars=0, selectedMeteo=[];
+let currentFilter='tous', currentYear='tous', currentStars=0, selectedMeteo=[];
 let isTrophy=false, isRelache=false, isCapot=false;
 let currentPhotos = []; // Tableau de photos compressées (base64)
 let leafletMap=null, mapMarkers=[];
@@ -1321,6 +1320,7 @@ async function init(){
   }
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('f-date').value=now.toISOString().slice(0,16);
+  applyLuneAuto();
   renderJournal(); updateStats(); updateAllStats();
   renderSpotsForm(); renderSpotsPage();
   renderAppatsForm();
@@ -1480,8 +1480,35 @@ function switchView(name){
 function setFilter(f,btn){
   currentFilter=f;
   document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
+  if(btn) btn.classList.add('active');
   renderJournal();
+}
+
+function setYear(y){
+  currentYear=y;
+  renderJournal();
+}
+
+function renderFilterPills(){
+  const container=document.getElementById('filter-pills-container');
+  if(!container) return;
+  // Espèces uniques présentes dans les entrées
+  const especes=[...new Set(entries.filter(e=>!e.capot&&e.espece&&e.espece!=='🚫 Capot').map(e=>e.espece))].sort();
+  const EMOJIS={'Carpe':'🐟','Brochet':'🦈','Truite fario':'🐠','Truite arc-en-ciel':'🐠','Sandre':'🐡',
+    'Perche':'🐟','Gardon':'🐟','Loup (Bar)':'🌊','Daurade royale':'🌊','Sar':'🌊','Mérou':'🌊'};
+  container.innerHTML=`
+    <button type="button" class="filter-pill${currentFilter==='tous'?' active':''}" onclick="setFilter('tous',this)">Toutes</button>
+    ${especes.map(e=>`<button type="button" class="filter-pill${currentFilter===e?' active':''}" onclick="setFilter('${e.replace(/'/g,"\\'")}',this)">${EMOJIS[e]||'🐟'} ${e}</button>`).join('')}
+    <button type="button" class="filter-pill${currentFilter==='trophy'?' active':''}" onclick="setFilter('trophy',this)">🏆 Trophées</button>
+    <button type="button" class="filter-pill${currentFilter==='capot'?' active':''}" onclick="setFilter('capot',this)">🚫 Capots</button>`;
+}
+
+function renderYearSelect(){
+  const sel=document.getElementById('year-select');
+  if(!sel) return;
+  const years=[...new Set(entries.filter(e=>e.date).map(e=>e.date.slice(0,4)))].sort((a,b)=>b-a);
+  sel.innerHTML=`<option value="tous">Toutes les années</option>`+
+    years.map(y=>`<option value="${y}"${currentYear===y?' selected':''}>${y}</option>`).join('');
 }
 
 // ── POPUP MENU ──
@@ -1503,6 +1530,97 @@ function popupNav(name){
   closeMenu(); switchView(name);
   document.querySelectorAll('.menu-popup-item').forEach(b=>b.classList.remove('active-view'));
   const el=document.getElementById('mpop-'+name); if(el) el.classList.add('active-view');
+}
+
+// ════════════════════════════════════════════════════════
+//  MÉTÉO & LUNE AUTOMATIQUES
+// ════════════════════════════════════════════════════════
+
+// ── Phase de lune (calcul pur JS, sans API) ──
+function getLunePhase(date){
+  const d=new Date(date||Date.now());
+  const syno=29.53058867;
+  const ref=new Date('2000-01-06T18:14:00Z'); // nouvelle lune de référence
+  const jours=(d-ref)/(1000*60*60*24);
+  const cycle=((jours%syno)+syno)%syno;
+  const pct=cycle/syno;
+  if(pct<0.03||pct>0.97) return '🌑 NL';
+  if(pct<0.22) return '🌒 CC';
+  if(pct<0.28) return '🌓 PQ';
+  if(pct<0.47) return '🌔 GC';
+  if(pct<0.53) return '🌕 PL';
+  if(pct<0.72) return '🌖 GD';
+  if(pct<0.78) return '🌗 DQ';
+  return '🌘 CD';
+}
+
+function applyLuneAuto(){
+  const dateVal=document.getElementById('f-date').value;
+  const phase=getLunePhase(dateVal?new Date(dateVal):new Date());
+  const sel=document.getElementById('f-lune');
+  for(let o of sel.options){ if(o.value===phase||o.text===phase){ sel.value=o.value; break; } }
+  // fallback : chercher par texte partiel
+  const phaseKey=phase.split(' ')[1];
+  for(let o of sel.options){ if(o.text.includes(phaseKey)){ sel.value=o.value; break; } }
+}
+
+// ── Météo auto via Open-Meteo (gratuit, sans clé) ──
+const WMO_MAP={
+  0:'☀️ Soleil',1:'☀️ Soleil',2:'⛅ Nuageux',3:'⛅ Nuageux',
+  45:'🌫 Brume',48:'🌫 Brume',
+  51:'🌧 Pluie',53:'🌧 Pluie',55:'🌧 Pluie',
+  61:'🌧 Pluie',63:'🌧 Pluie',65:'🌧 Pluie',
+  71:'❄️ Froid',73:'❄️ Froid',75:'❄️ Froid',
+  77:'❄️ Froid',80:'🌧 Pluie',81:'🌧 Pluie',82:'🌧 Pluie',
+  85:'❄️ Froid',86:'❄️ Froid',
+  95:'🌧 Pluie',96:'🌧 Pluie',99:'🌧 Pluie'
+};
+
+async function fetchMeteoAuto(){
+  const btn=document.getElementById('btn-meteo-auto');
+  if(btn){ btn.textContent='⏳ Chargement…'; btn.disabled=true; }
+  try {
+    // Obtenir position
+    const pos=await new Promise((res,rej)=>
+      navigator.geolocation.getCurrentPosition(res,rej,{timeout:8000,enableHighAccuracy:false})
+    );
+    const {latitude:lat,longitude:lon}=pos.coords;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_min&timezone=auto&forecast_days=1`;
+    const r=await fetch(url);
+    const d=await r.json();
+    const cur=d.current;
+    // Température air
+    const tempAir=Math.round(cur.temperature_2m);
+    document.getElementById('f-temp-air').value=tempAir;
+    // Condition météo → boutons
+    const cond=WMO_MAP[cur.weathercode]||'';
+    // Vent
+    const wind=cur.windspeed_10m>20;
+    // Cocher les bons boutons météo
+    document.querySelectorAll('.meteo-btn:not(#btn-capot):not(#btn-trophy):not(#btn-relache)').forEach(b=>{
+      const v=b.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]||'';
+      const shouldOn=(cond&&v===cond)||(wind&&v==='💨 Vent');
+      if(shouldOn&&!selectedMeteo.includes(v)){ b.classList.add('selected'); selectedMeteo.push(v); }
+    });
+    // Température : si froid (<5°) cocher froid
+    if(tempAir<5){
+      document.querySelectorAll('.meteo-btn').forEach(b=>{
+        if(b.textContent.includes('Froid')&&!b.classList.contains('selected')){
+          b.classList.add('selected'); selectedMeteo.push('❄️ Froid');
+        }
+      });
+    }
+    if(btn){ btn.textContent='✅ Météo chargée'; btn.disabled=false; }
+    showToast(`🌤 ${tempAir}°C — ${cond||'conditions chargées'}`);
+  } catch(e){
+    if(btn){ btn.textContent='🌤 Météo auto'; btn.disabled=false; }
+    showToast('❌ Météo indisponible');
+  }
+}
+
+// ── Auto-remplissage lune quand la date change ──
+function onDateChange(){
+  applyLuneAuto();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1665,6 +1783,8 @@ function resetForm(){
   sg.style.opacity='1'; sg.style.pointerEvents='';
   const gb=document.getElementById('geo-btn');
   if(gb){gb.textContent='📡 Utiliser ma position GPS';gb.disabled=false;}
+  const mb=document.getElementById('btn-meteo-auto');
+  if(mb){mb.textContent='🌤 Remplir automatiquement depuis ma position';mb.disabled=false;}
   selectedMeteo=[]; currentStars=0; isTrophy=false; isRelache=false; isCapot=false;
   currentMilieu='riviere';
   document.getElementById('btn-riviere').classList.add('active');
@@ -1674,6 +1794,7 @@ function resetForm(){
   resetPhotos();
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('f-date').value=now.toISOString().slice(0,16);
+  applyLuneAuto();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1741,11 +1862,14 @@ function toggleSortie(key){
 }
 
 function renderJournal(){
+  renderFilterPills();
+  renderYearSelect();
   const search=document.getElementById('search-input').value.toLowerCase();
   let filtered=entries.filter(e=>{
+    if(currentYear!=='tous'&&(!e.date||!e.date.startsWith(currentYear))) return false;
     if(currentFilter==='trophy') return e.trophy;
     if(currentFilter==='capot') return e.capot;
-    const mF=currentFilter==='tous'||(e.espece&&e.espece.includes(currentFilter));
+    const mF=currentFilter==='tous'||(e.espece&&e.espece===currentFilter);
     const mS=!search||(e.espece&&e.espece.toLowerCase().includes(search))||(e.lieu&&e.lieu.toLowerCase().includes(search));
     return mF&&mS;
   });
