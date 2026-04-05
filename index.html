@@ -1569,7 +1569,11 @@ function selectEspece(nom) {
 }
 
 function closeEspecePopup() {
-  document.getElementById('espece-popup-wrap').classList.remove('open');
+  const el = document.getElementById('espece-popup-wrap');
+  el.classList.remove('open');
+  el.style.display = 'none';
+  // Réinitialiser pour permettre réouverture
+  setTimeout(() => { el.style.display = ''; }, 10);
 }
 
 function closeEspecePopupOnOverlay(e) {
@@ -1624,6 +1628,9 @@ function toggleCapot(btn){
 }
 
 function saveEntry(){
+  // Fermer toutes les popups éventuellement ouvertes
+  closeEspecePopup();
+  closeAppatCat();
   const espece=getEspece('f-espece','f-espece-autre');
   if(!isCapot&&!espece){showToast('⚠️ Sélectionne une espèce !');return;}
   const poidsVal=document.getElementById('f-poids').value;
@@ -1655,6 +1662,8 @@ function saveEntry(){
 }
 
 function resetForm(){
+  closeEspecePopup();
+  closeAppatCat();
   ['f-espece','f-taille','f-poids','f-lieu','f-technique','f-temp-air','f-temp-eau','f-lune','f-notes','f-appat','f-profondeur','f-heure-fin']
     .forEach(id=>document.getElementById(id).value='');
   const autreInp=document.getElementById('f-espece-autre');
@@ -2406,7 +2415,10 @@ function selectAppatFromPopup(nom){
 }
 
 function closeAppatCat(){
-  document.getElementById('appat-cat-wrap').classList.remove('open');
+  const el = document.getElementById('appat-cat-wrap');
+  el.classList.remove('open');
+  el.style.display = 'none';
+  setTimeout(() => { el.style.display = ''; }, 10);
 }
 
 function closeAppatCatOnOverlay(e){
