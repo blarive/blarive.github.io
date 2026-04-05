@@ -3042,23 +3042,44 @@ const BACKUP_FILES = ['carnetpeche-1.json','carnetpeche-2.json','carnetpeche-3.j
 let _backupDirHandle = null; // handle du dossier choisi, chargé depuis IndexedDB
 
 // ── Persistance du handle dans IndexedDB ──
-async function saveBackupHandle(handle){
-  try { await dbSetSetting('backup-dir-handle', handle); } catch(e){}
+// Le FileSystemDirectoryHandle doit être stocké DIRECTEMENT dans IDB
+// sans être enveloppé dans un objet { key, value } — structured clone
+// ne reconstruit pas correctement le handle depuis un objet imbriqué.
+function saveBackupHandle(handle){
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORES.settings, 'readwrite');
+    const req = tx.objectStore(STORES.settings).put({ key: 'backup-dir-handle', value: handle });
+    req.onsuccess = () => resolve();
+    req.onerror   = () => reject(req.error);
+  });
 }
+
 async function loadBackupHandle(){
   try {
-    const h = await dbGetSetting('backup-dir-handle');
-    if(h && typeof h.queryPermission === 'function'){
-      // Vérifier que la permission est encore valide
-      const perm = await h.queryPermission({ mode:'readwrite' });
-      if(perm === 'granted'){ _backupDirHandle = h; return h; }
-      // Tenter de la regagner silencieusement (échoue sans geste utilisateur)
-      const req = await h.requestPermission({ mode:'readwrite' }).catch(()=>'denied');
-      if(req === 'granted'){ _backupDirHandle = h; return h; }
+    const h = await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORES.settings, 'readonly');
+      const req = tx.objectStore(STORES.settings).get('backup-dir-handle');
+      req.onsuccess = () => resolve(req.result ? req.result.value : null);
+      req.onerror   = () => reject(req.error);
+    });
+    if(!h || typeof h.queryPermission !== 'function') {
+      _backupDirHandle = null;
+      return null;
     }
-  } catch(e){}
-  _backupDirHandle = null;
-  return null;
+    // Sur mobile, requestPermission() échoue sans geste utilisateur —
+    // on stocke quand même le handle et on demandera la permission
+    // au moment du doBackup() qui lui sera déclenché par un geste.
+    const perm = await h.queryPermission({ mode: 'readwrite' });
+    _backupDirHandle = h; // conserver même si prompt nécessaire
+    if(perm === 'granted') return h;
+    // Permission en attente : on garde le handle, doBackup() redemandera
+    console.log('[Backup] Handle chargé — permission:', perm);
+    return h;
+  } catch(e) {
+    console.warn('[Backup] loadBackupHandle:', e);
+    _backupDirHandle = null;
+    return null;
+  }
 }
 
 // ── Choisir le dossier ──
@@ -3091,9 +3112,22 @@ async function chooseBackupFolder(){
 async function doBackup(silent=false){
   if(!_backupDirHandle) return;
   try {
-    // Vérifier/redemander permission (nécessaire après veille sur mobile)
-    const perm = await _backupDirHandle.requestPermission({ mode:'readwrite' });
-    if(perm !== 'granted'){ console.warn('[Backup] Permission refusée'); return; }
+    // Vérifier la permission actuelle d'abord
+    let perm = await _backupDirHandle.queryPermission({ mode:'readwrite' });
+    if(perm === 'prompt'){
+      if(silent){
+        // Sauvegarde auto : pas de geste utilisateur disponible → skip silencieux
+        console.log('[Backup] Permission en attente — sauvegarde auto skippée');
+        return;
+      }
+      // Sauvegarde manuelle : on peut demander la permission
+      perm = await _backupDirHandle.requestPermission({ mode:'readwrite' });
+    }
+    if(perm !== 'granted'){
+      console.warn('[Backup] Permission refusée');
+      if(!silent) showToast('❌ Accès au dossier refusé — reconfigurer dans Paramètres');
+      return;
+    }
 
     // Déterminer le slot suivant (0, 1, 2 en rotation)
     let slot = 0;
