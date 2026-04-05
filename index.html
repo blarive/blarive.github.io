@@ -143,6 +143,16 @@ body.dark .entry-meta-item{color:#a0b8d8;}
 
 /* ── JOURNAL ─── */
 .journal-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+
+/* ── TRI JOURNAL ─── */
+.sort-btn{padding:7px 12px;border:1.5px solid #ddd;border-radius:20px;background:white;font-size:12px;font-weight:600;color:var(--gris);cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;transition:all 0.15s;white-space:nowrap;}
+.sort-btn:hover{border-color:var(--eau-claire);color:var(--eau-claire);}
+.sort-btn.active{background:var(--eau-profonde);border-color:var(--eau-profonde);color:white;}
+body.dark .sort-btn{background:#0f2147;border-color:#2a4080;color:#8a96b0;}
+body.dark .sort-btn.active{background:var(--rose);border-color:var(--rose);color:white;}
+.sort-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+.sort-bar-label{font-size:11px;color:var(--gris);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;}
+
 .year-filter-btn{flex-shrink:0;padding:9px 14px;border:1.5px solid #dde3f0;border-radius:10px;background:white;color:var(--texte);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
 .year-filter-btn:hover{border-color:var(--eau-claire);background:var(--bleu-clair);color:var(--eau-claire);}
 .year-filter-btn.active{background:var(--eau-profonde);border-color:var(--eau-profonde);color:white;}
@@ -642,6 +652,46 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 
 /* ── CATÉGORIES APPÂTS ─── */
 .cat-block{margin-bottom:14px;transition:transform 0.15s,opacity 0.15s;border-top:3px solid transparent;}
+
+/* ── HEATMAP CALENDRIER ─── */
+.heatmap-wrap{overflow-x:auto;padding-bottom:4px;}
+.heatmap-grid{display:inline-flex;gap:3px;align-items:flex-end;}
+.heatmap-month{display:flex;flex-direction:column;gap:2px;}
+.heatmap-month-label{font-size:9px;color:var(--gris);text-align:center;margin-bottom:2px;font-family:'DM Sans',sans-serif;}
+.heatmap-weeks{display:flex;gap:2px;}
+.heatmap-day{width:11px;height:11px;border-radius:2px;background:#eef2f5;transition:transform 0.1s;cursor:default;flex-shrink:0;}
+body.dark .heatmap-day{background:#1a3060;}
+.heatmap-day.l1{background:#b3cff0;}
+.heatmap-day.l2{background:#6ea8e0;}
+.heatmap-day.l3{background:#2e6db4;}
+.heatmap-day.l4{background:#e8609a;}
+body.dark .heatmap-day.l1{background:#1a4070;}
+body.dark .heatmap-day.l2{background:#2a5898;}
+body.dark .heatmap-day.l3{background:#2e6db4;}
+body.dark .heatmap-day.l4{background:#e8609a;}
+.heatmap-day:hover{transform:scale(1.4);}
+.heatmap-legend{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:10px;color:var(--gris);}
+.heatmap-legend-cell{width:11px;height:11px;border-radius:2px;}
+/* ── MÉTÉO CORRÉLATION ─── */
+.meteo-corr-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+body.dark .meteo-corr-row{border-color:#1a3060;}
+.meteo-corr-row:last-child{border-bottom:none;}
+.meteo-corr-emoji{font-size:18px;width:28px;text-align:center;flex-shrink:0;}
+.meteo-corr-label{flex:1;color:var(--texte);}
+body.dark .meteo-corr-label{color:#e0e8f4;}
+.meteo-corr-bar-wrap{width:80px;background:#eef2f5;border-radius:4px;height:8px;flex-shrink:0;}
+body.dark .meteo-corr-bar-wrap{background:#1a3060;}
+.meteo-corr-bar{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--eau-claire),var(--rose));}
+.meteo-corr-pct{font-size:12px;font-weight:700;color:var(--eau-claire);min-width:36px;text-align:right;}
+/* ── MEILLEURE HEURE PAR ESPÈCE ─── */
+.espece-heure-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+body.dark .espece-heure-row{border-color:#1a3060;}
+.espece-heure-row:last-child{border-bottom:none;}
+.espece-heure-nom{font-family:'Playfair Display',serif;font-style:italic;color:var(--eau-profonde);flex:1;}
+body.dark .espece-heure-nom{color:#d0e0f8;}
+.espece-heure-val{font-weight:700;color:var(--rose);font-size:14px;}
+.espece-heure-detail{font-size:11px;color:var(--gris);}
+
 /* ── DRAG & DROP CATÉGORIES ─── */
 .cat-drag-handle{cursor:grab;font-size:18px;color:var(--gris);padding:2px 6px 2px 0;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;}
 .cat-drag-handle:active{cursor:grabbing;}
@@ -668,6 +718,24 @@ body.dark .cat-appat-nom{color:#e0e8f4;}
 .appat-cat-section{margin-bottom:10px;}
 .appat-cat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:5px;display:block;}
 
+
+
+/* ── INDICATEUR SAUVEGARDE ─── */
+#save-indicator{
+  position:fixed;bottom:80px;right:16px;
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:20px;
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;
+  pointer-events:none;z-index:300;
+  opacity:0;transition:opacity 0.3s;
+}
+#save-indicator.saving{background:#fff8e1;color:#b08000;opacity:1;}
+#save-indicator.saved{background:#e8f5e9;color:#2e7d32;opacity:1;}
+#save-indicator.error{background:#fce4ec;color:#c62828;opacity:1;}
+body.dark #save-indicator.saving{background:#332d00;color:#ffd54f;}
+body.dark #save-indicator.saved{background:#1b3a1b;color:#81c784;}
+body.dark #save-indicator.error{background:#3a1a1a;color:#ef9a9a;}
+@media(min-width:768px){#save-indicator{bottom:24px;right:24px;}}
 
 /* ── MODALE CONFIRMATION ─── */
 .confirm-wrap{display:none;position:fixed;inset:0;z-index:800;background:rgba(10,22,40,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;}
@@ -752,6 +820,13 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
         <button type="button" class="filter-pill active" onclick="setFilter('tous',this)">Toutes</button>
         <button type="button" class="filter-pill" onclick="setFilter('trophy',this)">🏆 Trophées</button>
         <button type="button" class="filter-pill" onclick="setFilter('capot',this)">🚫 Capots</button>
+      </div>
+      <div class="sort-bar" id="sort-bar">
+        <span class="sort-bar-label">Trier :</span>
+        <button type="button" class="sort-btn active" id="sort-date" onclick="setSort('date')">📅 Date</button>
+        <button type="button" class="sort-btn" id="sort-poids" onclick="setSort('poids')">⚖️ Poids</button>
+        <button type="button" class="sort-btn" id="sort-prises" onclick="setSort('prises')">🐟 Prises</button>
+        <button type="button" class="sort-btn" id="sort-lieu" onclick="setSort('lieu')">📍 Lieu</button>
       </div>
       <div class="cards-grid" id="journal-list"></div>
     </div>
@@ -1174,6 +1249,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
   </div>
 </div>
 
+<div id="save-indicator" role="status" aria-live="polite"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1269,16 +1345,41 @@ function dbDeleteSetting(key) {
   });
 }
 
+// ── Indicateur de sauvegarde ─────────────────────────────
+let _saveTimer = null;
+function showSaveIndicator(state, msg){
+  const el = document.getElementById('save-indicator');
+  if(!el) return;
+  el.className = state;
+  el.textContent = msg;
+  clearTimeout(_saveTimer);
+  if(state === 'saved' || state === 'error'){
+    _saveTimer = setTimeout(() => { el.style.opacity = '0'; el.className = ''; }, 2000);
+  }
+}
+
+async function _save(store, data, label){
+  showSaveIndicator('saving', '⏳ Sauvegarde…');
+  try {
+    await dbSaveAll(store, data);
+    showSaveIndicator('saved', '✅ Sauvegardé');
+  } catch(e) {
+    console.error('[DB] save error:', e);
+    showSaveIndicator('error', '❌ Erreur sauvegarde');
+    throw e;
+  }
+}
+
 // Alias pratiques
-async function saveEntries()    { await dbSaveAll(STORES.entries, entries); }
-async function saveSpots()      { await dbSaveAll(STORES.spots, spots); }
-async function saveCategories() { await dbSaveAll(STORES.categories, categories); }
+async function saveEntries()    { await _save(STORES.entries,    entries,    'entrées'); }
+async function saveSpots()      { await _save(STORES.spots,      spots,      'spots'); }
+async function saveCategories() { await _save(STORES.categories, categories, 'catégories'); }
 
 // ── STATE ─────────────────────────────────────────────────
 let entries    = [];
 let spots      = [];
 let categories = [];
-let currentFilter='tous', currentYear='tous', currentStars=0, selectedMeteo=[];
+let currentFilter='tous', currentYear='tous', currentSort='date', currentStars=0, selectedMeteo=[];
 let isTrophy=false, isRelache=false, isCapot=false;
 let currentPhotos = []; // Tableau de photos compressées (base64)
 let leafletMap=null, mapMarkers=[];
@@ -1930,7 +2031,19 @@ function renderJournal(){
   }
 
   const isMobile=window.innerWidth<768;
-  const sorties=groupEnSorties(filtered);
+  let sorties=groupEnSorties(filtered);
+  // Appliquer le tri
+  if(currentSort==='poids'){
+    sorties.sort((a,b)=>{
+      const pw=g=>Math.max(0,...g.filter(e=>e.poids!=null).map(e=>e.poids>100?e.poids/1000:e.poids));
+      return pw(b)-pw(a);
+    });
+  } else if(currentSort==='prises'){
+    sorties.sort((a,b)=>b.filter(e=>!e.capot).length - a.filter(e=>!e.capot).length);
+  } else if(currentSort==='lieu'){
+    sorties.sort((a,b)=>(a[0].lieu||'').localeCompare(b[0].lieu||'','fr'));
+  }
+  // 'date' : ordre naturel de groupEnSorties (déjà trié par date desc)
 
   list.innerHTML=sorties.map((prises,idx)=>{
     const ref=prises[0]; // Première prise du groupe pour les infos générales
@@ -2117,6 +2230,112 @@ function formatPoids(kg){
 }
 
 // ════════════════════════════════════════════════════════
+//  FONCTIONS STATS SUPPLÉMENTAIRES
+// ════════════════════════════════════════════════════════
+
+function buildHeatmap(entries){
+  // 52 semaines en arrière depuis aujourd'hui
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const startDay = new Date(today);
+  startDay.setDate(startDay.getDate() - 363); // ~52 semaines
+
+  // Compter prises par jour
+  const byDay = {};
+  entries.forEach(e => {
+    if(!e.date) return;
+    const k = e.date.slice(0,10);
+    byDay[k] = (byDay[k]||0) + 1;
+  });
+
+  // Grouper par mois pour affichage
+  const months = [];
+  let cur = new Date(startDay);
+  // Aller au lundi de la semaine de startDay
+  const dow = (cur.getDay()+6)%7; // 0=lundi
+  cur.setDate(cur.getDate() - dow);
+
+  let curMonth = -1;
+  let week = [];
+  let weeks = [];
+  let monthLabel = '';
+
+  while(cur <= today){
+    const m = cur.getMonth();
+    if(m !== curMonth){
+      if(weeks.length) months.push({label: monthLabel, weeks});
+      curMonth = m;
+      monthLabel = cur.toLocaleDateString('fr-FR',{month:'short'});
+      weeks = [];
+    }
+    if(week.length === 7){ weeks.push(week); week = []; }
+    const k = cur.toISOString().slice(0,10);
+    const n = byDay[k]||0;
+    const level = cur > today ? -1 : n===0?0:n===1?1:n<=3?2:n<=5?3:4;
+    week.push({k, n, level});
+    cur.setDate(cur.getDate()+1);
+  }
+  if(week.length){ while(week.length<7) week.push({k:'',n:0,level:-1}); weeks.push(week); }
+  if(weeks.length) months.push({label: monthLabel, weeks});
+
+  return `<div class="heatmap-grid">${months.map(mo=>`
+    <div class="heatmap-month">
+      <div class="heatmap-month-label">${mo.label}</div>
+      <div class="heatmap-weeks">${mo.weeks.map(wk=>`
+        <div style="display:flex;flex-direction:column;gap:2px">${wk.map(d=>
+          d.level<0
+            ? '<div class="heatmap-day" style="opacity:0"></div>'
+            : `<div class="heatmap-day${d.level>0?' l'+d.level:''}" title="${d.k?d.k+' — '+d.n+' prise(s)':''}"></div>`
+        ).join('')}</div>`).join('')}
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function buildHeureParEspece(prises){
+  // Pour chaque espèce : trouver l'heure où elle est le plus souvent prise
+  const sp = {};
+  prises.filter(e=>e.date&&e.espece).forEach(e=>{
+    const h = new Date(e.date).getHours();
+    if(!sp[e.espece]) sp[e.espece]=[];
+    sp[e.espece].push(h);
+  });
+  return Object.entries(sp)
+    .filter(([,arr])=>arr.length>=2)
+    .map(([espece,heures])=>{
+      const hCount={};
+      heures.forEach(h=>hCount[h]=(hCount[h]||0)+1);
+      const best=Object.entries(hCount).sort((a,b)=>b[1]-a[1])[0];
+      return {espece, heure:best[0], count:best[1], total:heures.length};
+    })
+    .sort((a,b)=>b.total-a.total)
+    .slice(0,8);
+}
+
+function buildMeteoCorr(entries){
+  // Par condition météo : taux de sorties avec ≥1 prise
+  const condStats={};
+  const sorties = [...new Map(entries.map(e=>[sortieKey(e),e])).values()];
+
+  sorties.forEach(ref=>{
+    const key=sortieKey(ref);
+    const groupe=entries.filter(e=>sortieKey(e)===key);
+    const aPrise=groupe.some(e=>!e.capot);
+    const meteo=[...new Set(groupe.flatMap(e=>e.meteo||[]))];
+    meteo.forEach(cond=>{
+      if(!condStats[cond]) condStats[cond]={ok:0,total:0};
+      condStats[cond].total++;
+      if(aPrise) condStats[cond].ok++;
+    });
+  });
+
+  return Object.entries(condStats)
+    .filter(([,v])=>v.total>=2)
+    .map(([cond,v])=>({cond, taux:Math.round(v.ok/v.total*100), n:v.total}))
+    .sort((a,b)=>b.taux-a.taux);
+}
+
+
+// ════════════════════════════════════════════════════════
 //  STATS & GRAPHIQUES
 // ════════════════════════════════════════════════════════
 function updateAllStats(){
@@ -2292,6 +2511,60 @@ function updateStats(){
       <div class="chart-wrap"><canvas id="chart-taux" width="600" height="180"></canvas></div>
     </div>`
   });
+
+  // Slide 7 : Carte de chaleur calendrier
+  slides.push({
+    label:'📆 Calendrier',
+    html:`<div class="stat-card">
+      <div class="stat-card-title">📆 Activité — 12 derniers mois</div>
+      <div class="heatmap-wrap">${buildHeatmap(entries)}</div>
+      <div class="heatmap-legend">
+        <span>Moins</span>
+        <div class="heatmap-legend-cell" style="background:#eef2f5"></div>
+        <div class="heatmap-legend-cell heatmap-day l1"></div>
+        <div class="heatmap-legend-cell heatmap-day l2"></div>
+        <div class="heatmap-legend-cell heatmap-day l3"></div>
+        <div class="heatmap-legend-cell heatmap-day l4"></div>
+        <span>Plus</span>
+      </div>
+    </div>`
+  });
+
+  // Slide 8 : Meilleure heure par espèce
+  const heureParEspece = buildHeureParEspece(prises);
+  if(heureParEspece.length){
+    slides.push({
+      label:'⏰ Heures',
+      html:`<div class="stat-card">
+        <div class="stat-card-title">⏰ Meilleure heure par espèce</div>
+        ${heureParEspece.map(({espece,heure,count,total})=>`
+          <div class="espece-heure-row">
+            <span class="espece-heure-nom">${espece}</span>
+            <span class="espece-heure-detail">${count}/${total} prises</span>
+            <span class="espece-heure-val">${heure}h</span>
+          </div>`).join('')}
+      </div>`
+    });
+  }
+
+  // Slide 9 : Corrélation météo / prises
+  const meteoCorrData = buildMeteoCorr(entries);
+  if(meteoCorrData.length){
+    slides.push({
+      label:'🌤 Météo',
+      html:`<div class="stat-card">
+        <div class="stat-card-title">🌤 Conditions favorables aux prises</div>
+        <p style="font-size:11px;color:var(--gris);margin-bottom:12px">Taux de réussite par condition météo (sorties avec ≥1 prise)</p>
+        ${meteoCorrData.map(({cond,taux,n})=>`
+          <div class="meteo-corr-row">
+            <span class="meteo-corr-emoji">${cond.split(' ')[0]}</span>
+            <span class="meteo-corr-label">${cond.split(' ').slice(1).join(' ')} <small style="color:var(--gris)">(${n} sorties)</small></span>
+            <div class="meteo-corr-bar-wrap"><div class="meteo-corr-bar" style="width:${taux}%"></div></div>
+            <span class="meteo-corr-pct">${taux}%</span>
+          </div>`).join('')}
+      </div>`
+    });
+  }
 
   // Rendu : carousel sur mobile, grille sur desktop
   if(isMobile){
