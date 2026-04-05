@@ -12,7 +12,7 @@
 <title>Carnet de Pêche</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
 <!-- Leaflet.js pour la carte interactive -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root {
@@ -87,7 +87,7 @@ body.dark .meteo-btn.selected-rose{background:rgba(232,96,154,0.25);color:#ffaac
 /* Modales */
 body.dark .edit-modal{background:#0f2147;color:#e0e8f4;}
 body.dark .edit-modal-handle{background:#2a4080;}
-body.dark .edit-modal h3{color:#d0e0f8;}
+body.dark .edit-modal h3,body.dark .edit-modal-title{color:#d0e0f8;}
 body.dark .export-modal{background:#0f2147;color:#e0e8f4;}
 body.dark .export-modal h3{color:#d0e0f8;}
 body.dark .export-cancel{background:#1a3060;color:#8a96b0;}
@@ -115,7 +115,7 @@ body.dark .entry-meta-item{color:#a0b8d8;}
 @keyframes vague{0%,100%{transform:translateX(0) scaleY(1)}50%{transform:translateX(4%) scaleY(1.2)}}
 .sidebar-logo{padding:32px 24px 20px;position:relative;z-index:1;}
 .sidebar-logo .icon{font-size:34px;display:block;margin-bottom:8px;filter:drop-shadow(0 2px 8px rgba(240,192,64,0.5));}
-.sidebar-logo h1{font-family:'Playfair Display',serif;font-size:19px;color:var(--sable);line-height:1.2;}
+.sidebar-logo h1,.sidebar-app-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--sable);line-height:1.2;}
 .sidebar-logo p{font-size:10px;color:var(--gris);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;}
 .sidebar-stats{display:flex;flex-direction:column;gap:8px;padding:0 16px 20px;position:relative;z-index:1;}
 .sidebar-stat{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
@@ -244,8 +244,8 @@ body.dark .prise-val{color:#8a96b0;}
 body.dark .edit-modal{background:#0f2147;color:#e0e8f4;}
 .edit-modal-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
 body.dark .edit-modal-handle{background:#2a4080;}
-.edit-modal h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--eau-profonde);margin-bottom:16px;}
-body.dark .edit-modal h3{color:#d0e0f8;}
+.edit-modal h3,.edit-modal-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--eau-profonde);margin-bottom:16px;}
+body.dark .edit-modal h3,body.dark .edit-modal-title{color:#d0e0f8;}
 
 /* ── MULTI PHOTO UPLOAD ─── */
 .photo-grid-upload{display:flex;flex-direction:column;gap:12px;}
@@ -532,7 +532,7 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .topbar{display:none;}
   .mobile-header{display:flex;align-items:center;justify-content:center;gap:8px;position:sticky;top:0;left:0;right:0;z-index:50;padding:12px 16px 8px;background:linear-gradient(135deg,var(--eau-profonde) 0%,var(--eau) 100%);}
   .mobile-header .icon{font-size:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
-  .mobile-header h1{font-family:'Playfair Display',serif;font-size:18px;color:var(--sable);}
+  .mobile-header h1,.mobile-header-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--sable);}
   .mobile-stats-bar{display:flex;gap:6px;position:sticky;top:52px;left:0;right:0;padding:8px 12px;background:var(--eau-profonde);z-index:49;}
   .mob-stat{flex:1;background:rgba(255,255,255,0.1);border-radius:8px;padding:6px 4px;text-align:center;}
   .mob-stat .num{font-family:'Playfair Display',serif;font-size:15px;color:var(--rose);display:block;line-height:1.2;}
@@ -685,7 +685,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
 <!-- MOBILE HEADER -->
 <div class="mobile-header">
   <span class="icon">🎣</span>
-  <h1>Carnet de Pêche</h1>
+  <p class="mobile-header-title">Carnet de Pêche</p>
 </div>
 <div class="mobile-stats-bar">
   <div class="mob-stat"><span class="num" id="m-total">0</span><span class="label">Sorties</span></div>
@@ -697,7 +697,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
 <aside class="sidebar">
   <div class="sidebar-logo">
     <span class="icon">🎣</span>
-    <h1>Carnet<br>de Pêche</h1>
+    <p class="sidebar-app-title">Carnet<br>de Pêche</p>
     <p>Journal du pêcheur</p>
   </div>
   <div class="sidebar-stats">
@@ -761,7 +761,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
           </div>
           <div class="form-group">
             <label class="form-label">⏱ Heure de fin (optionnel)</label>
-            <input type="time" class="form-input" id="f-heure-fin" placeholder="--:--">
+            <input type="time" class="form-input" id="f-heure-fin">
           </div>
           <div class="form-group">
             <label class="form-label">📋 Type de sortie</label>
@@ -1007,7 +1007,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
 <div class="edit-wrap" id="edit-wrap" onclick="closeEditOnOverlay(event)">
   <div class="edit-modal">
     <div class="edit-modal-handle"></div>
-    <h3>✏️ Modifier la prise</h3>
+    <h2 class="edit-modal-title">✏️ Modifier la prise</h2>
     <input type="hidden" id="edit-id">
     <div class="form-group">
       <label class="form-label">🐟 Espèce</label>
@@ -1134,7 +1134,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
   <div class="info-modal">
     <div class="info-logo">🎣</div>
     <h2>Carnet de Pêche</h2>
-    <span class="info-version">Version V 1.1</span>
+    <span class="info-version">Version V 1.1 stable</span>
     <div class="info-desc">Application personnelle de suivi<br>des sorties et prises de pêche</div>
     <div class="info-divider"></div>
     <div class="info-author" id="info-author-name">Bruno LARIVE</div>
@@ -3527,7 +3527,7 @@ function exportPDF(){
       </tr>`;
     }).join('')}
   </table>
-  <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.1</div>
+  <div class="footer">Carnet de Pêche Personnel — ${getPecheurNom()} © 2026 — V1.1 stable</div>
   </body></html>`;
 
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
