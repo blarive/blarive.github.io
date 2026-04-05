@@ -143,6 +143,11 @@ body.dark .entry-meta-item{color:#a0b8d8;}
 
 /* ── JOURNAL ─── */
 .journal-toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.year-filter-btn{flex-shrink:0;padding:9px 14px;border:1.5px solid #dde3f0;border-radius:10px;background:white;color:var(--texte);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.year-filter-btn:hover{border-color:var(--eau-claire);background:var(--bleu-clair);color:var(--eau-claire);}
+.year-filter-btn.active{background:var(--eau-profonde);border-color:var(--eau-profonde);color:white;}
+body.dark .year-filter-btn{background:#0f2147;border-color:#2a4080;color:#8a96b0;}
+body.dark .year-filter-btn.active{background:var(--eau-claire);border-color:var(--eau-claire);color:white;}
 .search-box{position:relative;flex:1;min-width:180px;}
 .search-box input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:white;color:var(--texte);transition:border-color 0.2s;}
 .search-box input:focus{border-color:var(--eau-claire);}
@@ -735,9 +740,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
     <div class="view active" id="view-journal">
       <div class="journal-toolbar">
         <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="renderJournal()"></div>
-        <select class="form-select" id="year-select" onchange="setYear(this.value)" style="width:auto;padding:9px 12px;font-size:13px;flex-shrink:0">
-          <option value="tous">Toutes les années</option>
-        </select>
+        <button type="button" id="year-btn" onclick="openYearPopup()" class="year-filter-btn">📅 <span id="year-btn-label">Toutes les années</span> ▾</button>
       </div>
       <div class="filter-pills" id="filter-pills-container">
         <button type="button" class="filter-pill active" onclick="setFilter('tous',this)">Toutes</button>
@@ -964,6 +967,17 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
       <button type="button" class="menu-popup-small" onclick="toggleDarkMode();closeMenu()" style="grid-column:1/-1">🌙 Mode sombre</button>
       <button type="button" class="menu-popup-small" onclick="openInfo();closeMenu()" style="grid-column:1/-1;opacity:0.75">ℹ️ À propos</button>
     </div>
+  </div>
+</div>
+
+<!-- POPUP FILTRE ANNÉE -->
+<div class="appat-cat-wrap" id="year-popup-wrap" onclick="closeYearPopupOnOverlay(event)">
+  <div class="appat-cat-modal">
+    <div class="appat-cat-handle"></div>
+    <div class="appat-cat-title">📅 Filtrer par année</div>
+    <div class="appat-cat-sub">Sélectionnez une période</div>
+    <div class="appat-cat-items" id="year-popup-items"></div>
+    <button type="button" class="appat-cat-close" onclick="closeYearPopup()">Fermer</button>
   </div>
 </div>
 
@@ -1486,7 +1500,37 @@ function setFilter(f,btn){
 
 function setYear(y){
   currentYear=y;
+  closeYearPopup();
+  const btn=document.getElementById('year-btn');
+  const lbl=document.getElementById('year-btn-label');
+  if(lbl) lbl.textContent=y==='tous'?'Toutes les années':y;
+  if(btn) btn.classList.toggle('active', y!=='tous');
   renderJournal();
+}
+
+function openYearPopup(){
+  const years=[...new Set(entries.filter(e=>e.date).map(e=>e.date.slice(0,4)))].sort((a,b)=>b-a);
+  const items=document.getElementById('year-popup-items');
+  if(!items) return;
+  items.innerHTML=[
+    `<button type="button" class="appat-cat-item${currentYear==='tous'?' selected':''}" onclick="setYear('tous')">Toutes les années</button>`,
+    ...years.map(y=>`<button type="button" class="appat-cat-item${currentYear===y?' selected':''}" onclick="setYear('${y}')">${y}</button>`)
+  ].join('');
+  const wrap=document.getElementById('year-popup-wrap');
+  wrap.style.display='';
+  wrap.classList.add('open');
+}
+
+function closeYearPopup(){
+  const el=document.getElementById('year-popup-wrap');
+  if(!el) return;
+  el.classList.remove('open');
+  el.style.display='none';
+  setTimeout(()=>{ el.style.display=''; },10);
+}
+
+function closeYearPopupOnOverlay(e){
+  if(e.target===document.getElementById('year-popup-wrap')) closeYearPopup();
 }
 
 function renderFilterPills(){
@@ -1504,11 +1548,10 @@ function renderFilterPills(){
 }
 
 function renderYearSelect(){
-  const sel=document.getElementById('year-select');
-  if(!sel) return;
-  const years=[...new Set(entries.filter(e=>e.date).map(e=>e.date.slice(0,4)))].sort((a,b)=>b-a);
-  sel.innerHTML=`<option value="tous">Toutes les années</option>`+
-    years.map(y=>`<option value="${y}"${currentYear===y?' selected':''}>${y}</option>`).join('');
+  const lbl=document.getElementById('year-btn-label');
+  if(lbl) lbl.textContent=currentYear==='tous'?'Toutes les années':currentYear;
+  const btn=document.getElementById('year-btn');
+  if(btn) btn.classList.toggle('active', currentYear!=='tous');
 }
 
 // ── POPUP MENU ──
