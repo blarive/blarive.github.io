@@ -562,21 +562,8 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:12px;
     padding:14px 0 4px;
   }
-  .stats-nav-btn{
-    width:40px;height:40px;
-    border-radius:50%;border:none;
-    background:linear-gradient(135deg,var(--eau-claire),var(--rose));
-    color:white;font-size:18px;
-    cursor:pointer;display:flex;align-items:center;justify-content:center;
-    box-shadow:0 2px 8px rgba(46,109,180,0.3);
-    transition:opacity 0.15s,transform 0.1s;
-    flex-shrink:0;
-  }
-  .stats-nav-btn:active{transform:scale(0.93);}
-  .stats-nav-btn:disabled{opacity:0.3;cursor:default;}
   .stats-nav-dots{display:flex;gap:6px;align-items:center;}
   .stats-nav-dot{
     width:7px;height:7px;border-radius:50%;
@@ -585,6 +572,7 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .stats-nav-dot.active{background:var(--rose);width:18px;border-radius:4px;}
   body.dark .stats-nav-dot{background:#2a4080;}
   body.dark .stats-nav-dot.active{background:var(--rose);}
+  .stats-carousel-wrap{touch-action:pan-y;user-select:none;}
   .stats-slide-label{
     font-size:10px;color:var(--gris);text-align:center;
     margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px;
@@ -2136,20 +2124,42 @@ function updateStats(){
   if(isMobile){
     el.innerHTML=`
       <div class="stats-slide-label" id="stats-slide-label">${slides[0].label}</div>
-      <div class="stats-carousel-wrap">
+      <div class="stats-carousel-wrap" id="stats-carousel-wrap">
         <div class="stats-carousel-track" id="stats-track">
           ${slides.map(s=>s.html).join('')}
         </div>
       </div>
       <div class="stats-nav">
-        <button type="button" class="stats-nav-btn" id="stats-prev" onclick="statsNav(-1)" disabled>◀</button>
         <div class="stats-nav-dots" id="stats-dots">
           ${slides.map((_,i)=>`<div class="stats-nav-dot${i===0?' active':''}" onclick="statsGoTo(${i})"></div>`).join('')}
         </div>
-        <button type="button" class="stats-nav-btn" id="stats-next" onclick="statsNav(1)">▶</button>
       </div>`;
     window._statsSlides=slides;
-    window._statsIdx=0; // toujours repartir à 0
+    window._statsIdx=0;
+    // Swipe tactile
+    const wrap=document.getElementById('stats-carousel-wrap');
+    let tsx=0, tactive=false, tdx=0;
+    wrap.addEventListener('touchstart',e=>{
+      tsx=e.touches[0].clientX; tactive=true; tdx=0;
+      document.getElementById('stats-track').style.transition='none';
+    },{passive:true});
+    wrap.addEventListener('touchmove',e=>{
+      if(!tactive) return;
+      tdx=e.touches[0].clientX-tsx;
+      const base=(window._statsIdx||0)*100;
+      const offset=base-(tdx/wrap.offsetWidth*100);
+      document.getElementById('stats-track').style.transform=`translateX(-${offset}%)`;
+    },{passive:true});
+    wrap.addEventListener('touchend',()=>{
+      if(!tactive) return;
+      tactive=false;
+      document.getElementById('stats-track').style.transition='';
+      if(Math.abs(tdx)>50){
+        statsNav(tdx<0?1:-1);
+      } else {
+        statsGoTo(window._statsIdx||0);
+      }
+    });
   } else {
     el.innerHTML=`
       <div class="stats-grid" style="display:grid;grid-template-columns:1fr;gap:14px">
@@ -2183,13 +2193,9 @@ function statsGoTo(idx){
   idx=Math.max(0,Math.min(idx,slides.length-1));
   window._statsIdx=idx;
   const track=document.getElementById('stats-track');
-  const prev=document.getElementById('stats-prev');
-  const next=document.getElementById('stats-next');
   const label=document.getElementById('stats-slide-label');
   const dots=document.querySelectorAll('.stats-nav-dot');
   if(track) track.style.transform=`translateX(-${idx*100}%)`;
-  if(prev) prev.disabled=(idx===0);
-  if(next) next.disabled=(idx===slides.length-1);
   if(label) label.textContent=slides[idx].label;
   dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
   // Attendre la fin de la transition CSS avant de redessiner
