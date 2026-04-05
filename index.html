@@ -641,7 +641,13 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 
 
 /* ── CATÉGORIES APPÂTS ─── */
-.cat-block{margin-bottom:14px;}
+.cat-block{margin-bottom:14px;transition:transform 0.15s,opacity 0.15s;border-top:3px solid transparent;}
+/* ── DRAG & DROP CATÉGORIES ─── */
+.cat-drag-handle{cursor:grab;font-size:18px;color:var(--gris);padding:2px 6px 2px 0;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;}
+.cat-drag-handle:active{cursor:grabbing;}
+.cat-block.dragging{opacity:0.4;transform:scale(0.98);}
+.cat-block.drag-over{border-top:3px solid var(--rose);margin-top:-3px;}
+
 .cat-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bleu-clair);border-radius:12px;margin-bottom:8px;}
 body.dark .cat-header{background:#1a3060;}
 .cat-title{font-size:13px;font-weight:700;color:var(--eau-profonde);flex:1;}
@@ -2664,9 +2670,10 @@ function renderAppatsPage(){
     </div>`;
 
   // Blocs par catégorie
-  const catsHtml=categories.map(cat=>`
-    <div class="stat-card cat-block" style="margin-bottom:14px">
+  const catsHtml=`<div id="cats-sortable">` + categories.map(cat=>`
+    <div class="stat-card cat-block" data-cat-id="${cat.id}" style="margin-bottom:14px">
       <div class="cat-header">
+        <span class="cat-drag-handle" aria-label="Réorganiser" title="Glisser pour réorganiser">⠿</span>
         <span class="cat-title">${cat.nom}</span>
         <button type="button" class="cat-del-btn" onclick="deleteCategorie(${cat.id})" title="Supprimer la catégorie">🗑</button>
       </div>
@@ -2698,7 +2705,8 @@ function renderAppatsPage(){
         </div>`).join('')}
     </div>`:'';
 
-  el.innerHTML=addCatHtml+catsHtml+statsHtml;
+  el.innerHTML=addCatHtml+catsHtml+'</div>'+statsHtml;
+  initCatDrag();
 }
 
 // ── GESTION CATÉGORIES ──────────────────────────────────
@@ -2750,6 +2758,139 @@ function deleteAppatFromCat(catId, nom){
   saveCategories().catch(e=>console.error('[DB] saveCategories:', e));
   renderAppatsPage(); renderAppatsForm();
   showToast('🗑 Appât supprimé');
+}
+
+// ════════════════════════════════════════════════════════
+//  DRAG & DROP CATÉGORIES (touch + mouse, sans librairie)
+// ════════════════════════════════════════════════════════
+function initCatDrag(){
+  const container = document.getElementById('cats-sortable');
+  if(!container) return;
+
+  let dragEl = null;      // élément en cours de drag
+  let placeholder = null; // div fantôme qui marque la position cible
+  let startY = 0;
+  let offsetY = 0;        // décalage doigt/souris par rapport au haut de l'élément
+  let clone = null;       // clone visuel flottant
+
+  function getBlocks(){ return [...container.querySelectorAll('.cat-block')]; }
+
+  function createClone(el){
+    const rect = el.getBoundingClientRect();
+    clone = el.cloneNode(true);
+    clone.style.cssText = [
+      'position:fixed',
+      'left:' + rect.left + 'px',
+      'top:' + rect.top + 'px',
+      'width:' + rect.width + 'px',
+      'z-index:9999',
+      'opacity:0.92',
+      'pointer-events:none',
+      'box-shadow:0 8px 32px rgba(0,0,0,0.22)',
+      'transition:none',
+      'border-radius:14px',
+      'margin:0'
+    ].join(';');
+    document.body.appendChild(clone);
+  }
+
+  function createPlaceholder(el){
+    placeholder = document.createElement('div');
+    placeholder.style.cssText = [
+      'height:' + el.offsetHeight + 'px',
+      'border-radius:14px',
+      'background:rgba(232,96,154,0.10)',
+      'border:2px dashed var(--rose)',
+      'margin-bottom:14px',
+      'transition:height 0.15s'
+    ].join(';');
+    el.parentNode.insertBefore(placeholder, el);
+  }
+
+  function moveClone(clientY){
+    if(!clone) return;
+    clone.style.top = (clientY - offsetY) + 'px';
+  }
+
+  function getTargetBlock(clientY){
+    return getBlocks().find(b => {
+      if(b === dragEl) return false;
+      const r = b.getBoundingClientRect();
+      return clientY < r.top + r.height / 2;
+    });
+  }
+
+  function onStart(el, clientY){
+    dragEl = el;
+    const rect = el.getBoundingClientRect();
+    offsetY = clientY - rect.top;
+    startY = clientY;
+    createClone(el);
+    createPlaceholder(el);
+    dragEl.classList.add('dragging');
+    // Empêcher le scroll pendant le drag sur mobile
+    document.body.style.overflow = 'hidden';
+  }
+
+  function onMove(clientY){
+    if(!dragEl) return;
+    moveClone(clientY);
+    const target = getTargetBlock(clientY);
+    if(target){
+      container.insertBefore(placeholder, target);
+    } else {
+      container.appendChild(placeholder);
+    }
+  }
+
+  function onEnd(){
+    if(!dragEl) return;
+    // Réinsérer l'élément à la place du placeholder
+    container.insertBefore(dragEl, placeholder);
+    placeholder.remove();
+    if(clone){ clone.remove(); clone = null; }
+    dragEl.classList.remove('dragging');
+    document.body.style.overflow = '';
+
+    // Mettre à jour l'ordre dans categories[]
+    const newOrder = getBlocks().map(b => parseInt(b.dataset.catId));
+    categories = newOrder.map(id => categories.find(c => c.id === id)).filter(Boolean);
+    saveCategories().catch(e => console.error('[DB] saveCategories:', e));
+    renderAppatsForm();
+
+    dragEl = null;
+    placeholder = null;
+  }
+
+  // ── Attacher les listeners sur chaque poignée ──────────
+  container.querySelectorAll('.cat-drag-handle').forEach(handle => {
+    const block = handle.closest('.cat-block');
+
+    // Mouse
+    handle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      onStart(block, e.clientY);
+      function onMouseMove(ev){ onMove(ev.clientY); }
+      function onMouseUp(){ onEnd(); document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+
+    // Touch
+    handle.addEventListener('touchstart', e => {
+      e.preventDefault();
+      onStart(block, e.touches[0].clientY);
+    }, { passive: false });
+  });
+
+  container.addEventListener('touchmove', e => {
+    if(!dragEl) return;
+    e.preventDefault();
+    onMove(e.touches[0].clientY);
+  }, { passive: false });
+
+  container.addEventListener('touchend', () => { if(dragEl) onEnd(); });
+  container.addEventListener('touchcancel', () => { if(dragEl) onEnd(); });
 }
 
 // ════════════════════════════════════════════════════════
