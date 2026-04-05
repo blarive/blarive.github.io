@@ -1339,6 +1339,8 @@ async function init(){
   renderSpotsForm(); renderSpotsPage();
   renderAppatsForm();
   updatePhotoThumbList();
+  // Charger le handle de sauvegarde (silencieux, sans popup)
+  loadBackupHandle().catch(()=>{});
 }
 
 // ════════════════════════════════════════════════════════
@@ -1805,6 +1807,7 @@ function saveEntry(){
   };
   entries.unshift(entry);
   saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
+  doBackup(true).catch(()=>{}); // sauvegarde auto silencieuse
   resetForm(); updateAllStats();
   showToast(isCapot?'😔 Capot enregistré…':'🎣 Sortie enregistrée !');
   switchView('journal'); renderJournal();
@@ -1876,6 +1879,7 @@ function deleteEntry(id){
     onConfirm: () => {
       entries=entries.filter(e=>e.id!==id);
       saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
+      doBackup(true).catch(()=>{});
       renderJournal(); updateAllStats();
       showToast('🗑 Prise supprimée');
     }
@@ -1893,6 +1897,7 @@ function deleteSortie(ids){
       const set=new Set(ids);
       entries=entries.filter(e=>!set.has(e.id));
       saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
+      doBackup(true).catch(()=>{});
       renderJournal(); updateAllStats();
       showToast('🗑 Sortie supprimée');
     }
@@ -3029,13 +3034,152 @@ function saveEditEntry(){
 // ════════════════════════════════════════════════════════
 //  PARAMÈTRES — personnalisation du nom
 // ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+//  SAUVEGARDE AUTOMATIQUE (File System Access API)
+// ════════════════════════════════════════════════════════
+
+const BACKUP_FILES = ['carnetpeche-1.json','carnetpeche-2.json','carnetpeche-3.json'];
+let _backupDirHandle = null; // handle du dossier choisi, chargé depuis IndexedDB
+
+// ── Persistance du handle dans IndexedDB ──
+async function saveBackupHandle(handle){
+  try { await dbSetSetting('backup-dir-handle', handle); } catch(e){}
+}
+async function loadBackupHandle(){
+  try {
+    const h = await dbGetSetting('backup-dir-handle');
+    if(h && typeof h.queryPermission === 'function'){
+      // Vérifier que la permission est encore valide
+      const perm = await h.queryPermission({ mode:'readwrite' });
+      if(perm === 'granted'){ _backupDirHandle = h; return h; }
+      // Tenter de la regagner silencieusement (échoue sans geste utilisateur)
+      const req = await h.requestPermission({ mode:'readwrite' }).catch(()=>'denied');
+      if(req === 'granted'){ _backupDirHandle = h; return h; }
+    }
+  } catch(e){}
+  _backupDirHandle = null;
+  return null;
+}
+
+// ── Choisir le dossier ──
+async function chooseBackupFolder(){
+  if(!('showDirectoryPicker' in window)){
+    showToast('❌ Non supporté sur ce navigateur');
+    return false;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({
+      id:'carnetpeche-backup',
+      mode:'readwrite',
+      startIn:'documents'
+    });
+    _backupDirHandle = handle;
+    await saveBackupHandle(handle);
+    await dbSetSetting('backup-slot', 0);
+    showToast(`📁 Dossier "${handle.name}" configuré !`);
+    renderParametresPage();
+    // Faire une première sauvegarde immédiatement
+    await doBackup(true);
+    return true;
+  } catch(e){
+    if(e.name !== 'AbortError') showToast('❌ Erreur accès dossier');
+    return false;
+  }
+}
+
+// ── Rotation des 3 fichiers ──
+async function doBackup(silent=false){
+  if(!_backupDirHandle) return;
+  try {
+    // Vérifier/redemander permission (nécessaire après veille sur mobile)
+    const perm = await _backupDirHandle.requestPermission({ mode:'readwrite' });
+    if(perm !== 'granted'){ console.warn('[Backup] Permission refusée'); return; }
+
+    // Déterminer le slot suivant (0, 1, 2 en rotation)
+    let slot = 0;
+    try { slot = (await dbGetSetting('backup-slot')) || 0; } catch(e){}
+    slot = ((parseInt(slot)||0) + 1) % 3;
+    await dbSetSetting('backup-slot', slot);
+
+    const filename = BACKUP_FILES[slot];
+    const data = {
+      version: 2,
+      backupDate: new Date().toISOString(),
+      slot: slot + 1,
+      entries,
+      spots,
+      categories
+    };
+
+    // Écrire le fichier (écrase le précédent du même slot)
+    const fh = await _backupDirHandle.getFileHandle(filename, { create:true });
+    const writable = await fh.createWritable();
+    await writable.write(JSON.stringify(data, null, 2));
+    await writable.close();
+
+    if(!silent) showToast(`💾 Sauvegarde ${slot+1}/3 — ${filename}`);
+    console.log(`[Backup] ${filename} écrit`);
+
+    // Rafraîchir l'UI paramètres si visible
+    const pv = document.getElementById('view-parametres');
+    if(pv && pv.classList.contains('active')) renderParametresPage();
+
+  } catch(e){
+    console.warn('[Backup] Erreur :', e);
+    if(!silent) showToast('❌ Erreur sauvegarde');
+  }
+}
+
+// ── Réinitialiser la config sauvegarde ──
+async function clearBackupConfig(){
+  _backupDirHandle = null;
+  try { await dbDeleteSetting('backup-dir-handle'); } catch(e){}
+  try { await dbDeleteSetting('backup-slot'); } catch(e){}
+  renderParametresPage();
+  showToast('🗑 Configuration sauvegarde supprimée');
+}
+
+// ── Infos sur les sauvegardes existantes ──
+async function getBackupInfo(){
+  if(!_backupDirHandle) return null;
+  try {
+    const perm = await _backupDirHandle.queryPermission({ mode:'readwrite' });
+    if(perm !== 'granted') return null;
+    const files = [];
+    for(const name of BACKUP_FILES){
+      try {
+        const fh = await _backupDirHandle.getFileHandle(name);
+        const file = await fh.getFile();
+        files.push({ name, date: new Date(file.lastModified), size: Math.round(file.size/1024) });
+      } catch(e){ files.push({ name, date:null, size:0 }); }
+    }
+    return files;
+  } catch(e){ return null; }
+}
+
 function getPecheurNom(){
   return localStorage.getItem('pecheur-nom')||'Bruno LARIVE';
 }
 
-function renderParametresPage(){
+async function renderParametresPage(){
   const el=document.getElementById('parametres-content'); if(!el) return;
   const nom=getPecheurNom();
+
+  // Infos sauvegarde
+  const hasHandle = !!_backupDirHandle;
+  const backupInfo = hasHandle ? await getBackupInfo() : null;
+  const backupSupported = 'showDirectoryPicker' in window;
+
+  const backupFilesHtml = backupInfo ? backupInfo.map(f=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px">
+      <span style="font-size:16px">📄</span>
+      <span style="flex:1;color:var(--texte);font-weight:500">${f.name}</span>
+      ${f.date
+        ? `<span style="color:var(--gris)">${f.date.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} ${f.date.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>
+           <span style="color:var(--gris);min-width:40px;text-align:right">${f.size} Ko</span>`
+        : `<span style="color:var(--gris);font-style:italic">vide</span>`}
+    </div>`).join('') : '';
+
   el.innerHTML=`
     <div class="stat-card" style="margin-bottom:14px">
       <div class="stat-card-title">👤 Identité du pêcheur</div>
@@ -3052,6 +3196,37 @@ function renderParametresPage(){
         Aperçu : <strong>${nom}</strong> — Carnet de Pêche Personnel
       </div>
     </div>
+
+    <div class="stat-card" style="margin-bottom:14px">
+      <div class="stat-card-title">💾 Sauvegarde automatique</div>
+      ${!backupSupported ? `
+        <div style="padding:14px;background:#fff8f0;border-radius:10px;border:1px solid #fcd">
+          <div style="font-size:13px;color:#993c1d;font-weight:600">⚠️ Non disponible sur ce navigateur</div>
+          <div style="font-size:12px;color:var(--gris);margin-top:4px">Utilisez Chrome ou Edge sur desktop/Android. Sur iOS, utilisez l'export JSON manuel.</div>
+        </div>` : hasHandle ? `
+        <div style="padding:12px;background:var(--bleu-clair);border-radius:10px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-size:20px">📁</span>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--eau-profonde)">${_backupDirHandle.name}</div>
+              <div style="font-size:11px;color:var(--gris)">Sauvegarde automatique active — rotation sur 3 fichiers</div>
+            </div>
+          </div>
+          ${backupFilesHtml}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" onclick="doBackup()" style="flex:1;padding:10px 14px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px">💾 Sauvegarder maintenant</button>
+          <button type="button" onclick="chooseBackupFolder()" style="padding:10px 14px;background:var(--bleu-clair);color:var(--eau-claire);border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;white-space:nowrap">📁 Changer</button>
+          <button type="button" onclick="clearBackupConfig()" style="padding:10px 14px;background:#fee;color:var(--rouge);border:1px solid #fcc;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;white-space:nowrap">✕</button>
+        </div>` : `
+        <div style="padding:14px;background:var(--bleu-clair);border-radius:10px;margin-bottom:12px;font-size:13px;color:var(--eau-claire);line-height:1.6">
+          Choisissez un dossier sur votre appareil. L'application y écrira automatiquement jusqu'à <strong>3 fichiers</strong> en rotation — le plus ancien est écrasé à chaque sauvegarde.
+        </div>
+        <button type="button" onclick="chooseBackupFolder()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px">
+          📁 Choisir le dossier de sauvegarde
+        </button>`}
+    </div>
+
     <div class="stat-card" style="margin-bottom:14px">
       <div class="stat-card-title">🎨 Apparence</div>
       <div class="settings-row">
