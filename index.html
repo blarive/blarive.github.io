@@ -693,6 +693,38 @@ body.dark .espece-heure-nom{color:#d0e0f8;}
 .espece-heure-detail{font-size:11px;color:var(--gris);}
 
 
+
+/* ── MODE OFFLINE ─── */
+#offline-badge{
+  display:none;align-items:center;gap:5px;
+  padding:5px 11px;border-radius:20px;
+  background:#fff3cd;color:#856404;
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;
+  border:1px solid #ffc107;
+  animation:fadeIn 0.3s ease;
+}
+body.dark #offline-badge{background:#332b00;color:#ffd54f;border-color:#997300;}
+#offline-badge.visible{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+
+/* ── PULL TO REFRESH ─── */
+#ptr-indicator{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  height:0;overflow:hidden;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--gris);
+  transition:height 0.2s;
+  background:var(--bleu-clair);
+  border-radius:12px;
+  margin-bottom:0;
+}
+body.dark #ptr-indicator{background:#1a3060;}
+#ptr-indicator.pulling{height:44px;margin-bottom:10px;}
+#ptr-indicator.refreshing{height:44px;margin-bottom:10px;color:var(--eau-claire);}
+#ptr-spinner{display:inline-block;transition:transform 0.2s;}
+#ptr-indicator.refreshing #ptr-spinner{animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 /* ── VALIDATION FORMULAIRE ─── */
 .form-input.invalid,.form-select.invalid,.espece-display.invalid{border-color:var(--rouge)!important;background:#fff5f5;}
 body.dark .form-input.invalid,body.dark .form-select.invalid,body.dark .espece-display.invalid{background:#2a1010;}
@@ -808,6 +840,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
   <div class="topbar">
     <div class="topbar-title" id="topbar-title"><small>Mes sorties</small>Journal de pêche</div>
     <div style="display:flex;gap:8px;align-items:center">
+      <span id="offline-badge" role="status" aria-live="polite">📵 Hors ligne</span>
       <button type="button" class="btn-secondary" onclick="toggleDarkMode()" id="dark-btn" title="Mode sombre">🌙</button>
       <button type="button" class="btn-secondary" onclick="exportData()">📤 Exporter</button>
       <button type="button" class="btn-secondary" onclick="document.getElementById('import-file').click()">📥 Importer</button>
@@ -836,6 +869,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
         <button type="button" class="sort-btn" id="sort-prises" onclick="setSort('prises')">🐟 Prises</button>
         <button type="button" class="sort-btn" id="sort-lieu" onclick="setSort('lieu')">📍 Lieu</button>
       </div>
+      <div id="ptr-indicator" aria-live="polite"><span id="ptr-spinner">↓</span> <span id="ptr-label">Tirer pour rafraîchir</span></div>
       <div class="cards-grid" id="journal-list"></div>
     </div>
 
@@ -1407,6 +1441,196 @@ const topbarTitles={
 };
 
 // ════════════════════════════════════════════════════════
+//  MODE OFFLINE
+// ════════════════════════════════════════════════════════
+function updateOnlineStatus(){
+  const badge = document.getElementById('offline-badge');
+  if(!badge) return;
+  if(navigator.onLine){
+    badge.classList.remove('visible');
+  } else {
+    badge.classList.add('visible');
+  }
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+
+// ════════════════════════════════════════════════════════
+//  PULL TO REFRESH
+// ════════════════════════════════════════════════════════
+(function initPTR(){
+  let startY = 0, currentY = 0, pulling = false, triggered = false;
+  const THRESHOLD = 72; // px à tirer avant déclenchement
+
+  function getIndicator(){ return document.getElementById('ptr-indicator'); }
+  function getLabel(){ return document.getElementById('ptr-label'); }
+  function getSpinner(){ return document.getElementById('ptr-spinner'); }
+
+  function isJournalActive(){
+    const v = document.getElementById('view-journal');
+    return v && v.classList.contains('active');
+  }
+
+  function canPull(){
+    // Seulement sur le journal, seulement si on est en haut de page
+    if(!isJournalActive()) return false;
+    const scrollTop = document.querySelector('.page-content')?.scrollTop || window.scrollY;
+    return scrollTop <= 0;
+  }
+
+  document.addEventListener('touchstart', e => {
+    if(!canPull()) return;
+    startY = e.touches[0].clientY;
+    pulling = false;
+    triggered = false;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if(!canPull() && !pulling) return;
+    currentY = e.touches[0].clientY;
+    const dist = currentY - startY;
+    if(dist <= 0) return;
+    pulling = true;
+    const ind = getIndicator();
+    const lbl = getLabel();
+    const spn = getSpinner();
+    if(!ind) return;
+    const progress = Math.min(dist / THRESHOLD, 1);
+    if(dist < THRESHOLD){
+      ind.classList.add('pulling');
+      ind.classList.remove('refreshing');
+      if(spn) spn.style.transform = `rotate(${progress * 180}deg)`;
+      if(lbl) lbl.textContent = 'Tirer pour rafraîchir';
+    } else {
+      if(!triggered){ triggered = true; haptic('light'); }
+      ind.classList.add('pulling');
+      if(spn) spn.style.transform = 'rotate(180deg)';
+      if(lbl) lbl.textContent = 'Relâcher pour rafraîchir';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if(!pulling) return;
+    pulling = false;
+    const ind = getIndicator();
+    if(!ind) return;
+    if(triggered){
+      ind.classList.add('refreshing');
+      ind.classList.remove('pulling');
+      const lbl = getLabel();
+      const spn = getSpinner();
+      if(lbl) lbl.textContent = 'Rafraîchissement…';
+      if(spn) spn.style.transform = '';
+      haptic('medium');
+      // Recharger depuis IndexedDB
+      dbGetAll(STORES.entries).then(loaded => {
+        entries = loaded.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+        renderJournal();
+        updateAllStats();
+        showToast('✅ Journal mis à jour');
+      }).catch(() => showToast('❌ Erreur de chargement')).finally(() => {
+        setTimeout(() => {
+          ind.classList.remove('refreshing','pulling');
+        }, 400);
+      });
+    } else {
+      ind.classList.remove('pulling','refreshing');
+      const spn = getSpinner();
+      if(spn) spn.style.transform = '';
+    }
+    triggered = false;
+  }, { passive: true });
+})();
+
+
+// ════════════════════════════════════════════════════════
+//  COMPRESSION DES ANCIENNES PHOTOS
+// ════════════════════════════════════════════════════════
+
+// Recompresser un dataURL base64 existant vers une qualité inférieure
+function recompressDataUrl(dataUrl, maxWidth, quality){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if(w > maxWidth){ h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+// Estimer la taille d'un dataUrl en Ko
+function dataUrlSizeKo(dataUrl){
+  // base64 encode ~1.37× le binaire
+  const base64 = dataUrl.split(',')[1] || '';
+  return Math.round(base64.length * 0.75 / 1024);
+}
+
+async function compressOldPhotos(){
+  const SIX_MONTHS_MS = 6 * 30 * 24 * 3600 * 1000;
+  const cutoff = Date.now() - SIX_MONTHS_MS;
+  const OLD_MAX_W = 600;
+  const OLD_QUALITY = 0.45;
+  const MIN_SIZE_KO = 30; // Ne pas recompresser si déjà < 30 Ko
+
+  let totalBefore = 0, totalAfter = 0, count = 0;
+  let modified = false;
+
+  for(const entry of entries){
+    if(!entry.photos || !entry.photos.length) continue;
+    // Entrée ancienne ?
+    const entryDate = entry.date ? new Date(entry.date).getTime() : 0;
+    if(entryDate > cutoff) continue;
+
+    const newPhotos = [];
+    for(const photo of entry.photos){
+      const sizeBefore = dataUrlSizeKo(photo);
+      totalBefore += sizeBefore;
+      if(sizeBefore < MIN_SIZE_KO){
+        newPhotos.push(photo); // déjà petite
+        totalAfter += sizeBefore;
+        continue;
+      }
+      try {
+        const recompressed = await recompressDataUrl(photo, OLD_MAX_W, OLD_QUALITY);
+        const sizeAfter = dataUrlSizeKo(recompressed);
+        // N'utiliser la recompression que si elle réduit réellement
+        if(sizeAfter < sizeBefore * 0.9){
+          newPhotos.push(recompressed);
+          totalAfter += sizeAfter;
+          count++;
+          modified = true;
+        } else {
+          newPhotos.push(photo);
+          totalAfter += sizeBefore;
+        }
+      } catch(e){
+        newPhotos.push(photo);
+        totalAfter += sizeBefore;
+      }
+    }
+    entry.photos = newPhotos;
+  }
+
+  if(modified){
+    await saveEntries();
+    const saved = Math.round((totalBefore - totalAfter));
+    showToast(`🗜 ${count} photo(s) recompressée(s) — ${saved > 0 ? saved + ' Ko libérés' : 'optimisé'}`);
+  } else {
+    showToast('✅ Aucune compression nécessaire');
+  }
+  return { count, totalBefore, totalAfter };
+}
+
+
+// ════════════════════════════════════════════════════════
 //  RETOUR HAPTIQUE (Vibration API — W3C)
 // ════════════════════════════════════════════════════════
 function haptic(type){
@@ -1457,6 +1681,7 @@ async function init(){
     console.error('[DB] Erreur ouverture IndexedDB:', err);
     showToast('⚠️ Erreur base de données');
   }
+  updateOnlineStatus();
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('f-date').value=now.toISOString().slice(0,16);
   applyLuneAuto();
