@@ -2140,7 +2140,7 @@ function updateStats(){
         <button type="button" class="stats-nav-btn" id="stats-next" onclick="statsNav(1)">▶</button>
       </div>`;
     window._statsSlides=slides;
-    window._statsIdx=0;
+    window._statsIdx=0; // toujours repartir à 0
   } else {
     el.innerHTML=`
       <div class="stats-grid" style="display:grid;grid-template-columns:1fr;gap:14px">
@@ -2149,10 +2149,16 @@ function updateStats(){
   }
 
   setTimeout(()=>{
-    drawMoisChart(moisData);
-    drawTauxChart(moisData);
-    if(sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
-  }, 50);
+    const moisData=getMoisData();
+    const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
+    const cm=document.getElementById('chart-mois');
+    const ct=document.getElementById('chart-taux');
+    const cp=document.getElementById('chart-pie');
+    if(cm&&cm.offsetWidth>0){ cm.width=cm.offsetWidth; cm.height=cm.offsetHeight||180; drawMoisChart(moisData); }
+    if(ct&&ct.offsetWidth>0){ ct.width=ct.offsetWidth; ct.height=ct.offsetHeight||180; drawTauxChart(moisData); }
+    if(cp&&cp.offsetWidth>0&&sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
+    // Sur mobile : les canvas de slides non visibles ont offsetWidth=0, on les dessinera à la navigation
+  }, 80);
 }
 
 // ── CAROUSEL STATS (mobile) ──────────────────────────────
@@ -2177,20 +2183,24 @@ function statsGoTo(idx){
   if(next) next.disabled=(idx===slides.length-1);
   if(label) label.textContent=slides[idx].label;
   dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
-  // Redessiner les graphiques si on navigue vers une slide avec canvas
+  // Attendre la fin de la transition CSS avant de redessiner
   setTimeout(()=>{
     const moisData=getMoisData();
-    if(document.getElementById('chart-mois')) drawMoisChart(moisData);
-    if(document.getElementById('chart-taux')) drawTauxChart(moisData);
-    if(document.getElementById('chart-pie')){
+    const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
+    const cm=document.getElementById('chart-mois');
+    const ct=document.getElementById('chart-taux');
+    const cp=document.getElementById('chart-pie');
+    // Forcer la taille du canvas à celle de son conteneur avant de dessiner
+    if(cm&&cm.offsetWidth>0){ cm.width=cm.offsetWidth; cm.height=cm.offsetHeight||180; drawMoisChart(moisData); }
+    if(ct&&ct.offsetWidth>0){ ct.width=ct.offsetWidth; ct.height=ct.offsetHeight||180; drawTauxChart(moisData); }
+    if(cp&&cp.offsetWidth>0){
       const prises=entries.filter(e=>!e.capot);
       const sp={};prises.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+(e.nbPoissons||1);});
       const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
       const total=Object.values(sp).reduce((a,b)=>a+b,0);
-      const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
       if(sorted.length) drawPieChart(sorted,total,PIE_COLORS);
     }
-  },60);
+  }, 380); // après la transition CSS de 350ms
 }
 
 function getMoisData(){
@@ -3228,7 +3238,7 @@ window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJou
 //  SERVICE WORKER — version par date de déploiement
 //  ⚠️  Changez BUILD_DATE à chaque déploiement GitHub
 // ════════════════════════════════════════════════════════
-const BUILD_DATE = '20260404'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
+const BUILD_DATE = '20260405'; // Format YYYYMMDD — à mettre à jour à chaque déploiement
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
