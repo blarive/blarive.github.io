@@ -2578,7 +2578,8 @@ function buildHeatmap(entries){
   const today = new Date();
   today.setHours(0,0,0,0);
   const startDay = new Date(today);
-  startDay.setDate(startDay.getDate() - 363); // ~52 semaines
+  startDay.setFullYear(startDay.getFullYear() - 1);
+  startDay.setDate(1); // 1er du mois il y a 12 mois
 
   // Compter prises par jour
   const byDay = {};
