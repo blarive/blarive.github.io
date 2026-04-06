@@ -8,7 +8,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # nécessaire pour pousser sur gh-pages
+      contents: write
 
     steps:
       - name: Checkout
@@ -28,3 +28,4 @@ jobs:
           publish_dir: ./
           publish_branch: gh-pages
           exclude_assets: '.github,*.md,*.yml'
+          include_files: '.well-known/assetlinks.json'
