@@ -441,8 +441,8 @@ body.dark .cmp-label{color:#e0e8f4;}
 .record-value{font-family:'Playfair Display',serif;font-size:20px;color:var(--rose);}
 
 /* ── GRAPHIQUES ─── */
-.chart-wrap{position:relative;width:100%;height:180px;margin-top:8px;}
-canvas.stat-chart{width:100%!important;height:100%!important;}
+.chart-wrap{position:relative;width:100%;height:180px;margin-top:8px;overflow:hidden;}
+.chart-wrap svg{display:block;width:100%;height:100%;}
 .chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
 .chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gris);}
 .chart-legend-dot{width:10px;height:10px;border-radius:50%;}
@@ -654,12 +654,12 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 .cat-block{margin-bottom:14px;transition:transform 0.15s,opacity 0.15s;border-top:3px solid transparent;}
 
 /* ── HEATMAP CALENDRIER ─── */
-.heatmap-wrap{overflow-x:auto;padding-bottom:4px;}
-.heatmap-grid{display:inline-flex;gap:4px;align-items:flex-start;}
-.heatmap-month{display:flex;flex-direction:column;gap:0;}
-.heatmap-month-label{font-size:9px;color:var(--gris);text-align:center;margin-bottom:4px;font-family:'DM Sans',sans-serif;white-space:nowrap;}
-.heatmap-weeks{display:flex;gap:2px;align-items:flex-start;}
-.heatmap-day{width:11px;height:11px;border-radius:2px;background:#eef2f5;transition:transform 0.1s;cursor:default;flex-shrink:0;}
+.heatmap-wrap{overflow-x:auto;padding-bottom:6px;}
+.heatmap-grid{display:inline-flex;gap:6px;align-items:flex-start;padding-top:2px;}
+.heatmap-month{display:flex;flex-direction:column;align-items:flex-start;gap:0;}
+.heatmap-month-label{font-size:9px;color:var(--gris);margin-bottom:4px;font-family:'DM Sans',sans-serif;white-space:nowrap;line-height:1;}
+.heatmap-weeks{display:flex;flex-direction:row;gap:2px;align-items:flex-start;}
+.heatmap-day{width:11px;height:11px;border-radius:2px;background:#eef2f5;transition:transform 0.1s;cursor:default;flex-shrink:0;display:block;}
 body.dark .heatmap-day{background:#1a3060;}
 .heatmap-day.l1{background:#b3cff0;}
 .heatmap-day.l2{background:#6ea8e0;}
@@ -2809,7 +2809,7 @@ function updateStats(){
     label:'📅 Activité',
     html:`<div class="stat-card">
       <div class="stat-card-title">📅 Sorties par mois (12 mois)</div>
-      <div class="chart-wrap"><canvas id="chart-mois" width="600" height="180"></canvas></div>
+      <div class="chart-wrap" id="chart-mois"></div>
     </div>`
   });
 
@@ -2820,7 +2820,7 @@ function updateStats(){
       html:`<div class="stat-card">
         <div class="stat-card-title">🥧 Répartition par espèce</div>
         <div class="pie-wrap">
-          <div class="pie-canvas-wrap"><canvas id="chart-pie" width="160" height="160"></canvas></div>
+          <div class="pie-canvas-wrap" id="chart-pie"></div>
           <div class="pie-legend">
             ${sorted.slice(0,8).map(([s,c],i)=>`
               <div class="pie-legend-item">
@@ -2872,7 +2872,7 @@ function updateStats(){
     label:'🎯 Taux',
     html:`<div class="stat-card">
       <div class="stat-card-title">🎯 Taux de réussite par mois</div>
-      <div class="chart-wrap"><canvas id="chart-taux" width="600" height="180"></canvas></div>
+      <div class="chart-wrap" id="chart-taux"></div>
     </div>`
   });
 
@@ -2977,17 +2977,13 @@ function updateStats(){
       </div>`;
   }
 
-  setTimeout(()=>{
-    const moisData=getMoisData();
-    const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
-    const cm=document.getElementById('chart-mois');
-    const ct=document.getElementById('chart-taux');
-    const cp=document.getElementById('chart-pie');
-    if(cm&&cm.offsetWidth>0){ cm.width=cm.offsetWidth; cm.height=cm.offsetHeight||180; drawMoisChart(moisData); }
-    if(ct&&ct.offsetWidth>0){ ct.width=ct.offsetWidth; ct.height=ct.offsetHeight||180; drawTauxChart(moisData); }
-    if(cp&&cp.offsetWidth>0&&sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
-    // Sur mobile : les canvas de slides non visibles ont offsetWidth=0, on les dessinera à la navigation
-  }, 80);
+  setTimeout(function(){
+    var moisData=getMoisData();
+    var PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
+    drawMoisChart(moisData);
+    drawTauxChart(moisData);
+    if(sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
+  }, 50);
 }
 
 // ── CAROUSEL STATS (mobile) ──────────────────────────────
@@ -3009,160 +3005,160 @@ function statsGoTo(idx){
   if(label) label.textContent=slides[idx].label;
   dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
   // Attendre la fin de la transition CSS avant de redessiner
-  setTimeout(()=>{
-    const moisData=getMoisData();
-    const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
-    const cm=document.getElementById('chart-mois');
-    const ct=document.getElementById('chart-taux');
-    const cp=document.getElementById('chart-pie');
-    // Forcer la taille du canvas à celle de son conteneur avant de dessiner
-    if(cm&&cm.offsetWidth>0){ cm.width=cm.offsetWidth; cm.height=cm.offsetHeight||180; drawMoisChart(moisData); }
-    if(ct&&ct.offsetWidth>0){ ct.width=ct.offsetWidth; ct.height=ct.offsetHeight||180; drawTauxChart(moisData); }
-    if(cp&&cp.offsetWidth>0){
-      const prises=entries.filter(e=>!e.capot);
-      const sp={};prises.forEach(e=>{sp[e.espece]=(sp[e.espece]||0)+(e.nbPoissons||1);});
-      const sorted=Object.entries(sp).sort((a,b)=>b[1]-a[1]);
-      const total=Object.values(sp).reduce((a,b)=>a+b,0);
-      if(sorted.length) drawPieChart(sorted,total,PIE_COLORS);
-    }
-  }, 380); // après la transition CSS de 350ms
+  setTimeout(function(){
+    var moisData=getMoisData();
+    var PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
+    drawMoisChart(moisData);
+    drawTauxChart(moisData);
+    var prises2=entries.filter(function(e){return !e.capot;});
+    var sp2={};prises2.forEach(function(e){sp2[e.espece]=(sp2[e.espece]||0)+(e.nbPoissons||1);});
+    var sorted2=Object.entries(sp2).sort(function(a,b){return b[1]-a[1];});
+    var total2=Object.values(sp2).reduce(function(a,b){return a+b;},0);
+    if(sorted2.length) drawPieChart(sorted2,total2,PIE_COLORS);
+  }, 380);
 }
 
 function getMoisData(){
-  const now=new Date();
-  const data=[];
-  for(let i=11;i>=0;i--){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const label=d.toLocaleDateString('fr-FR',{month:'short'})+(i===0||d.getMonth()===0?' '+String(d.getFullYear()).slice(2):'');
-    const mEntries=entries.filter(e=>e.date&&e.date.startsWith(key));
-    // Compter les sorties (groupes), pas les prises
-    const mSorties=new Set(mEntries.map(sortieKey)).size;
-    const mPriseKeys=new Set(mEntries.filter(e=>!e.capot).map(sortieKey));
-    const mTotal=mSorties;
-    const mAvecPrise=mPriseKeys.size;
-    data.push({label,total:mTotal,prises:mAvecPrise,taux:mTotal?Math.round(mAvecPrise/mTotal*100):0});
+  var now=new Date();
+  var data=[];
+  for(var i=11;i>=0;i--){
+    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    var label=d.toLocaleDateString('fr-FR',{month:'short'});
+    if(i===11||d.getMonth()===0) label+='\u00a0'+String(d.getFullYear()).slice(2);
+    var mEntries=entries.filter(function(e){return e.date&&e.date.startsWith(key);});
+    var mSorties=new Set(mEntries.map(sortieKey)).size;
+    var mPrises=new Set(mEntries.filter(function(e){return !e.capot;}).map(sortieKey)).size;
+    var taux=mSorties?Math.round(mPrises/mSorties*100):0;
+    data.push({label:label,key:key,total:mSorties,prises:mPrises,taux:taux});
   }
   return data;
 }
 
 function drawMoisChart(data){
-  const canvas=document.getElementById('chart-mois'); if(!canvas) return;
-  const ctx=canvas.getContext('2d');
-  const W=canvas.offsetWidth, H=canvas.offsetHeight;
-  canvas.width=W; canvas.height=H;
-  const pad={t:10,r:10,b:30,l:28};
-  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
-  const maxVal=Math.max(...data.map(d=>d.total),1);
-  const bw=cw/data.length*0.6, gap=cw/data.length;
-  ctx.clearRect(0,0,W,H);
-  const isDark=document.body.classList.contains('dark');
-  const textCol=isDark?'#8a96b0':'#8a96b0';
-  const gridCol=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
-  // grille
-  for(let i=0;i<=4;i++){
-    const y=pad.t+ch*(1-i/4);
-    ctx.strokeStyle=gridCol; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
-    if(i>0){ctx.fillStyle=textCol;ctx.font='10px DM Sans';ctx.textAlign='right';ctx.fillText(Math.round(maxVal*i/4),pad.l-4,y+3);}
+  var el=document.getElementById('chart-mois'); if(!el) return;
+  var maxVal=Math.max.apply(null,data.map(function(d){return d.total;}));
+  if(maxVal===0) maxVal=1;
+  var W=300, H=160, padL=24, padB=28, padT=8, padR=8;
+  var cw=W-padL-padR, ch=H-padT-padB;
+  var n=data.length;
+  var gap=cw/n;
+  var bw=gap*0.55;
+  var isDark=document.body.classList.contains('dark');
+  var textCol=isDark?'#8a96b0':'#8a96b0';
+  var gridCol=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';
+
+  var lines='';
+  // Grilles horizontales
+  for(var g=0;g<=4;g++){
+    var gy=padT+ch*(1-g/4);
+    lines+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(padL+cw)+'" y2="'+gy+'" stroke="'+gridCol+'" stroke-width="1"/>';
+    if(g>0) lines+='<text x="'+(padL-3)+'" y="'+(gy+3)+'" text-anchor="end" fill="'+textCol+'" font-size="9" font-family="DM Sans">'+Math.round(maxVal*g/4)+'</text>';
   }
-  // barres
-  data.forEach((d,i)=>{
-    const x=pad.l+i*gap+gap/2-bw/2;
-    const h=d.total?(d.total/maxVal)*ch:0;
-    const y=pad.t+ch-h;
-    const grad=ctx.createLinearGradient(0,y,0,y+h);
-    grad.addColorStop(0,'#2e6db4'); grad.addColorStop(1,'#e8609a');
-    ctx.fillStyle=grad;
-    ctx.beginPath();
-    ctx.roundRect?ctx.roundRect(x,y,bw,h,4):ctx.rect(x,y,bw,h);
-    ctx.fill();
-    // label mois — alterner pour éviter chevauchement
-    ctx.fillStyle=textCol; ctx.font='9px DM Sans'; ctx.textAlign='center';
-    if(data.length<=12||i%2===0) ctx.fillText(d.label,x+bw/2,H-6);
+  // Barres + labels
+  data.forEach(function(d,i){
+    var x=padL+i*gap+gap/2-bw/2;
+    var h=d.total?(d.total/maxVal)*ch:0;
+    var y=padT+ch-h;
+    if(h>0){
+      lines+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="3" ry="3" fill="url(#barGrad)"/>';
+    }
+    // label tous les mois sur desktop, 1 sur 2 sur mobile si trop serré
+    if(n<=7||i%2===0||W>400){
+      lines+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" fill="'+textCol+'" font-size="8.5" font-family="DM Sans">'+d.label+'</text>';
+    }
   });
+
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sorties par mois" style="width:100%;height:100%">'
+    +'<defs><linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2e6db4"/><stop offset="100%" stop-color="#e8609a"/></linearGradient></defs>'
+    +lines+'</svg>';
 }
 
 function drawTauxChart(data){
-  const canvas=document.getElementById('chart-taux'); if(!canvas) return;
-  const ctx=canvas.getContext('2d');
-  const W=canvas.offsetWidth, H=canvas.offsetHeight;
-  canvas.width=W; canvas.height=H;
-  const pad={t:10,r:10,b:30,l:28};
-  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
-  const isDark=document.body.classList.contains('dark');
-  const textCol=isDark?'#8a96b0':'#8a96b0';
-  const gridCol=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
-  ctx.clearRect(0,0,W,H);
-  // grille 0-100%
-  for(let i=0;i<=4;i++){
-    const y=pad.t+ch*(1-i/4);
-    ctx.strokeStyle=gridCol; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
-    ctx.fillStyle=textCol;ctx.font='10px DM Sans';ctx.textAlign='right';
-    ctx.fillText(i*25+'%',pad.l-4,y+3);
+  var el=document.getElementById('chart-taux'); if(!el) return;
+  var W=300, H=160, padL=32, padB=28, padT=8, padR=8;
+  var cw=W-padL-padR, ch=H-padT-padB;
+  var n=data.length;
+  var isDark=document.body.classList.contains('dark');
+  var textCol=isDark?'#8a96b0':'#8a96b0';
+  var gridCol=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';
+
+  var lines='';
+  // Grille 0-100%
+  for(var g=0;g<=4;g++){
+    var gy=padT+ch*(1-g/4);
+    lines+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(padL+cw)+'" y2="'+gy+'" stroke="'+gridCol+'" stroke-width="1"/>';
+    lines+='<text x="'+(padL-3)+'" y="'+(gy+3)+'" text-anchor="end" fill="'+textCol+'" font-size="9" font-family="DM Sans">'+(g*25)+'%</text>';
   }
-  // ligne courbe
-  const pts=data.map((d,i)=>({
-    x:pad.l+(data.length>1?i*(cw/(data.length-1)):cw/2),
-    y:pad.t+ch*(1-d.taux/100)
-  }));
-  // aire
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x,pad.t+ch);
-  pts.forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.lineTo(pts[pts.length-1].x,pad.t+ch);
-  ctx.closePath();
-  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
-  grad.addColorStop(0,'rgba(232,96,154,0.25)');
-  grad.addColorStop(1,'rgba(232,96,154,0)');
-  ctx.fillStyle=grad; ctx.fill();
-  // ligne
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x,pts[0].y);
-  pts.forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.strokeStyle='#e8609a'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
-  // points
-  pts.forEach((p,i)=>{
-    if(data[i].total===0) return;
-    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2);
-    ctx.fillStyle='#e8609a'; ctx.fill();
-    ctx.fillStyle=textCol; ctx.font='9px DM Sans'; ctx.textAlign='center';
-    ctx.fillText(data[i].label,p.x,H-6);
+
+  // Points
+  var pts=data.map(function(d,i){
+    return {
+      x:padL+(n>1?i*(cw/(n-1)):cw/2),
+      y:padT+ch*(1-d.taux/100),
+      d:d
+    };
   });
+
+  // Aire
+  var areaPath='M '+pts[0].x+' '+(padT+ch);
+  pts.forEach(function(p){ areaPath+=' L '+p.x+' '+p.y; });
+  areaPath+=' L '+pts[pts.length-1].x+' '+(padT+ch)+' Z';
+  lines+='<defs><linearGradient id="tauxGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(232,96,154,0.3)"/><stop offset="100%" stop-color="rgba(232,96,154,0)"/></linearGradient></defs>';
+  lines+='<path d="'+areaPath+'" fill="url(#tauxGrad)"/>';
+
+  // Ligne
+  var linePath='M '+pts[0].x+' '+pts[0].y;
+  pts.slice(1).forEach(function(p){ linePath+=' L '+p.x+' '+p.y; });
+  lines+='<path d="'+linePath+'" fill="none" stroke="#e8609a" stroke-width="2.5" stroke-linejoin="round"/>';
+
+  // Points + labels
+  pts.forEach(function(p,i){
+    if(p.d.total>0){
+      lines+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4" fill="#e8609a"/>';
+    }
+    if(n<=7||i%2===0){
+      lines+='<text x="'+p.x.toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" fill="'+textCol+'" font-size="8.5" font-family="DM Sans">'+p.d.label+'</text>';
+    }
+  });
+
+  el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Taux de r\u00e9ussite par mois" style="width:100%;height:100%">'+lines+'</svg>';
 }
 
-// ── CAMEMBERT ESPÈCES ──────────────────────────────────
 function drawPieChart(sorted, total, colors){
-  const canvas=document.getElementById('chart-pie'); if(!canvas) return;
-  if(canvas.offsetWidth>0){ canvas.width=canvas.offsetWidth; canvas.height=canvas.offsetWidth; }
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width, H=canvas.height;
-  ctx.clearRect(0,0,W,H);
-  const cx=W/2, cy=H/2, r=Math.min(W,H)/2-6;
-  let angle=-Math.PI/2;
-  sorted.forEach(([,c],i)=>{
-    const slice=(c/total)*Math.PI*2;
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,r,angle,angle+slice);
-    ctx.closePath();
-    ctx.fillStyle=colors[i%colors.length];
-    ctx.fill();
-    ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+  var el=document.getElementById('chart-pie'); if(!el) return;
+  if(!total||!sorted.length){el.innerHTML='';return;}
+  var size=160, cx=80, cy=80, r=70, ri=36;
+  var isDark=document.body.classList.contains('dark');
+  var centerFill=isDark?'#0f2147':'white';
+  var textFill=isDark?'#d0e0f8':'#1a2035';
+
+  var slices='';
+  var angle=-Math.PI/2;
+  sorted.forEach(function(item,i){
+    var c=item[1];
+    var slice=(c/total)*Math.PI*2;
+    var x1=cx+r*Math.cos(angle), y1=cy+r*Math.sin(angle);
+    var x2=cx+r*Math.cos(angle+slice), y2=cy+r*Math.sin(angle+slice);
+    var largeArc=slice>Math.PI?1:0;
+    var xi1=cx+ri*Math.cos(angle), yi1=cy+ri*Math.sin(angle);
+    var xi2=cx+ri*Math.cos(angle+slice), yi2=cy+ri*Math.sin(angle+slice);
+    var path='M '+xi1.toFixed(2)+' '+yi1.toFixed(2)
+      +' L '+x1.toFixed(2)+' '+y1.toFixed(2)
+      +' A '+r+' '+r+' 0 '+largeArc+' 1 '+x2.toFixed(2)+' '+y2.toFixed(2)
+      +' L '+xi2.toFixed(2)+' '+yi2.toFixed(2)
+      +' A '+ri+' '+ri+' 0 '+largeArc+' 0 '+xi1.toFixed(2)+' '+yi1.toFixed(2)
+      +' Z';
+    slices+='<path d="'+path+'" fill="'+colors[i%colors.length]+'" stroke="'+centerFill+'" stroke-width="1.5"/>';
     angle+=slice;
   });
-  // Trou central (donut)
-  ctx.beginPath(); ctx.arc(cx,cy,r*0.52,0,Math.PI*2);
-  ctx.fillStyle=document.body.classList.contains('dark')?'#0f2147':'white';
-  ctx.fill();
-  // Texte central
-  ctx.fillStyle=document.body.classList.contains('dark')?'#d0e0f8':'#1a2035';
-  ctx.font=`bold 22px Playfair Display`;
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(total,cx,cy-6);
-  ctx.font='10px DM Sans'; ctx.fillStyle='#8a96b0';
-  ctx.fillText('poissons',cx,cy+10);
+
+  el.innerHTML='<svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="R\u00e9partition par esp\u00e8ce" style="width:160px;height:160px;flex-shrink:0">'
+    +slices
+    +'<circle cx="'+cx+'" cy="'+cy+'" r="'+ri+'" fill="'+centerFill+'"/>'
+    +'<text x="'+cx+'" y="'+(cy-5)+'" text-anchor="middle" fill="'+textFill+'" font-size="18" font-weight="bold" font-family="Playfair Display">'+total+'</text>'
+    +'<text x="'+cx+'" y="'+(cy+12)+'" text-anchor="middle" fill="#8a96b0" font-size="9" font-family="DM Sans">poissons</text>'
+    +'</svg>';
 }
 
 // ════════════════════════════════════════════════════════
