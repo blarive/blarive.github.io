@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.blarive.carnetpeche",
+      "sha256_cert_fingerprints": [
+        "5C:B9:3C:D0:4B:C3:0D:36:DD:66:28:8E:B6:0B:C0:55:3D:5E:E2:56:9F:2A:5C:30:C6:70:34:B9:18:5C:18:C1"
+      ]
+    }
+  }
+]
