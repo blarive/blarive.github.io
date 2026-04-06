@@ -951,7 +951,6 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
           <div class="form-card-title">🌤 Conditions & Notes</div>
           <div class="form-group">
             <label class="form-label">🌤 Météo</label>
-            <button type="button" id="btn-meteo-auto" onclick="fetchMeteoAuto()" style="margin-bottom:10px;padding:8px 14px;border:1.5px solid #c8d8f0;border-radius:10px;background:var(--bleu-clair);color:var(--eau-claire);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;width:100%;transition:all 0.15s">🌤 Remplir automatiquement depuis ma position</button>
             <div class="meteo-btns">
               <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'☀️ Soleil')">☀️ Soleil</button>
               <button type="button" class="meteo-btn" onclick="toggleMeteo(this,'⛅ Nuageux')">⛅ Nuageux</button>
@@ -1843,6 +1842,7 @@ function switchView(name){
   window.scrollTo({top:0,behavior:'instant'});
   haptic('light');
   if(name==='stats') updateStats();
+  if(name==='ajouter') fetchMeteoAuto();
   if(name==='spots'){ renderSpotsPage(); setTimeout(initMap,200); }
   if(name==='appats') renderAppatsPage();
   if(name==='rapport') renderRapportPage();
@@ -1985,32 +1985,43 @@ const WMO_MAP={
 };
 
 async function fetchMeteoAuto(){
-  const btn=document.getElementById('btn-meteo-auto');
-  if(btn){ btn.textContent='⏳ Chargement…'; btn.disabled=true; }
+  // Phase de lune immédiate (pas besoin de GPS)
+  const lunePhase=getLunePhase(new Date());
+  const luneSelect=document.getElementById('f-lune');
+  if(luneSelect) luneSelect.value=lunePhase;
+
+  if(!navigator.geolocation) return;
   try {
-    // Obtenir position
     const pos=await new Promise((res,rej)=>
       navigator.geolocation.getCurrentPosition(res,rej,{timeout:8000,enableHighAccuracy:false})
     );
     const {latitude:lat,longitude:lon}=pos.coords;
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&daily=temperature_2m_min&timezone=auto&forecast_days=1`;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+      +`&current=temperature_2m,weathercode,windspeed_10m,soil_temperature_0cm`
+      +`&timezone=auto&forecast_days=1`;
     const r=await fetch(url);
     const d=await r.json();
     const cur=d.current;
-    // Température air
+
+    // ── Température air ──
     const tempAir=Math.round(cur.temperature_2m);
     document.getElementById('f-temp-air').value=tempAir;
-    // Condition météo → boutons
+
+    // ── Température eau (approximation via température du sol) ──
+    if(cur.soil_temperature_0cm!=null){
+      document.getElementById('f-temp-eau').value=Math.round(cur.soil_temperature_0cm);
+    }
+
+    // ── Conditions météo → boutons ──
     const cond=WMO_MAP[cur.weathercode]||'';
-    // Vent
     const wind=cur.windspeed_10m>20;
-    // Cocher les bons boutons météo
     document.querySelectorAll('.meteo-btn:not(#btn-capot):not(#btn-trophy):not(#btn-relache)').forEach(b=>{
       const v=b.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]||'';
       const shouldOn=(cond&&v===cond)||(wind&&v==='💨 Vent');
       if(shouldOn&&!selectedMeteo.includes(v)){ b.classList.add('selected'); selectedMeteo.push(v); }
     });
-    // Température : si froid (<5°) cocher froid
+
+    // ── Si froid (<5°C) cocher froid ──
     if(tempAir<5){
       document.querySelectorAll('.meteo-btn').forEach(b=>{
         if(b.textContent.includes('Froid')&&!b.classList.contains('selected')){
@@ -2018,12 +2029,28 @@ async function fetchMeteoAuto(){
         }
       });
     }
-    if(btn){ btn.textContent='✅ Météo chargée'; btn.disabled=false; }
-    showToast(`🌤 ${tempAir}°C — ${cond||'conditions chargées'}`);
+
+    showToast(`🌤 ${tempAir}°C — ${cond||'météo chargée'} — ${lunePhase.split(' ')[0]}`);
   } catch(e){
-    if(btn){ btn.textContent='🌤 Météo auto'; btn.disabled=false; }
-    showToast('❌ Météo indisponible');
+    // Silencieux — l'utilisateur peut saisir manuellement
   }
+}
+
+// ── Calcul phase de lune (astronomique, sans API) ────────
+function getLunePhase(date){
+  const known=new Date(2000,0,6); // nouvelle lune de référence
+  const diff=(date-known)/(1000*60*60*24);
+  const cycle=29.53058867;
+  const phase=((diff%cycle)+cycle)%cycle;
+  if(phase<1.85)  return '🌑 NL';
+  if(phase<7.38)  return '🌒 CC';
+  if(phase<9.22)  return '🌓 PQ';
+  if(phase<14.77) return '🌔 GC';
+  if(phase<16.61) return '🌕 PL';
+  if(phase<22.15) return '🌖 GD';
+  if(phase<24.0)  return '🌗 DQ';
+  if(phase<29.53) return '🌘 CD';
+  return '🌑 NL';
 }
 
 // ── Auto-remplissage lune quand la date change ──
