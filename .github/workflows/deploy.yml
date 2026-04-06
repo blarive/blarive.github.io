@@ -1,0 +1,30 @@
+name: Deploy Carnet de Pêche
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Injecter le numéro de build dans sw.js
+        run: |
+          BUILD=$(date -u +%Y%m%d%H%M%S)
+          echo "BUILD=$BUILD"
+          sed -i "s/carnet-peche-v[0-9]*/carnet-peche-v${BUILD}/" sw.js
+          grep "CACHE_NAME" sw.js
+
+      - name: Déployer sur GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          publish_branch: gh-pages
+          exclude_assets: '.github,*.md,*.yml'
