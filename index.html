@@ -2575,7 +2575,7 @@ function formatPoids(kg){
 
 function buildHeatmap(entries){
   // Compter les prises par jour
-  const byDay = {};
+  var byDay = {};
   entries.forEach(function(e){
     if(!e.date) return;
     var k = e.date.slice(0,10);
@@ -2583,78 +2583,62 @@ function buildHeatmap(entries){
   });
 
   function toKey(d){
-    var y = d.getFullYear();
-    var m = String(d.getMonth()+1).padStart(2,'0');
-    var j = String(d.getDate()).padStart(2,'0');
-    return y+'-'+m+'-'+j;
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
 
-  // 12 mois glissants : du 1er du mois M-11 au dernier jour du mois courant
   var now = new Date();
   now.setHours(0,0,0,0);
-  var startMonth = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-  var endMonth   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  var months = [];
-  var d = new Date(startMonth);
-
-  while(d <= endMonth){
-    var year   = d.getFullYear();
-    var month  = d.getMonth();
-    var label  = d.toLocaleDateString('fr-FR', {month:'short'});
-    var firstDay  = new Date(year, month, 1);
-    var lastDay   = new Date(year, month + 1, 0);
-    var firstDow  = (firstDay.getDay() + 6) % 7; // 0=lundi
-    var totalDays = lastDay.getDate();
-    var cols = Math.ceil((firstDow + totalDays) / 7);
-
-    var grid = [];
-    for(var col = 0; col < cols; col++){
-      var column = [];
-      for(var row = 0; row < 7; row++){
-        var dayNum = col * 7 + row - firstDow + 1;
-        if(dayNum < 1 || dayNum > totalDays){
-          column.push(null);
-        } else {
-          var date  = new Date(year, month, dayNum);
-          var k     = toKey(date);
-          var n     = byDay[k] || 0;
-          var future = date > now;
-          var level  = future ? -1 : n===0 ? 0 : n===1 ? 1 : n<=3 ? 2 : n<=5 ? 3 : 4;
-          column.push({k:k, n:n, level:level});
-        }
-      }
-      grid.push(column);
-    }
-    months.push({label:label, grid:grid});
-    d = new Date(year, month + 1, 1);
-  }
+  // 12 mois : du 1er du mois M-11 au dernier jour du mois courant
+  var startMonth = new Date(now.getFullYear(), now.getMonth()-11, 1);
+  var endMonth   = new Date(now.getFullYear(), now.getMonth()+1, 0);
 
   var html = '<div class="heatmap-grid" role="img" aria-label="Activit\u00e9 des 12 derniers mois">';
-  months.forEach(function(mo){
+
+  var cur = new Date(startMonth);
+  while(cur <= endMonth){
+    var year  = cur.getFullYear();
+    var month = cur.getMonth();
+    var label = cur.toLocaleDateString('fr-FR', {month:'short'});
+    var firstDay  = new Date(year, month, 1);
+    var lastDay   = new Date(year, month+1, 0);
+    // 0=lundi … 6=dimanche
+    var firstDow  = (firstDay.getDay()+6)%7;
+    var totalDays = lastDay.getDate();
+    var cols      = Math.ceil((firstDow+totalDays)/7);
+    // Largeur en px : cols * (11px cellule + 2px gap) - 2px dernier gap
+    var gridW = cols*13-2;
+
+    // CSS grid : 7 lignes fixes (lun-dim), cols colonnes
+    var cells = '';
+    for(var day=1; day<=totalDays; day++){
+      var date   = new Date(year, month, day);
+      var dow    = (date.getDay()+6)%7; // 0=lundi
+      var col    = Math.floor((firstDow+day-1)/7)+1;
+      var row    = dow+1;
+      var k      = toKey(date);
+      var n      = byDay[k]||0;
+      var future = date > now;
+      var cls    = 'heatmap-day';
+      if(!future && n>0) cls += ' l'+(n===1?1:n<=3?2:n<=5?3:4);
+      var title  = n>0 ? k+' \u2014 '+n+' prise'+(n>1?'s':'') : k;
+      var op     = future ? ' style="opacity:0.15"' : '';
+      cells += '<div class="'+cls+'" style="grid-row:'+row+';grid-column:'+col+'"'+op+' title="'+title+'" aria-label="'+title+'"></div>';
+    }
+
     html += '<div class="heatmap-month">';
-    html += '<div class="heatmap-month-label">'+mo.label+'</div>';
-    html += '<div class="heatmap-weeks">';
-    mo.grid.forEach(function(col){
-      html += '<div style="display:flex;flex-direction:column;gap:2px">';
-      col.forEach(function(cell){
-        if(cell === null){
-          html += '<div class="heatmap-day" style="visibility:hidden" aria-hidden="true"></div>';
-        } else if(cell.level < 0){
-          html += '<div class="heatmap-day" style="opacity:0.2" aria-hidden="true"></div>';
-        } else {
-          var cls   = cell.level > 0 ? ' l'+cell.level : '';
-          var title = cell.n > 0 ? cell.k+' — '+cell.n+' prise'+(cell.n>1?'s':'') : cell.k;
-          html += '<div class="heatmap-day'+cls+'" title="'+title+'" aria-label="'+title+'"></div>';
-        }
-      });
-      html += '</div>';
-    });
+    html += '<div class="heatmap-month-label" style="width:'+gridW+'px">'+label+'</div>';
+    html += '<div style="display:grid;grid-template-rows:repeat(7,11px);grid-template-columns:repeat('+cols+',11px);gap:2px;width:'+gridW+'px">';
+    html += cells;
     html += '</div></div>';
-  });
+
+    cur = new Date(year, month+1, 1);
+  }
+
   html += '</div>';
   return html;
 }
+
 function buildHeureParEspece(prises){
   // Pour chaque espèce : trouver l'heure où elle est le plus souvent prise
   const sp = {};
