@@ -4428,29 +4428,57 @@ window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderJou
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      // updateViaCache:'none' force le navigateur à re-télécharger
-      // sw.js à chaque visite, sans se fier à son propre cache HTTP
       const reg = await navigator.serviceWorker.register('./sw.js', {
         updateViaCache: 'none'
       });
 
-      // Vérifier les mises à jour en arrière-plan toutes les 60s
-      setInterval(() => reg.update(), 60 * 1000);
+      // Nouveau SW installé en arrière-plan → proposer la mise à jour
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if(!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+            // Une nouvelle version est prête — afficher le bandeau
+            showUpdateBanner(newWorker);
+          }
+        });
+      });
+
+      // Vérifier les mises à jour toutes les 5 minutes
+      setInterval(() => reg.update(), 5 * 60 * 1000);
+      // Et immédiatement au focus (retour sur l'onglet)
+      document.addEventListener('visibilitychange', () => {
+        if(document.visibilityState === 'visible') reg.update();
+      });
 
       console.log('[App] SW enregistré');
     } catch (err) {
       console.warn('[App] SW échec :', err);
     }
 
-    // Le SW envoie RELOAD après activation + clients.claim()
-    // → on recharge pour servir le nouvel index.html
-    navigator.serviceWorker.addEventListener('message', event => {
-      if (event.data && event.data.type === 'RELOAD') {
-        console.log('[App] Nouveau SW actif — rechargement');
-        window.location.reload();
-      }
+    // Rechargement contrôlé uniquement si l'utilisateur l'a demandé
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if(window._swUpdateAccepted) window.location.reload();
     });
   });
+}
+
+// ── Bandeau de mise à jour ────────────────────────────────
+function showUpdateBanner(newWorker){
+  const banner = document.getElementById('update-banner');
+  if(!banner) return;
+  banner.classList.add('visible');
+  // Stocker la ref pour l'activer au clic
+  window._pendingWorker = newWorker;
+}
+
+function applyUpdate(){
+  window._swUpdateAccepted = true;
+  if(window._pendingWorker){
+    window._pendingWorker.postMessage('SKIP_WAITING');
+  } else {
+    window.location.reload();
+  }
 }
 
 // ── MODALE À PROPOS ──
