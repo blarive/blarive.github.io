@@ -1,6 +1,6 @@
 // ─── Service Worker — Carnet de Pêche ────────────────────
 // ⚠️  Une seule chose à changer à chaque déploiement : VERSION
-const VERSION = '20260405';
+const VERSION = '20260406';
 const CACHE = `carnet-peche-${VERSION}`;
 
 const STATIC = [

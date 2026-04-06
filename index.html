@@ -4059,6 +4059,17 @@ async function renderParametresPage(){
           🗑 Réinitialiser
         </button>
       </div>
+    </div>
+    <div class="stat-card" style="margin-top:14px">
+      <div class="stat-card-title">🗜 Photos</div>
+      <div class="settings-row">
+        <div class="settings-label">Recompresser les anciennes photos
+          <span class="settings-sub">Réduit la taille des photos de plus de 6 mois. Les photos récentes ne sont pas touchées.</span>
+        </div>
+        <button type="button" onclick="compressOldPhotos()" style="padding:8px 14px;background:var(--bleu-clair);color:var(--eau-claire);border:none;border-radius:20px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;white-space:nowrap">
+          🗜 Compresser
+        </button>
+      </div>
     </div>`;
 }
 
