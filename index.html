@@ -655,10 +655,10 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 
 /* ── HEATMAP CALENDRIER ─── */
 .heatmap-wrap{overflow-x:auto;padding-bottom:4px;}
-.heatmap-grid{display:inline-flex;gap:3px;align-items:flex-end;}
-.heatmap-month{display:flex;flex-direction:column;gap:2px;}
-.heatmap-month-label{font-size:9px;color:var(--gris);text-align:center;margin-bottom:2px;font-family:'DM Sans',sans-serif;}
-.heatmap-weeks{display:flex;gap:2px;}
+.heatmap-grid{display:inline-flex;gap:4px;align-items:flex-start;}
+.heatmap-month{display:flex;flex-direction:column;gap:0;}
+.heatmap-month-label{font-size:9px;color:var(--gris);text-align:center;margin-bottom:4px;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.heatmap-weeks{display:flex;gap:2px;align-items:flex-start;}
 .heatmap-day{width:11px;height:11px;border-radius:2px;background:#eef2f5;transition:transform 0.1s;cursor:default;flex-shrink:0;}
 body.dark .heatmap-day{background:#1a3060;}
 .heatmap-day.l1{background:#b3cff0;}
@@ -2574,64 +2574,87 @@ function formatPoids(kg){
 // ════════════════════════════════════════════════════════
 
 function buildHeatmap(entries){
-  // 52 semaines en arrière depuis aujourd'hui
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const startDay = new Date(today);
-  startDay.setFullYear(startDay.getFullYear() - 1);
-  startDay.setDate(1); // 1er du mois il y a 12 mois
-
-  // Compter prises par jour
+  // Compter les prises par jour
   const byDay = {};
-  entries.forEach(e => {
+  entries.forEach(function(e){
     if(!e.date) return;
-    const k = e.date.slice(0,10);
+    var k = e.date.slice(0,10);
     byDay[k] = (byDay[k]||0) + 1;
   });
 
-  // Grouper par mois pour affichage
-  const months = [];
-  let cur = new Date(startDay);
-  // Aller au lundi de la semaine de startDay
-  const dow = (cur.getDay()+6)%7; // 0=lundi
-  cur.setDate(cur.getDate() - dow);
-
-  let curMonth = -1;
-  let week = [];
-  let weeks = [];
-  let monthLabel = '';
-
-  while(cur <= today){
-    const m = cur.getMonth();
-    if(m !== curMonth){
-      if(weeks.length) months.push({label: monthLabel, weeks});
-      curMonth = m;
-      monthLabel = cur.toLocaleDateString('fr-FR',{month:'short'});
-      weeks = [];
-    }
-    if(week.length === 7){ weeks.push(week); week = []; }
-    const k = cur.toISOString().slice(0,10);
-    const n = byDay[k]||0;
-    const level = cur > today ? -1 : n===0?0:n===1?1:n<=3?2:n<=5?3:4;
-    week.push({k, n, level});
-    cur.setDate(cur.getDate()+1);
+  function toKey(d){
+    var y = d.getFullYear();
+    var m = String(d.getMonth()+1).padStart(2,'0');
+    var j = String(d.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+j;
   }
-  if(week.length){ while(week.length<7) week.push({k:'',n:0,level:-1}); weeks.push(week); }
-  if(weeks.length) months.push({label: monthLabel, weeks});
 
-  return `<div class="heatmap-grid">${months.map(mo=>`
-    <div class="heatmap-month">
-      <div class="heatmap-month-label">${mo.label}</div>
-      <div class="heatmap-weeks">${mo.weeks.map(wk=>`
-        <div style="display:flex;flex-direction:column;gap:2px">${wk.map(d=>
-          d.level<0
-            ? '<div class="heatmap-day" style="opacity:0"></div>'
-            : `<div class="heatmap-day${d.level>0?' l'+d.level:''}" title="${d.k?d.k+' — '+d.n+' prise(s)':''}"></div>`
-        ).join('')}</div>`).join('')}
-      </div>
-    </div>`).join('')}</div>`;
+  // 12 mois glissants : du 1er du mois M-11 au dernier jour du mois courant
+  var now = new Date();
+  now.setHours(0,0,0,0);
+  var startMonth = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+  var endMonth   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  var months = [];
+  var d = new Date(startMonth);
+
+  while(d <= endMonth){
+    var year   = d.getFullYear();
+    var month  = d.getMonth();
+    var label  = d.toLocaleDateString('fr-FR', {month:'short'});
+    var firstDay  = new Date(year, month, 1);
+    var lastDay   = new Date(year, month + 1, 0);
+    var firstDow  = (firstDay.getDay() + 6) % 7; // 0=lundi
+    var totalDays = lastDay.getDate();
+    var cols = Math.ceil((firstDow + totalDays) / 7);
+
+    var grid = [];
+    for(var col = 0; col < cols; col++){
+      var column = [];
+      for(var row = 0; row < 7; row++){
+        var dayNum = col * 7 + row - firstDow + 1;
+        if(dayNum < 1 || dayNum > totalDays){
+          column.push(null);
+        } else {
+          var date  = new Date(year, month, dayNum);
+          var k     = toKey(date);
+          var n     = byDay[k] || 0;
+          var future = date > now;
+          var level  = future ? -1 : n===0 ? 0 : n===1 ? 1 : n<=3 ? 2 : n<=5 ? 3 : 4;
+          column.push({k:k, n:n, level:level});
+        }
+      }
+      grid.push(column);
+    }
+    months.push({label:label, grid:grid});
+    d = new Date(year, month + 1, 1);
+  }
+
+  var html = '<div class="heatmap-grid" role="img" aria-label="Activit\u00e9 des 12 derniers mois">';
+  months.forEach(function(mo){
+    html += '<div class="heatmap-month">';
+    html += '<div class="heatmap-month-label">'+mo.label+'</div>';
+    html += '<div class="heatmap-weeks">';
+    mo.grid.forEach(function(col){
+      html += '<div style="display:flex;flex-direction:column;gap:2px">';
+      col.forEach(function(cell){
+        if(cell === null){
+          html += '<div class="heatmap-day" style="visibility:hidden" aria-hidden="true"></div>';
+        } else if(cell.level < 0){
+          html += '<div class="heatmap-day" style="opacity:0.2" aria-hidden="true"></div>';
+        } else {
+          var cls   = cell.level > 0 ? ' l'+cell.level : '';
+          var title = cell.n > 0 ? cell.k+' — '+cell.n+' prise'+(cell.n>1?'s':'') : cell.k;
+          html += '<div class="heatmap-day'+cls+'" title="'+title+'" aria-label="'+title+'"></div>';
+        }
+      });
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+  return html;
 }
-
 function buildHeureParEspece(prises){
   // Pour chaque espèce : trouver l'heure où elle est le plus souvent prise
   const sp = {};
@@ -2646,7 +2669,7 @@ function buildHeureParEspece(prises){
       const hCount={};
       heures.forEach(h=>hCount[h]=(hCount[h]||0)+1);
       const best=Object.entries(hCount).sort((a,b)=>b[1]-a[1])[0];
-      return {espece, heure:best[0], count:best[1], total:heures.length};
+      return {espece, heure:parseInt(best[0],10), count:best[1], total:heures.length};
     })
     .sort((a,b)=>b.total-a.total)
     .slice(0,8);
@@ -2839,7 +2862,7 @@ function updateStats(){
         <div class="cmp-row"><span class="cmp-label">Sorties</span>${arrow(sortiesN,sortiesN1)}<span class="cmp-val current">${sortiesN}</span><span class="cmp-val prev">${sortiesN1}</span></div>
         <div class="cmp-row"><span class="cmp-label">Prises</span>${arrow(prisesN.length,prisesN1.length)}<span class="cmp-val current">${prisesN.length}</span><span class="cmp-val prev">${prisesN1.length}</span></div>
         <div class="cmp-row"><span class="cmp-label">Taux réussite</span>${arrow(tauxN,tauxN1)}<span class="cmp-val current">${tauxN}%</span><span class="cmp-val prev">${tauxN1}%</span></div>
-        <div class="cmp-row"><span class="cmp-label">Meilleur poids</span>${arrow(recordN?.poids||0,recordN1?.poids||0)}<span class="cmp-val current">${recordN?formatPoids(recordN.poids>100?recordN.poids/1000:recordN.poids):'—'}</span><span class="cmp-val prev">${recordN1?formatPoids(recordN1.poids>100?recordN1.poids/1000:recordN1.poids):'—'}</span></div>
+        <div class="cmp-row"><span class="cmp-label">Meilleur poids</span>${arrow(recordN&&recordN.poids!=null?recordN.poids:0, recordN1&&recordN1.poids!=null?recordN1.poids:0)}<span class="cmp-val current">${recordN?formatPoids(recordN.poids>100?recordN.poids/1000:recordN.poids):'—'}</span><span class="cmp-val prev">${recordN1?formatPoids(recordN1.poids>100?recordN1.poids/1000:recordN1.poids):'—'}</span></div>
       </div>`
     });
   }
@@ -3011,7 +3034,7 @@ function getMoisData(){
   for(let i=11;i>=0;i--){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
     const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const label=d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});
+    const label=d.toLocaleDateString('fr-FR',{month:'short'})+(i===0||d.getMonth()===0?' '+String(d.getFullYear()).slice(2):'');
     const mEntries=entries.filter(e=>e.date&&e.date.startsWith(key));
     // Compter les sorties (groupes), pas les prises
     const mSorties=new Set(mEntries.map(sortieKey)).size;
@@ -3054,9 +3077,9 @@ function drawMoisChart(data){
     ctx.beginPath();
     ctx.roundRect?ctx.roundRect(x,y,bw,h,4):ctx.rect(x,y,bw,h);
     ctx.fill();
-    // label mois
+    // label mois — alterner pour éviter chevauchement
     ctx.fillStyle=textCol; ctx.font='9px DM Sans'; ctx.textAlign='center';
-    ctx.fillText(d.label,x+bw/2,H-6);
+    if(data.length<=12||i%2===0) ctx.fillText(d.label,x+bw/2,H-6);
   });
 }
 
@@ -3081,7 +3104,7 @@ function drawTauxChart(data){
   }
   // ligne courbe
   const pts=data.map((d,i)=>({
-    x:pad.l+i*(cw/(data.length-1||1)),
+    x:pad.l+(data.length>1?i*(cw/(data.length-1)):cw/2),
     y:pad.t+ch*(1-d.taux/100)
   }));
   // aire
@@ -3112,6 +3135,7 @@ function drawTauxChart(data){
 // ── CAMEMBERT ESPÈCES ──────────────────────────────────
 function drawPieChart(sorted, total, colors){
   const canvas=document.getElementById('chart-pie'); if(!canvas) return;
+  if(canvas.offsetWidth>0){ canvas.width=canvas.offsetWidth; canvas.height=canvas.offsetWidth; }
   const ctx=canvas.getContext('2d');
   const W=canvas.width, H=canvas.height;
   ctx.clearRect(0,0,W,H);
