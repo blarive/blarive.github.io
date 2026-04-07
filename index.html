@@ -672,6 +672,19 @@ body.dark .heatmap-day.l4{background:#e8609a;}
 .heatmap-day:hover{transform:scale(1.4);}
 .heatmap-legend{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:10px;color:var(--gris);}
 .heatmap-legend-cell{width:11px;height:11px;border-radius:2px;}
+/* ── CALENDRIER ANNUEL ─── */
+.cal-annuel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;margin-top:4px;}
+.cal-month-block{display:flex;flex-direction:column;gap:3px;}
+.cal-month-label{font-size:10px;font-weight:700;color:var(--eau-claire);text-transform:uppercase;letter-spacing:0.5px;font-family:'DM Sans',sans-serif;}
+.cal-day{width:9px;height:9px;border-radius:1.5px;background:#eef2f5;display:block;}
+body.dark .cal-day{background:#1a3060;}
+.cal-day.cal-l1{background:#b3cff0;}.cal-day.cal-l2{background:#6ea8e0;}
+.cal-day.cal-l3{background:#2e6db4;}.cal-day.cal-l4{background:#e8609a;}
+body.dark .cal-day.cal-l1{background:#1a4070;}body.dark .cal-day.cal-l2{background:#2a5898;}
+body.dark .cal-day.cal-l3{background:#2e6db4;}body.dark .cal-day.cal-l4{background:#e8609a;}
+.chart-multiyear-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--texte);}
+.chart-multiyear-legend-item{display:flex;align-items:center;}
+
 /* ── MÉTÉO CORRÉLATION ─── */
 .meteo-corr-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
 body.dark .meteo-corr-row{border-color:#1a3060;}
@@ -2573,7 +2586,7 @@ function formatPoids(kg){
 //  FONCTIONS STATS SUPPLÉMENTAIRES
 // ════════════════════════════════════════════════════════
 
-function buildHeatmap(entries){
+function buildCalendrierAnnuel(entries){
   // Compter les prises par jour
   var byDay = {};
   entries.forEach(function(e){
@@ -2582,61 +2595,153 @@ function buildHeatmap(entries){
     byDay[k] = (byDay[k]||0) + 1;
   });
 
-  function toKey(d){
-    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-
   var now = new Date();
   now.setHours(0,0,0,0);
+  var curYear = now.getFullYear();
 
-  // 12 mois : du 1er du mois M-11 au dernier jour du mois courant
-  var startMonth = new Date(now.getFullYear(), now.getMonth()-11, 1);
-  var endMonth   = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  // Grille 3 colonnes x 4 lignes = 12 mois (jan-déc)
+  var MOIS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  var html = '';
 
-  var html = '<div class="heatmap-grid" role="img" aria-label="Activit\u00e9 des 12 derniers mois">';
-
-  var cur = new Date(startMonth);
-  while(cur <= endMonth){
-    var year  = cur.getFullYear();
-    var month = cur.getMonth();
-    var label = cur.toLocaleDateString('fr-FR', {month:'short'});
-    var firstDay  = new Date(year, month, 1);
-    var lastDay   = new Date(year, month+1, 0);
-    // 0=lundi … 6=dimanche
-    var firstDow  = (firstDay.getDay()+6)%7;
+  for(var m=0; m<12; m++){
+    var firstDay  = new Date(curYear, m, 1);
+    var lastDay   = new Date(curYear, m+1, 0);
+    var firstDow  = (firstDay.getDay()+6)%7; // 0=lun
     var totalDays = lastDay.getDate();
     var cols      = Math.ceil((firstDow+totalDays)/7);
-    // Largeur en px : cols * (11px cellule + 2px gap) - 2px dernier gap
-    var gridW = cols*13-2;
+    var gridW     = cols*10+cols-1; // 9px cell + 1px gap (compact)
 
-    // CSS grid : 7 lignes fixes (lun-dim), cols colonnes
     var cells = '';
     for(var day=1; day<=totalDays; day++){
-      var date   = new Date(year, month, day);
-      var dow    = (date.getDay()+6)%7; // 0=lundi
+      var date   = new Date(curYear, m, day);
+      var dow    = (date.getDay()+6)%7;
       var col    = Math.floor((firstDow+day-1)/7)+1;
       var row    = dow+1;
-      var k      = toKey(date);
+      var k      = curYear+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
       var n      = byDay[k]||0;
       var future = date > now;
-      var cls    = 'heatmap-day';
-      if(!future && n>0) cls += ' l'+(n===1?1:n<=3?2:n<=5?3:4);
-      var title  = n>0 ? k+' \u2014 '+n+' prise'+(n>1?'s':'') : k;
-      var op     = future ? ' style="opacity:0.15"' : '';
-      cells += '<div class="'+cls+'" style="grid-row:'+row+';grid-column:'+col+'"'+op+' title="'+title+'" aria-label="'+title+'"></div>';
+      var cls    = 'cal-day';
+      if(!future && n>0) cls += ' cal-l'+(n===1?1:n<=3?2:n<=5?3:4);
+      var op     = future ? ' style="opacity:0.12"' : '';
+      var title  = n>0 ? k+'\u00a0\u2014\u00a0'+n+'\u00a0prise'+(n>1?'s':'') : k;
+      cells += '<div class="'+cls+'" style="grid-row:'+row+';grid-column:'+col+'"'+op+' title="'+title+'"></div>';
     }
 
-    html += '<div class="heatmap-month">';
-    html += '<div class="heatmap-month-label" style="width:'+gridW+'px">'+label+'</div>';
-    html += '<div style="display:grid;grid-template-rows:repeat(7,11px);grid-template-columns:repeat('+cols+',11px);gap:2px;width:'+gridW+'px">';
+    html += '<div class="cal-month-block">';
+    html += '<div class="cal-month-label">'+MOIS[m]+'</div>';
+    html += '<div style="display:grid;grid-template-rows:repeat(7,9px);grid-template-columns:repeat('+cols+',9px);gap:1px">';
     html += cells;
     html += '</div></div>';
+  }
+  return html;
+}
 
-    cur = new Date(year, month+1, 1);
+function drawMultiYearChart(){
+  var el  = document.getElementById('chart-multiyear');
+  var leg = document.getElementById('chart-multiyear-legend');
+  if(!el) return;
+
+  var now    = new Date();
+  var curYear = now.getFullYear();
+
+  // 3 dernières années avec données
+  var yearsWithData = [];
+  for(var y=curYear; y>=curYear-4; y--){
+    var hasData = entries.some(function(e){ return e.date && e.date.startsWith(String(y)); });
+    if(hasData) yearsWithData.push(y);
+    if(yearsWithData.length>=3) break;
+  }
+  if(!yearsWithData.length){ el.innerHTML=''; return; }
+
+  var COLORS = ['#e8609a','#2e6db4','#4a7c59','#f0a030'];
+  var MOIS_SHORT = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+
+  // Calculer prises par mois pour chaque année
+  var series = yearsWithData.map(function(year, yi){
+    var data = [];
+    for(var m=0; m<12; m++){
+      var key = year+'-'+String(m+1).padStart(2,'0');
+      var n = entries.filter(function(e){ return !e.capot && e.date && e.date.startsWith(key); }).length;
+      data.push(n);
+    }
+    return {year:year, data:data, color:COLORS[yi]};
+  });
+
+  // SVG
+  var W=300, H=150, padL=22, padB=22, padT=8, padR=8;
+  var cw=W-padL-padR, ch=H-padT-padB;
+  var maxVal = Math.max.apply(null, series.map(function(s){ return Math.max.apply(null,s.data); }));
+  if(maxVal===0) maxVal=1;
+
+  var isDark = document.body.classList.contains('dark');
+  var textCol = isDark?'#8a96b0':'#8a96b0';
+  var gridCol = isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)';
+
+  var svg = '';
+
+  // Grilles horizontales
+  var steps = Math.min(maxVal, 4);
+  for(var g=0; g<=steps; g++){
+    var gy = padT+ch*(1-g/steps);
+    svg += '<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(padL+cw)+'" y2="'+gy.toFixed(1)+'" stroke="'+gridCol+'" stroke-width="1"/>';
+    if(g>0){
+      var val = Math.round(maxVal*g/steps);
+      svg += '<text x="'+(padL-3)+'" y="'+(gy+3).toFixed(1)+'" text-anchor="end" fill="'+textCol+'" font-size="8" font-family="DM Sans">'+val+'</text>';
+    }
   }
 
-  html += '</div>';
-  return html;
+  // Labels mois (axe X)
+  for(var mi=0; mi<12; mi++){
+    var mx = padL + mi*(cw/11);
+    if(mi%2===0 || window.innerWidth>500){
+      svg += '<text x="'+mx.toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle" fill="'+textCol+'" font-size="8" font-family="DM Sans">'+MOIS_SHORT[mi]+'</text>';
+    }
+  }
+
+  // Courbes
+  series.forEach(function(s){
+    // Aire
+    var areaD = 'M '+padL.toFixed(1)+' '+(padT+ch).toFixed(1);
+    s.data.forEach(function(n,i){
+      var x = padL+i*(cw/11);
+      var y = padT+ch*(1-n/maxVal);
+      areaD += ' L '+x.toFixed(1)+' '+y.toFixed(1);
+    });
+    areaD += ' L '+(padL+cw).toFixed(1)+' '+(padT+ch).toFixed(1)+' Z';
+    var col = s.color;
+    var fillCol = col.replace('#','');
+    svg += '<defs><linearGradient id="myg'+s.year+'" x1="0" y1="0" x2="0" y2="1">'
+      +'<stop offset="0%" stop-color="'+col+'" stop-opacity="0.25"/>'
+      +'<stop offset="100%" stop-color="'+col+'" stop-opacity="0"/>'
+      +'</linearGradient></defs>';
+    svg += '<path d="'+areaD+'" fill="url(#myg'+s.year+')"/>';
+
+    // Ligne
+    var lineD = '';
+    s.data.forEach(function(n,i){
+      var x = padL+i*(cw/11);
+      var y = padT+ch*(1-n/maxVal);
+      lineD += (i===0?'M ':'L ')+x.toFixed(1)+' '+y.toFixed(1)+' ';
+    });
+    svg += '<path d="'+lineD+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+
+    // Points
+    s.data.forEach(function(n,i){
+      if(n===0) return;
+      var x = padL+i*(cw/11);
+      var y = padT+ch*(1-n/maxVal);
+      svg += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3" fill="'+col+'"/>';
+    });
+  });
+
+  el.innerHTML = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prises par mois multi-ann\u00e9es" style="width:100%;height:100%">'+svg+'</svg>';
+
+  // Légende
+  if(leg){
+    leg.innerHTML = series.map(function(s){
+      return '<span class="chart-multiyear-legend-item"><span style="display:inline-block;width:20px;height:3px;background:'+s.color+';border-radius:2px;vertical-align:middle;margin-right:4px"></span>'+s.year+'</span>';
+    }).join('');
+  }
 }
 
 function buildHeureParEspece(prises){
@@ -2860,21 +2965,15 @@ function updateStats(){
     </div>`
   });
 
-  // Slide 7 : Carte de chaleur calendrier
+  // Slide 7 : Calendrier annuel + courbe multi-années
   slides.push({
     label:'📆 Calendrier',
     html:`<div class="stat-card">
-      <div class="stat-card-title">📆 Activité — 12 derniers mois</div>
-      <div class="heatmap-wrap">${buildHeatmap(entries)}</div>
-      <div class="heatmap-legend">
-        <span>Moins</span>
-        <div class="heatmap-legend-cell" style="background:#eef2f5"></div>
-        <div class="heatmap-legend-cell heatmap-day l1"></div>
-        <div class="heatmap-legend-cell heatmap-day l2"></div>
-        <div class="heatmap-legend-cell heatmap-day l3"></div>
-        <div class="heatmap-legend-cell heatmap-day l4"></div>
-        <span>Plus</span>
-      </div>
+      <div class="stat-card-title">📆 Activité par mois</div>
+      <div id="cal-annuel-grid" class="cal-annuel-grid">${buildCalendrierAnnuel(entries)}</div>
+      <div class="stat-card-title" style="margin-top:18px">📈 Prises par mois</div>
+      <div id="chart-multiyear" class="chart-wrap" style="height:160px"></div>
+      <div id="chart-multiyear-legend" class="chart-multiyear-legend"></div>
     </div>`
   });
 
@@ -2967,6 +3066,7 @@ function updateStats(){
     drawMoisChart(moisData);
     drawTauxChart(moisData);
     if(sorted.length) drawPieChart(sorted, totalPoissons, PIE_COLORS);
+    drawMultiYearChart();
   }, 50);
 }
 
@@ -2999,6 +3099,7 @@ function statsGoTo(idx){
     var sorted2=Object.entries(sp2).sort(function(a,b){return b[1]-a[1];});
     var total2=Object.values(sp2).reduce(function(a,b){return a+b;},0);
     if(sorted2.length) drawPieChart(sorted2,total2,PIE_COLORS);
+    drawMultiYearChart();
   }, 380);
 }
 
