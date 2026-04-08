@@ -5,7 +5,7 @@
 
 // ⚠️  CE NOM CHANGE À CHAQUE DÉPLOIEMENT (via GitHub Actions ou manuellement)
 //     Changer ce nom invalide l'ancien cache et force le téléchargement
-const CACHE_NAME = 'carnet-peche-v20260408210745';
+const CACHE_NAME = 'carnet-peche-v20260408211210';
 
 const STATIC_ASSETS = [
   './',
