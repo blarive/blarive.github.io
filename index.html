@@ -107,7 +107,6 @@ body.dark .sortie-chip{background:#1a3060;}
 body.dark .sortie-header:hover{background:rgba(255,255,255,0.04);}
 body.dark .record-info .species{color:#e0e8f4;}
 body.dark .entry-notes{color:#8a96b0;}
-body.dark .entry-meta-item{color:#a0b8d8;}
 
 /* ── SIDEBAR ─── */
 .sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,var(--eau-profonde) 0%,var(--eau) 100%);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden;}
@@ -176,19 +175,14 @@ body.dark .year-filter-btn.active{background:var(--eau-claire);border-color:var(
 .entry-card.swiping{transition:none;}
 .entry-card.trophy{border-left-color:var(--rose);}
 .entry-card.capot{border-left-color:#b0bcd8;background:#f8f9fd;}
-.btn-delete-desktop{display:none;position:absolute;top:12px;right:14px;background:#fee;border:1.5px solid #fcc;color:var(--rouge);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;}
-.btn-delete-desktop:hover{background:var(--rouge);color:white;}
-.entry-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-right:90px;}
+
 .entry-species{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:var(--eau-profonde);}
-.entry-date{font-size:11px;color:var(--gris);text-align:right;}
-.entry-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
-.entry-meta-item{display:flex;align-items:center;gap:4px;font-size:13px;color:#555;}
-.entry-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+
 .tag{padding:3px 10px;border-radius:10px;font-size:11px;background:var(--bleu-clair);color:var(--eau-claire);font-weight:500;}
 .tag.rose{background:var(--rose-clair);color:var(--rose);}
-.entry-stars{font-size:13px;margin-top:4px;}
+
 .entry-notes{font-size:13px;color:#666;margin-top:6px;font-style:italic;line-height:1.4;}
-.photo-badge{display:inline-block;background:linear-gradient(135deg,var(--rose),#c0306a);color:white;padding:2px 9px;border-radius:8px;font-size:10px;font-weight:700;margin-left:6px;}
+
 .empty-state{text-align:center;padding:56px 24px;color:var(--gris);}
 .empty-state .icon{font-size:56px;margin-bottom:12px;display:block;opacity:0.4;}
 
@@ -215,7 +209,6 @@ body.dark .sortie-date-line{color:#d0e0f8;}
 .sortie-header-right{text-align:right;flex-shrink:0;}
 .sortie-chevron{font-size:18px;color:var(--gris);transition:transform 0.25s;margin-top:2px;}
 .sortie-card.open .sortie-chevron{transform:rotate(180deg);}
-.sortie-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:8px;}
 
 /* Liste des prises dans la sortie */
 .prises-list{display:none;border-top:1px solid #f0f0f0;padding:0 12px 12px;}
@@ -229,7 +222,7 @@ body.dark .prise-species{color:#d0e0f8;}
 .prise-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .prise-val{font-size:12px;color:#555;display:flex;align-items:center;gap:3px;}
 body.dark .prise-val{color:#8a96b0;}
-.prise-photos{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+
 .prise-photo-mini{width:36px;height:36px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid rgba(0,0,0,0.1);transition:transform 0.1s;}
 .prise-photo-mini:hover{transform:scale(1.05);}
 .prise-photo-grid{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
@@ -315,8 +308,7 @@ body.dark .meteo-btn.selected{background:rgba(46,109,180,0.3);color:#90c0ff;bord
 body.dark .meteo-btn.selected-rose{background:rgba(232,96,154,0.25);color:#ffaacc;border-color:var(--rose);}
 .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--eau-claire) 0%,var(--rose) 100%);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(46,109,180,0.25);transition:transform 0.15s;}
 .btn-submit:active{transform:scale(0.98);}
-.capot-banner{display:none;background:var(--bleu-clair);border:1.5px solid #b8cef0;border-radius:12px;padding:14px 16px;margin-bottom:14px;color:var(--eau);font-size:14px;font-weight:500;text-align:center;}
-.capot-banner.visible{display:block;}
+
 .geo-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid #c8d8f0;border-radius:10px;background:var(--bleu-clair);color:var(--eau-claire);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;width:100%;margin-top:6px;}
 .geo-btn:hover{background:#d8eaff;}
 .spots-list{margin-top:6px;display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;}
@@ -366,7 +358,6 @@ body.dark .appat-cat-close{border-color:#2a4080;color:#8a96b0;}
 .appat-cat-tag.has-selection{background:var(--eau-claire);color:white;border-color:var(--eau-claire);}
 body.dark .appat-cat-tag{background:#1a3060;color:white;border-color:#2a4080;}
 body.dark .appat-cat-tag.has-selection{background:var(--eau-claire);border-color:var(--eau-claire);}
-.appat-cat-tag .cat-arrow{font-size:10px;opacity:0.7;}
 
 /* ── MÉTÉO PAR SPOT ─── */
 .meteo-spot-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0;}
@@ -442,10 +433,6 @@ body.dark .cmp-label{color:#e0e8f4;}
 
 /* ── GRAPHIQUES ─── */
 .chart-wrap{position:relative;width:100%;height:180px;margin-top:8px;}
-canvas.stat-chart{width:100%!important;height:100%!important;}
-.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
-.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gris);}
-.chart-legend-dot{width:10px;height:10px;border-radius:50%;}
 
 /* ── CARTE LEAFLET ─── */
 #map-container{width:100%;height:400px;border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.1);}
@@ -525,7 +512,7 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .stats-grid{grid-template-columns:1fr 1fr;}
   .form-layout{grid-template-columns:1fr 1fr;gap:16px;}
   .form-card.full{grid-column:1/-1;}
-  .btn-delete-desktop{display:block;}
+
   .card-delete-bg{display:none;}
 }
 @media(min-width:1024px){
@@ -622,7 +609,7 @@ body.dark .info-modal .info-author{color:#e0e8f4;}
   .fab-menu-btn:active{transform:scale(0.93);}
   .fab-menu-btn.open{transform:rotate(45deg);}
   .toast{bottom:90px;}
-  .btn-delete-desktop{display:none;}
+
 }
 
 /* ── POPUP MENU ─── */
@@ -647,14 +634,11 @@ body.dark .menu-popup-item.active-view{background:#1e4080;border-color:var(--ros
 .menu-popup-small{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:12px;border:none;background:#f8f9ff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--texte);transition:background 0.15s;}
 .menu-popup-small:active{background:var(--bleu-clair);}
 
-
-
-
 /* ── CATÉGORIES APPÂTS ─── */
 .cat-block{margin-bottom:14px;transition:transform 0.15s,opacity 0.15s;border-top:3px solid transparent;}
 
 /* ── HEATMAP CALENDRIER ─── */
-.heatmap-wrap{overflow-x:auto;padding-bottom:4px;}
+
 .heatmap-grid{display:inline-flex;gap:3px;align-items:flex-end;}
 .heatmap-month{display:flex;flex-direction:column;gap:2px;}
 .heatmap-month-label{font-size:9px;color:var(--gris);text-align:center;margin-bottom:2px;font-family:'DM Sans',sans-serif;}
@@ -670,8 +654,7 @@ body.dark .heatmap-day.l2{background:#2a5898;}
 body.dark .heatmap-day.l3{background:#2e6db4;}
 body.dark .heatmap-day.l4{background:#e8609a;}
 .heatmap-day:hover{transform:scale(1.4);}
-.heatmap-legend{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:10px;color:var(--gris);}
-.heatmap-legend-cell{width:11px;height:11px;border-radius:2px;}
+
 .chart-multiyear-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--texte);}
 .chart-multiyear-legend-item{display:flex;align-items:center;}
 .chart-wrap svg{display:block;width:100%;height:100%;}
@@ -696,8 +679,6 @@ body.dark .espece-heure-nom{color:#d0e0f8;}
 .espece-heure-val{font-weight:700;color:var(--rose);font-size:14px;}
 .espece-heure-detail{font-size:11px;color:var(--gris);}
 
-
-
 /* ── MODE OFFLINE ─── */
 #offline-badge{
   display:none;align-items:center;gap:5px;
@@ -710,7 +691,6 @@ body.dark .espece-heure-nom{color:#d0e0f8;}
 body.dark #offline-badge{background:#332b00;color:#ffd54f;border-color:#997300;}
 #offline-badge.visible{display:flex;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-
 
 /* ── PULL TO REFRESH ─── */
 #ptr-indicator{
@@ -740,7 +720,6 @@ body.dark .form-input.invalid,body.dark .form-select.invalid{background:#2a1010;
 .cat-drag-handle{cursor:grab;font-size:18px;color:var(--gris);padding:2px 6px 2px 0;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;}
 .cat-drag-handle:active{cursor:grabbing;}
 .cat-block.dragging{opacity:0.4;transform:scale(0.98);}
-.cat-block.drag-over{border-top:3px solid var(--rose);margin-top:-3px;}
 
 .cat-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bleu-clair);border-radius:12px;margin-bottom:8px;}
 body.dark .cat-header{background:#1a3060;}
@@ -759,10 +738,6 @@ body.dark .cat-appat-nom{color:#e0e8f4;}
 .add-appat-inline{display:flex;gap:6px;margin-top:6px;padding:0 4px;}
 .add-cat-form{display:flex;gap:8px;margin-bottom:14px;}
 /* Tags appâts dans formulaire de prise — par catégorie */
-.appat-cat-section{margin-bottom:10px;}
-.appat-cat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin-bottom:5px;display:block;}
-
-
 
 /* ── INDICATEUR SAUVEGARDE ─── */
 #save-indicator{
@@ -902,7 +877,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
     <!-- JOURNAL -->
     <div class="view active" id="view-journal">
       <div class="journal-toolbar">
-        <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="renderJournal()"></div>
+        <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="journalPage=1;renderJournal()"></div>
         <button type="button" id="year-btn" onclick="openYearPopup()" class="year-filter-btn">📅 <span id="year-btn-label">Toutes les années</span> ▾</button>
       </div>
       <div class="filter-pills" id="filter-pills-container">
@@ -1475,6 +1450,8 @@ let categories = [];
 let currentFilter='tous', currentYear='tous', currentSort='date', currentStars=0, selectedMeteo=[];
 let isTrophy=false, isRelache=false, isCapot=false;
 let currentPhotos = []; // Tableau de photos compressées (base64)
+let journalPage  = 1;   // Pagination journal
+const JOURNAL_PAGE_SIZE = 20;
 let leafletMap=null, mapMarkers=[];
 
 const topbarTitles={
@@ -1898,6 +1875,7 @@ function switchView(name){
 }
 function setFilter(f,btn){
   currentFilter=f;
+  journalPage=1;
   document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
   if(btn) btn.classList.add('active');
   renderJournal();
@@ -1905,6 +1883,7 @@ function setFilter(f,btn){
 
 function setSort(s){
   currentSort=s;
+  journalPage=1;
   document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('sort-'+s);
   if(el) el.classList.add('active');
@@ -1913,6 +1892,7 @@ function setSort(s){
 
 function setYear(y){
   currentYear=y;
+  journalPage=1;
   closeYearPopup();
   const btn=document.getElementById('year-btn');
   const lbl=document.getElementById('year-btn-label');
@@ -1993,22 +1973,6 @@ function popupNav(name){
 // ════════════════════════════════════════════════════════
 
 // ── Phase de lune (calcul pur JS, sans API) ──
-function getLunePhase(date){
-  const d=new Date(date||Date.now());
-  const syno=29.53058867;
-  const ref=new Date('2000-01-06T18:14:00Z'); // nouvelle lune de référence
-  const jours=(d-ref)/(1000*60*60*24);
-  const cycle=((jours%syno)+syno)%syno;
-  const pct=cycle/syno;
-  if(pct<0.03||pct>0.97) return '🌑 NL';
-  if(pct<0.22) return '🌒 CC';
-  if(pct<0.28) return '🌓 PQ';
-  if(pct<0.47) return '🌔 GC';
-  if(pct<0.53) return '🌕 PL';
-  if(pct<0.72) return '🌖 GD';
-  if(pct<0.78) return '🌗 DQ';
-  return '🌘 CD';
-}
 
 function applyLuneAuto(){
   const dateVal=document.getElementById('f-date').value;
@@ -2417,7 +2381,11 @@ function renderJournal(){
   }
   // 'date' : ordre naturel de groupEnSorties (déjà trié par date desc)
 
-  list.innerHTML=sorties.map((prises,idx)=>{
+  // Pagination : afficher seulement les N premières sorties
+  const totalSorties = sorties.length;
+  const visible = sorties.slice(0, journalPage * JOURNAL_PAGE_SIZE);
+
+  list.innerHTML=visible.map((prises,idx)=>{
     const ref=prises[0]; // Première prise du groupe pour les infos générales
     const ids=prises.map(e=>e.id);
     const key=sortieKey(ref);
@@ -2555,26 +2523,48 @@ function renderJournal(){
     }
   }).join('');
 
-  // Swipe mobile sur les cartes sortie
-  if(isMobile){
-    document.querySelectorAll('.sortie-card').forEach(card=>{
-      let sx=0,cx=0,d=false;
-      card.addEventListener('touchstart',e=>{
-        if(e.target.closest('button,a,.prise-del-btn')) return;
-        sx=e.touches[0].clientX; d=true;
-      },{passive:true});
-      card.addEventListener('touchmove',e=>{
-        if(!d) return;
-        cx=Math.min(0,Math.max(e.touches[0].clientX-sx,-120));
-        card.style.transform=`translateX(${cx}px)`;
-      },{passive:true});
-      card.addEventListener('touchend',()=>{
-        d=false;
-        card.style.transform=cx<-80?'translateX(-90px)':'';
-        cx=0;
-      });
-    });
+  // Bouton "Charger plus" si des sorties sont cachées
+  if(totalSorties > visible.length){
+    list.innerHTML += `<div style="grid-column:1/-1;text-align:center;padding:16px 0">
+      <button type="button" onclick="loadMoreJournal()" style="padding:10px 28px;background:linear-gradient(135deg,var(--eau-claire),var(--rose));color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer">
+        Charger plus <span style="opacity:0.8;font-size:12px">(${totalSorties - visible.length} restantes)</span>
+      </button>
+    </div>`;
   }
+
+  // Swipe mobile — délégation sur le conteneur (un seul listener, pas un par carte)
+  if(isMobile) initSwipeJournal();
+}
+
+// ── Swipe mobile journal — délégation d'événements (initialisée une seule fois) ──
+function initSwipeJournal(){
+  const container = document.getElementById('journal-list');
+  if(!container || container._swipeInit) return;
+  container._swipeInit = true;
+  let sx=0, cx=0, active=null;
+  container.addEventListener('touchstart', e=>{
+    const card = e.target.closest('.sortie-card');
+    if(!card || e.target.closest('button,a,.prise-del-btn')) return;
+    active = card; sx = e.touches[0].clientX; cx = 0;
+  },{passive:true});
+  container.addEventListener('touchmove', e=>{
+    if(!active) return;
+    cx = Math.min(0, Math.max(e.touches[0].clientX - sx, -120));
+    active.style.transform = `translateX(${cx}px)`;
+  },{passive:true});
+  container.addEventListener('touchend', ()=>{
+    if(!active) return;
+    active.style.transform = cx < -80 ? 'translateX(-90px)' : '';
+    active = null; cx = 0;
+  });
+}
+
+function loadMoreJournal(){
+  journalPage++;
+  renderJournal();
+  // Scroll vers le bas pour voir les nouvelles sorties
+  const list = document.getElementById('journal-list');
+  if(list) list.lastElementChild?.previousElementSibling?.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 function viewFullImage(src) {
