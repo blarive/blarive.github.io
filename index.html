@@ -17,7 +17,7 @@
 <style>
 :root {
   --eau:#1b3a6b; --eau-profonde:#0f2147; --eau-claire:#2e6db4;
-  --sable:#f7d6e8; --mousse:#4a7c59; --eclair:#e8609a;
+  --sable:#f7d6e8; --mousse:#4a7c59;
   --blanc:#fdf4f8; --texte:#1a2035; --gris:#8a96b0;
   --rouge:#c0392b; --rose:#e8609a; --rose-clair:#fce4f0;
   --bleu-clair:#e8f0fb; --radius:14px; --sidebar-w:240px;
@@ -1746,7 +1746,9 @@ async function init(){
     }
   } catch(err) {
     console.error('[DB] Erreur ouverture IndexedDB:', err);
-    showToast('⚠️ Erreur base de données');
+    // Afficher un message clair et permettre l'utilisation en mode mémoire
+    showToast('⚠️ Base de données indisponible — données non sauvegardées');
+    // L'app continue de fonctionner avec entries/spots/categories vides en mémoire
   }
   updateOnlineStatus();
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
@@ -2029,13 +2031,26 @@ function applyLuneAuto(){
 
 // ── Météo auto via Open-Meteo (gratuit, sans clé) ──
 const WMO_MAP={
+  // Ciel clair / peu nuageux
   0:'☀️ Soleil',1:'☀️ Soleil',2:'⛅ Nuageux',3:'⛅ Nuageux',
+  // Brouillard / brume
+  4:'🌫 Brume',5:'🌫 Brume',6:'🌫 Brume',7:'🌫 Brume',8:'🌫 Brume',
+  10:'🌫 Brume',11:'🌫 Brume',12:'🌫 Brume',
   45:'🌫 Brume',48:'🌫 Brume',
+  // Précipitations légères passées
+  30:'🌧 Pluie',31:'🌧 Pluie',32:'🌧 Pluie',33:'🌧 Pluie',34:'🌧 Pluie',35:'❄️ Froid',
+  // Bruine
+  40:'🌧 Pluie',41:'🌧 Pluie',42:'🌧 Pluie',
+  // Pluie
   51:'🌧 Pluie',53:'🌧 Pluie',55:'🌧 Pluie',
   61:'🌧 Pluie',63:'🌧 Pluie',65:'🌧 Pluie',
+  // Neige / grésil
   71:'❄️ Froid',73:'❄️ Froid',75:'❄️ Froid',
-  77:'❄️ Froid',80:'🌧 Pluie',81:'🌧 Pluie',82:'🌧 Pluie',
+  77:'❄️ Froid',
+  // Averses
+  80:'🌧 Pluie',81:'🌧 Pluie',82:'🌧 Pluie',
   85:'❄️ Froid',86:'❄️ Froid',
+  // Orage
   95:'🌧 Pluie',96:'🌧 Pluie',99:'🌧 Pluie'
 };
 
@@ -2622,8 +2637,17 @@ function loadMoreJournal(){
 }
 
 function viewFullImage(src) {
-  const imgWindow = window.open();
-  imgWindow.document.write(`<img src="${src}" style="max-width:100%;height:auto;margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh">`);
+  // Construire un blob HTML propre — évite l'API obsolète window.open+write
+  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Photo</title>
+<style>*{margin:0;padding:0}body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;max-height:100vh;object-fit:contain}</style>
+</head><body><img src="${src}" alt="Photo de prise"></body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  // Révoquer l'URL dès que la fenêtre est chargée
+  if(win) win.addEventListener('load', () => URL.revokeObjectURL(url), {once:true});
 }
 
 function calcDuree(dateStr, heureFin){
