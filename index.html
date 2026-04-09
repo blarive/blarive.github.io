@@ -1221,6 +1221,41 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
         </label>
       </div>
     </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">📍 Lieu / Spot</label>
+        <input type="text" class="form-input" id="edit-lieu" placeholder="Étang, rivière…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">⏱ Heure fin</label>
+        <input type="time" class="form-input" id="edit-heure-fin">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">🌡 Air (°C)</label>
+        <input type="number" class="form-input" id="edit-temp-air" placeholder="18">
+      </div>
+      <div class="form-group">
+        <label class="form-label">💧 Eau (°C)</label>
+        <input type="number" class="form-input" id="edit-temp-eau" placeholder="14">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">🌙 Lune</label>
+        <select class="form-select" id="edit-lune">
+          <option value="">—</option>
+          <option>🌑 NL</option><option>🌒 CC</option><option>🌓 PQ</option>
+          <option>🌔 GC</option><option>🌕 PL</option><option>🌖 GD</option>
+          <option>🌗 DQ</option><option>🌘 CD</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">🔢 Nb poissons</label>
+        <input type="number" class="form-input" id="edit-nb-poissons" placeholder="1" min="1" value="1">
+      </div>
+    </div>
     <div class="form-group">
       <label class="form-label">📝 Notes</label>
       <textarea class="form-textarea" id="edit-notes" placeholder="Notes, observations…"></textarea>
@@ -2038,7 +2073,16 @@ async function fetchMeteoAuto(){
       });
     }
     showToast(`🌤 ${tempAir}°C — ${cond||'météo chargée'} — ${lunePhase.split(' ')[0]}`);
-  } catch(e){ /* silencieux */ }
+  } catch(e){
+    // Distinguer erreur GPS vs erreur réseau
+    const isGPSError = e instanceof GeolocationPositionError ||
+                       (e && (e.code === 1 || e.code === 2 || e.code === 3));
+    if(isGPSError){
+      showToast('📍 GPS indisponible — saisissez la météo manuellement');
+    } else {
+      showToast('🌤 Météo auto indisponible — saisissez manuellement');
+    }
+  }
 }
 
 function getLunePhase(date){
@@ -3755,6 +3799,12 @@ function openEditEntry(id){
   document.getElementById('edit-notes').value=e.notes||'';
   document.getElementById('edit-trophy').checked=!!e.trophy;
   document.getElementById('edit-relache').checked=!!e.relache;
+  document.getElementById('edit-lieu').value=e.lieu||'';
+  document.getElementById('edit-heure-fin').value=e.heureFin||'';
+  document.getElementById('edit-temp-air').value=e.tempAir||'';
+  document.getElementById('edit-temp-eau').value=e.tempEau||'';
+  document.getElementById('edit-lune').value=e.lune||'';
+  document.getElementById('edit-nb-poissons').value=e.nbPoissons||1;
   document.getElementById('edit-wrap').classList.add('open');
 }
 function closeEdit(){
@@ -3780,6 +3830,12 @@ function saveEditEntry(){
     notes:document.getElementById('edit-notes').value,
     trophy:document.getElementById('edit-trophy').checked,
     relache:document.getElementById('edit-relache').checked,
+    lieu:document.getElementById('edit-lieu').value,
+    heureFin:document.getElementById('edit-heure-fin').value||null,
+    tempAir:document.getElementById('edit-temp-air').value||null,
+    tempEau:document.getElementById('edit-temp-eau').value||null,
+    lune:document.getElementById('edit-lune').value,
+    nbPoissons:parseInt(document.getElementById('edit-nb-poissons').value)||entries[idx].nbPoissons||1,
   };
   haptic('medium');
   saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
@@ -4393,7 +4449,10 @@ function importData(event){
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+  // Durée adaptée à la longueur du message (min 2s, ~60ms/char)
+  const dur=Math.min(5000, Math.max(2000, msg.length * 60));
+  clearTimeout(t._toastTimer);
+  t._toastTimer=setTimeout(()=>t.classList.remove('show'), dur);
 }
 
 let rt;

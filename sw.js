@@ -1,115 +1,99 @@
-// ════════════════════════════════════════════════════════
-//  SERVICE WORKER — Carnet de Pêche
-//  Cache-first pour les assets, network-first pour index.html
-// ════════════════════════════════════════════════════════
+// ─── Service Worker — Carnet de Pêche ────────────────────
+// ⚠️  Une seule chose à changer à chaque déploiement : VERSION
+const VERSION = '20260409';
+const CACHE = `carnet-peche-${VERSION}`;
 
-// ⚠️  CE NOM CHANGE À CHAQUE DÉPLOIEMENT (via GitHub Actions ou manuellement)
-//     Changer ce nom invalide l'ancien cache et force le téléchargement
-const CACHE_NAME = 'carnet-peche-v2026040608';
-
-const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
+const STATIC = [
   'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
+  './icon-192.png',
+  './icon-512.png',
+  './manifest.json',
 ];
 
-// ── Installation : mise en cache des assets statiques ──
+// ─── INSTALL ─────────────────────────────────────────────
+// skipWaiting immédiat : pas d'attente, le nouveau SW prend
+// le contrôle dès qu'il est installé, même onglet ouvert.
 self.addEventListener('install', event => {
-  // Ne pas attendre — skipWaiting est déclenché par l'utilisateur via le bandeau
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return Promise.allSettled(
-        STATIC_ASSETS.map(url =>
-          cache.add(url).catch(err => console.warn('[SW] Cache miss:', url, err))
-        )
-      );
-    })
+    caches.open(CACHE).then(cache =>
+      Promise.allSettled(STATIC.map(url => cache.add(url).catch(() => {})))
+    )
   );
 });
 
-// ── Activation : supprimer les anciens caches ──
+// ─── ACTIVATE ────────────────────────────────────────────
+// Purge tous les caches qui ne correspondent pas à VERSION.
+// clients.claim() : le nouveau SW contrôle immédiatement
+// tous les onglets sans attendre un rechargement.
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
+    caches.keys()
+      .then(keys => Promise.all(
         keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => {
-            console.log('[SW] Suppression ancien cache:', key);
-            return caches.delete(key);
+          .filter(k => k !== CACHE)
+          .map(k => {
+            console.log('[SW] Purge :', k);
+            return caches.delete(k);
           })
-      )
-    ).then(() => {
-      // Prendre le contrôle de tous les onglets ouverts
-      return self.clients.claim();
-    }).then(() => {
-      // Notifier tous les clients qu'une nouvelle version est active
-      return self.clients.matchAll({ type: 'window' }).then(clients => {
-        clients.forEach(client => client.postMessage({ type: 'RELOAD' }));
-      });
-    })
+      ))
+      .then(() => self.clients.claim())
+      .then(() => {
+        // Après claim(), notifier les onglets de se recharger
+        // pour charger le nouveau index.html depuis le réseau
+        return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      })
+      .then(clients => {
+        clients.forEach(c => c.postMessage({ type: 'RELOAD' }));
+      })
   );
 });
 
-// ── Fetch : stratégies différenciées ──
+// ─── FETCH ───────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // index.html → Network-first (toujours la version la plus récente)
-  if(url.pathname.endsWith('/') || url.pathname.endsWith('index.html')){
-    event.respondWith(networkFirst(event.request));
+  if (event.request.method !== 'GET') return;
+
+  // Réseau direct : GPS, tuiles OSM, API météo
+  if (
+    url.hostname === 'nominatim.openstreetmap.org' ||
+    url.hostname.includes('tile.openstreetmap.org') ||
+    url.hostname === 'api.open-meteo.com'
+  ) return;
+
+  // index.html et sw.js : toujours réseau, jamais cache
+  // Garantit que la dernière version est toujours servie
+  if (
+    url.pathname === '/' ||
+    url.pathname.endsWith('/index.html') ||
+    url.pathname.includes('sw.js')
+  ) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' })
+        .catch(() => caches.match('./index.html'))
+    );
     return;
   }
 
-  // APIs externes (nominatim, météo) → Network only, pas de cache
-  if(url.hostname !== self.location.hostname){
-    event.respondWith(fetch(event.request).catch(() => Response.error()));
-    return;
-  }
-
-  // Assets statiques → Cache-first
-  event.respondWith(cacheFirst(event.request));
+  // Assets statiques (fonts, leaflet, icônes) : cache first
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(response => {
+        if (response && response.ok) {
+          caches.open(CACHE).then(c => c.put(event.request, response.clone()));
+        }
+        return response;
+      }).catch(() => new Response('', { status: 408 }));
+    })
+  );
 });
 
-// Network-first : essayer le réseau, fallback cache si offline
-async function networkFirst(request){
-  try {
-    const response = await fetch(request);
-    if(response.ok){
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch(e) {
-    const cached = await caches.match(request);
-    return cached || Response.error();
-  }
-}
-
-// Cache-first : servir depuis le cache, sinon réseau
-async function cacheFirst(request){
-  const cached = await caches.match(request);
-  if(cached) return cached;
-  try {
-    const response = await fetch(request);
-    if(response.ok){
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch(e) {
-    return Response.error();
-  }
-}
-
-// ── Message SKIP_WAITING depuis l'app (bandeau mise à jour) ──
+// ─── MESSAGE ─────────────────────────────────────────────
+// Conservé pour compatibilité — plus utilisé activement
 self.addEventListener('message', event => {
-  if(event.data === 'SKIP_WAITING'){
-    self.skipWaiting();
-  }
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
