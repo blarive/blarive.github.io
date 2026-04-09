@@ -882,7 +882,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
     <!-- JOURNAL -->
     <div class="view active" id="view-journal">
       <div class="journal-toolbar">
-        <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="journalPage=1;renderJournal()"></div>
+        <div class="search-box"><input type="text" placeholder="Rechercher espèce, lieu…" id="search-input" oninput="journalPage=1;clearTimeout(window._st);window._st=setTimeout(renderJournal,200)"></div>
         <button type="button" id="year-btn" onclick="openYearPopup()" class="year-filter-btn">📅 <span id="year-btn-label">Toutes les années</span> ▾</button>
       </div>
       <div class="filter-pills" id="filter-pills-container">
@@ -2299,6 +2299,7 @@ function saveEntry(){
   resetForm(); updateAllStats();
   haptic('success');
   showToast(isCapot?'😔 Capot enregistré…':'🎣 Sortie enregistrée !');
+  _moisCache=null; _statsCache=null;
   switchView('journal'); renderJournal();
 }
 
@@ -2370,7 +2371,8 @@ function deleteEntry(id){
       entries=entries.filter(e=>e.id!==id);
       saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
       doBackup(true).catch(()=>{});
-      renderJournal(); updateAllStats();
+      _moisCache=null; _statsCache=null;
+  renderJournal(); updateAllStats();
       showToast('🗑 Prise supprimée');
     }
   });
@@ -2708,8 +2710,12 @@ function updateAllStats(){
   const sr=document.getElementById('s-record'); if(sr) sr.textContent=rec;
 }
 
+let _statsCache=null, _statsCacheKey='';
 function updateStats(){
   const el=document.getElementById('stats-content');
+  // Cache : skip rebuild si données identiques
+  const _ck=entries.length+'|'+currentYear+'|'+(entries[0]?.id||0);
+  if(_statsCache && _statsCacheKey===_ck){ el.innerHTML=_statsCache; return; }
   if(!entries.length){
     el.innerHTML=`<div class="empty-state" class="gc-full"><span class="icon">📊</span><p>Pas encore de données.</p></div>`;
     return;
@@ -2961,6 +2967,8 @@ function updateStats(){
       </div>`;
   }
 
+  // Sauvegarder le HTML dans le cache
+  _statsCache=el.innerHTML; _statsCacheKey=_ck;
   setTimeout(()=>{
     const moisData=getMoisData();
     const PIE_COLORS=['#2e6db4','#e8609a','#4a7c59','#f0a030','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#2ecc71'];
@@ -3004,8 +3012,12 @@ function statsGoTo(idx){
   }, 380);
 }
 
+// getMoisData mémoïsée — recalculée uniquement si nb entrées ou mois change
+let _moisCache=null, _moisCacheKey='';
 function getMoisData(){
   const now=new Date();
+  const ck=entries.length+'|'+now.getFullYear()+'-'+now.getMonth();
+  if(_moisCache&&_moisCacheKey===ck) return _moisCache;
   const data=[];
   for(let i=11;i>=0;i--){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
@@ -3017,6 +3029,7 @@ function getMoisData(){
     const taux=mSorties?Math.round(mPrises/mSorties*100):0;
     data.push({label,key,total:mSorties,prises:mPrises,taux});
   }
+  _moisCache=data; _moisCacheKey=ck;
   return data;
 }
 
@@ -3839,6 +3852,7 @@ function saveEditEntry(){
   };
   haptic('medium');
   saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
+  _moisCache=null; _statsCache=null;
   closeEdit(); renderJournal(); updateAllStats();
   showToast('✅ Prise modifiée !');
 }
@@ -4435,7 +4449,8 @@ function importData(event){
         spots=[...newSpots,...spots];
         saveSpots().catch(e=>console.error('[DB] import spots:', e));
       }
-      renderJournal(); updateAllStats(); renderSpotsForm();
+      _moisCache=null; _statsCache=null;
+  renderJournal(); updateAllStats(); renderSpotsForm();
       showToast(`📥 ${nouveaux.length} sortie(s) importée(s) !`);
     }catch{showToast('❌ Fichier invalide');}
     event.target.value='';
