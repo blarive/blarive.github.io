@@ -795,6 +795,11 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
 .db-arrow{font-size:28px;color:#e8609a;margin-bottom:10px;}
 .db-badge{display:inline-block;padding:10px 28px;background:linear-gradient(135deg,#2e6db4,#e8609a);color:white;border-radius:30px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.5px;box-shadow:0 4px 20px rgba(232,96,154,0.3);}
 .db-url{margin-top:20px;font-size:12px;color:#4a6090;font-family:monospace;}
+/* ── Utilitaires ─── */
+.mb-14{margin-bottom:14px;}
+.flex-1{flex:1;}
+.gc-full{grid-column:1/-1;}
+.w-full-h-full{width:100%;height:100%;}
 </style>
 </head>
 <body>
@@ -1103,8 +1108,8 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
     <div class="menu-popup-row">
       <button type="button" class="menu-popup-small" onclick="exportData();closeMenu()">📤 Exporter</button>
       <button type="button" class="menu-popup-small" onclick="document.getElementById('import-file').click();closeMenu()">📥 Importer</button>
-      <button type="button" class="menu-popup-small" onclick="popupNav('parametres')" style="grid-column:1/-1">⚙️ Paramètres</button>
-      <button type="button" class="menu-popup-small" onclick="toggleDarkMode();closeMenu()" style="grid-column:1/-1">🌙 Mode sombre</button>
+      <button type="button" class="menu-popup-small" onclick="popupNav('parametres')" class="gc-full">⚙️ Paramètres</button>
+      <button type="button" class="menu-popup-small" onclick="toggleDarkMode();closeMenu()" class="gc-full">🌙 Mode sombre</button>
       <button type="button" class="menu-popup-small" onclick="openInfo();closeMenu()" style="grid-column:1/-1;opacity:0.75">ℹ️ À propos</button>
     </div>
   </div>
@@ -1451,6 +1456,9 @@ let currentFilter='tous', currentYear='tous', currentSort='date', currentStars=0
 let isTrophy=false, isRelache=false, isCapot=false;
 let currentPhotos = []; // Tableau de photos compressées (base64)
 let journalPage  = 1;   // Pagination journal
+
+// Sanitise les chaînes insérées dans innerHTML (prévention XSS)
+function esc(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 const JOURNAL_PAGE_SIZE = 20;
 let leafletMap=null, mapMarkers=[];
 
@@ -2362,7 +2370,7 @@ function renderJournal(){
 
   const list=document.getElementById('journal-list');
   if(!filtered.length){
-    list.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">🎣</span><p>Aucune sortie enregistrée.<br>Ajoutez votre première prise !</p></div>`;
+    list.innerHTML=`<div class="empty-state" class="gc-full"><span class="icon">🎣</span><p>Aucune sortie enregistrée.<br>Ajoutez votre première prise !</p></div>`;
     return;
   }
 
@@ -2449,7 +2457,7 @@ function renderJournal(){
             </div>
             ${tags.length?`<div class="prise-badges" style="margin-top:4px">${tags.map(t=>`<span style="font-size:10px;background:var(--bleu-clair);color:var(--eau-claire);padding:2px 7px;border-radius:8px;font-weight:500">${t}</span>`).join('')}</div>`:''}
             ${photosHtml}
-            ${e.notes?`<div class="prise-notes">"${e.notes.slice(0,80)}${e.notes.length>80?'…':''}"</div>`:''}
+            ${e.notes?`<div class="prise-notes">"${esc(e.notes).slice(0,80)}${e.notes.length>80?'…':''}"</div>`:''}
           </div>
           <button type="button" class="prise-edit-btn" onclick="openEditEntry(${e.id})" title="Modifier cette prise">✏️</button>
           <button type="button" class="prise-del-btn" onclick="deleteEntry(${e.id})" title="Supprimer cette prise">🗑</button>
@@ -2471,7 +2479,7 @@ function renderJournal(){
             <div class="sortie-header" onclick="toggleSortie('${keyEsc}')">
               <div class="sortie-header-left">
                 <div class="sortie-date-line">${jour}</div>
-                ${ref.lieu?`<div class="sortie-lieu">📍 ${ref.lieu}</div>`:''}
+                ${ref.lieu?`<div class="sortie-lieu">📍 ${esc(ref.lieu)}</div>`:''}
                 <div class="sortie-chips">
                   ${isCapotSortie?'<span class="sortie-chip chip-capot">🚫 Capot</span>':`<span class="sortie-chip chip-prises">${nbPrises} prise${nbPrises>1?'s':''}</span>`}
                   ${hasTrophy?'<span class="sortie-chip chip-trophy">🏆</span>':''}
@@ -2479,7 +2487,7 @@ function renderJournal(){
                   ${duree?`<span class="sortie-chip chip-duree">⏱ ${duree}</span>`:''}
                   ${maxStars?`<span class="sortie-chip chip-stars">${'⭐'.repeat(maxStars)}</span>`:''}
                 </div>
-                ${!isCapotSortie&&especesSummary?`<div style="font-size:12px;color:var(--gris);margin-top:5px;font-style:italic">${especesSummary}${meilleurPoids?' — '+meilleurPoids:''}</div>`:''}
+                ${!isCapotSortie&&especesSummary?`<div style="font-size:12px;color:var(--gris);margin-top:5px;font-style:italic">${esc(especesSummary)}${meilleurPoids?' — '+meilleurPoids:''}</div>`:''}
               </div>
               <div class="sortie-header-right">
                 <div style="font-size:11px;color:var(--gris);margin-bottom:4px">${heureDeb}</div>
@@ -2499,7 +2507,7 @@ function renderJournal(){
           <div class="sortie-header" onclick="toggleSortie('${keyEsc}')">
             <div class="sortie-header-left">
               <div class="sortie-date-line">${jour}</div>
-              ${ref.lieu?`<div class="sortie-lieu">📍 ${ref.lieu}</div>`:''}
+              ${ref.lieu?`<div class="sortie-lieu">📍 ${esc(ref.lieu)}</div>`:''}
               <div class="sortie-chips">
                 ${isCapotSortie?'<span class="sortie-chip chip-capot">🚫 Capot</span>':`<span class="sortie-chip chip-prises">${nbPrises} prise${nbPrises>1?'s':''}</span>`}
                 ${hasTrophy?'<span class="sortie-chip chip-trophy">🏆 Trophée</span>':''}
@@ -2507,7 +2515,7 @@ function renderJournal(){
                 ${duree?`<span class="sortie-chip chip-duree">⏱ ${duree}</span>`:''}
                 ${maxStars?`<span class="sortie-chip chip-stars">${'⭐'.repeat(maxStars)}</span>`:''}
               </div>
-              ${!isCapotSortie&&especesSummary?`<div style="font-size:12px;color:var(--gris);margin-top:5px;font-style:italic">${especesSummary}${meilleurPoids?' — '+meilleurPoids:''}</div>`:''}
+              ${!isCapotSortie&&especesSummary?`<div style="font-size:12px;color:var(--gris);margin-top:5px;font-style:italic">${esc(especesSummary)}${meilleurPoids?' — '+meilleurPoids:''}</div>`:''}
             </div>
             <div class="sortie-header-right">
               <div style="font-size:11px;color:var(--gris);margin-bottom:4px">${heureDeb}</div>
@@ -2595,64 +2603,6 @@ function formatPoids(kg){
 //  FONCTIONS STATS SUPPLÉMENTAIRES
 // ════════════════════════════════════════════════════════
 
-function buildHeatmap(entries){
-  // 52 semaines en arrière depuis aujourd'hui
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const startDay = new Date(today);
-  startDay.setDate(startDay.getDate() - 363); // ~52 semaines
-
-  // Compter prises par jour
-  const byDay = {};
-  entries.forEach(e => {
-    if(!e.date) return;
-    const k = e.date.slice(0,10);
-    byDay[k] = (byDay[k]||0) + 1;
-  });
-
-  // Grouper par mois pour affichage
-  const months = [];
-  let cur = new Date(startDay);
-  // Aller au lundi de la semaine de startDay
-  const dow = (cur.getDay()+6)%7; // 0=lundi
-  cur.setDate(cur.getDate() - dow);
-
-  let curMonth = -1;
-  let week = [];
-  let weeks = [];
-  let monthLabel = '';
-
-  while(cur <= today){
-    const m = cur.getMonth();
-    if(m !== curMonth){
-      if(weeks.length) months.push({label: monthLabel, weeks});
-      curMonth = m;
-      monthLabel = cur.toLocaleDateString('fr-FR',{month:'short'});
-      weeks = [];
-    }
-    if(week.length === 7){ weeks.push(week); week = []; }
-    const k = cur.toISOString().slice(0,10);
-    const n = byDay[k]||0;
-    const level = cur > today ? -1 : n===0?0:n===1?1:n<=3?2:n<=5?3:4;
-    week.push({k, n, level});
-    cur.setDate(cur.getDate()+1);
-  }
-  if(week.length){ while(week.length<7) week.push({k:'',n:0,level:-1}); weeks.push(week); }
-  if(weeks.length) months.push({label: monthLabel, weeks});
-
-  return `<div class="heatmap-grid">${months.map(mo=>`
-    <div class="heatmap-month">
-      <div class="heatmap-month-label">${mo.label}</div>
-      <div class="heatmap-weeks">${mo.weeks.map(wk=>`
-        <div style="display:flex;flex-direction:column;gap:2px">${wk.map(d=>
-          d.level<0
-            ? '<div class="heatmap-day" style="opacity:0"></div>'
-            : `<div class="heatmap-day${d.level>0?' l'+d.level:''}" title="${d.k?d.k+' — '+d.n+' prise(s)':''}"></div>`
-        ).join('')}</div>`).join('')}
-      </div>
-    </div>`).join('')}</div>`;
-}
-
 function buildHeureParEspece(prises){
   // Pour chaque espèce : trouver l'heure où elle est le plus souvent prise
   const sp = {};
@@ -2717,7 +2667,7 @@ function updateAllStats(){
 function updateStats(){
   const el=document.getElementById('stats-content');
   if(!entries.length){
-    el.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><span class="icon">📊</span><p>Pas encore de données.</p></div>`;
+    el.innerHTML=`<div class="empty-state" class="gc-full"><span class="icon">📊</span><p>Pas encore de données.</p></div>`;
     return;
   }
   const prises=entries.filter(e=>!e.capot);
@@ -3170,7 +3120,7 @@ function renderTechniqueCatGrid(){
     const isActive = currentTechCatId === cat.id;
     return `<button type="button" class="appat-cat-tag${isActive ? ' has-selection' : ''}"
       onclick="selectTechniqueCat(${cat.id})">
-      ${cat.nom}
+      ${esc(cat.nom)}
     </button>`;
   }).join('');
 }
@@ -3280,7 +3230,7 @@ function renderAppatsPage(){
 
   // Bloc ajout catégorie
   const addCatHtml=`
-    <div class="stat-card" style="margin-bottom:14px">
+    <div class="stat-card" class="mb-14">
       <div class="stat-card-title">📁 Nouvelle catégorie</div>
       <div class="add-cat-form">
         <input type="text" id="new-cat-name" class="form-input" placeholder="ex. 🪱 Au toc, 🎣 Au leurre…" style="flex:1">
@@ -3290,10 +3240,10 @@ function renderAppatsPage(){
 
   // Blocs par catégorie
   const catsHtml=`<div id="cats-sortable">` + categories.map(cat=>`
-    <div class="stat-card cat-block" data-cat-id="${cat.id}" style="margin-bottom:14px">
+    <div class="stat-card cat-block" data-cat-id="${cat.id}" class="mb-14">
       <div class="cat-header">
         <span class="cat-drag-handle" aria-label="Réorganiser" title="Glisser pour réorganiser">⠿</span>
-        <span class="cat-title">${cat.nom}</span>
+        <span class="cat-title">${esc(cat.nom)}</span>
         <button type="button" class="cat-del-btn" onclick="deleteCategorie(${cat.id})" title="Supprimer la catégorie">🗑</button>
       </div>
       <div class="cat-appats-wrap">
@@ -3574,7 +3524,7 @@ function renderSpotsForm(){
   box.style.display='block';
   list.innerHTML=spots.map(s=>`
     <div class="spot-chip" onclick="useSpot('${s.nom.replace(/'/g,"\\'")}')">
-      📍 <span style="flex:1">${s.nom}</span>
+      📍 <span style="flex:1">${esc(s.nom)}</span>
       <button type="button" class="spot-del" onclick="deleteSpot(${s.id},event)">✕</button>
     </div>`).join('');
 }
@@ -3645,7 +3595,7 @@ function renderSpotsPage(){
   const el=document.getElementById('spots-page-content');
   if(!el) return;
   const addHtml=`
-    <div class="stat-card" style="margin-bottom:14px">
+    <div class="stat-card" class="mb-14">
       <div class="stat-card-title">➕ Ajouter un spot manuellement</div>
       <div style="display:flex;gap:8px">
         <input type="text" id="new-spot-name" class="form-input" placeholder="Nom du spot…" style="flex:1">
@@ -3654,7 +3604,7 @@ function renderSpotsPage(){
     </div>`;
 
   const mapHtml=`
-    <div class="stat-card" style="margin-bottom:14px">
+    <div class="stat-card" class="mb-14">
       <div class="stat-card-title">🗺 Carte de mes spots</div>
       <div id="map-container"></div>
       ${spots.filter(s=>s.lat&&s.lng).length===0?`<p style="font-size:12px;color:var(--gris);margin-top:8px;text-align:center">Utilisez le GPS pour afficher vos spots sur la carte</p>`:''}
@@ -3693,7 +3643,7 @@ function renderSpotsPage(){
             <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:${meteoHtml?'10px':'0'}">
               <span style="font-size:26px">📍</span>
               <div style="flex:1;min-width:0">
-                <div style="font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:var(--eau-profonde);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.nom}</div>
+                <div style="font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:var(--eau-profonde);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.nom)}</div>
                 <div style="font-size:12px;color:var(--gris);margin-top:3px">${sortiesSpot.length} sortie${sortiesSpot.length>1?'s':''} — ${prisesSpot.length} prise${prisesSpot.length>1?'s':''}</div>
                 ${hasCoords?`<div style="font-size:11px;color:#aab;margin-top:2px">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</div>`:''}
               </div>
@@ -3879,10 +3829,8 @@ async function loadBackupHandle(){
     _backupDirHandle = h; // conserver même si prompt nécessaire
     if(perm === 'granted') return h;
     // Permission en attente : on garde le handle, doBackup() redemandera
-    console.log('[Backup] Handle chargé — permission:', perm);
     return h;
   } catch(e) {
-    console.warn('[Backup] loadBackupHandle:', e);
     _backupDirHandle = null;
     return null;
   }
@@ -3924,13 +3872,11 @@ async function doBackup(silent=false){
     let perm = await _backupDirHandle.queryPermission({ mode:'readwrite' });
     if(perm === 'prompt'){
       if(silent){
-        console.log('[Backup] Permission en attente — sauvegarde auto skippée');
         return;
       }
       perm = await _backupDirHandle.requestPermission({ mode:'readwrite' });
     }
     if(perm !== 'granted'){
-      console.warn('[Backup] Permission refusée');
       if(!silent) showToast('❌ Accès au dossier refusé — reconfigurer dans Paramètres');
       return;
     }
@@ -3964,13 +3910,11 @@ async function doBackup(silent=false){
     await writable.close();
 
     if(!silent) showToast(`💾 Snapshot sauvegardé — ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`);
-    console.log('[Backup] Snapshot écrit →', BACKUP_FILES[0]);
 
     const pv = document.getElementById('view-parametres');
     if(pv && pv.classList.contains('active')) renderParametresPage();
 
   } catch(e){
-    console.warn('[Backup] Erreur :', e);
     if(!silent) showToast('❌ Erreur sauvegarde');
   }
 }
@@ -4025,7 +3969,7 @@ async function renderParametresPage(){
     </div>`).join('') : '';
 
   el.innerHTML=`
-    <div class="stat-card" style="margin-bottom:14px">
+    <div class="stat-card" class="mb-14">
       <div class="stat-card-title">👤 Identité du pêcheur</div>
       <div class="settings-row">
         <div class="settings-label">Votre nom
@@ -4041,7 +3985,7 @@ async function renderParametresPage(){
       </div>
     </div>
 
-    <div class="stat-card" style="margin-bottom:14px">
+    <div class="stat-card" class="mb-14">
       <div class="stat-card-title">💾 Sauvegarde automatique</div>
       ${!backupSupported ? `
         <div style="padding:14px;background:#fff8f0;border-radius:10px;border:1px solid #fcd">
@@ -4071,7 +4015,7 @@ async function renderParametresPage(){
         </button>`}
     </div>
 
-    <div class="stat-card" style="margin-bottom:14px">
+    <div class="stat-card" class="mb-14">
       <div class="stat-card-title">🎨 Apparence</div>
       <div class="settings-row">
         <div class="settings-label">Mode sombre
@@ -4146,7 +4090,7 @@ function renderRapportPage(){
   const prises=entries.filter(e=>!e.capot);
   const nbSorties=new Set(entries.map(sortieKey)).size;
   el.innerHTML=`
-    <div class="stat-card" style="margin-bottom:14px">
+    <div class="stat-card" class="mb-14">
       <div class="stat-card-title">📄 Rapport & Export</div>
       <p style="font-size:13px;color:var(--gris);margin-bottom:20px;line-height:1.6">
         Exportez votre carnet de pêche en différents formats.
@@ -4484,9 +4428,7 @@ if ('serviceWorker' in navigator) {
         if(document.visibilityState === 'visible') reg.update();
       });
 
-      console.log('[App] SW enregistré');
     } catch (err) {
-      console.warn('[App] SW échec :', err);
     }
 
     // Rechargement contrôlé uniquement si l'utilisateur l'a demandé
