@@ -1,27 +1,38 @@
 ![License](https://img.shields.io/badge/License-Source--Available-orange?style=for-the-badge)
 ![Usage](https://img.shields.io/badge/Usage-Personal--Only-blue?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-PWA-brightgreen?style=for-the-badge)
 
-# carnet-peche
+# 🎣 Carnet de Pêche Pro
+**Une application PWA moderne pour le suivi de vos sessions de pêche.**
 
-Mon carnet de pêche
+Carnet de Pêche est un outil léger et privé, conçu pour les pêcheurs qui souhaitent garder une trace précise de leurs prises sans compromettre la confidentialité de leurs coins de pêche.
 
-Petite application purement personnelle, orientée mobile (on peut l'installer après avoir lancé la version WEB depuis son téléphone)
+## ✨ Points Forts
+* **Privé par design** : Aucune donnée n'est envoyée à un serveur tiers. Tout reste dans votre navigateur (LocalStorage).
+* **Expérience Mobile** : Installable comme une application native grâce à la technologie PWA.
+* **Automatisation** : Récupération automatique de la météo (Open-Meteo) et des phases de la lune.
+* **Zéro Tracking** : Pas de revente de données, pas de compte utilisateur obligatoire.
 
-Elle ne sert que pour mon plaisir et mes idées. malgré tout, si vous avez des suggestions et que je les trouve pertinentes j'ajouterai peut être les suggestions.
+## 🚀 Fonctionnalités
+- **Saisie intelligente** : Sélecteur Mer/Rivière, gestion des appâts et espèces.
+- **Cartographie** : Visualisation précise de vos prises via Leaflet.js.
+- **Statistiques** : Analyse dynamique par année et par espèce avec interface tactile.
+- **Sécurité des données** : Système de snapshots (sauvegardes automatiques) et export/import JSON.
 
-Carnet de Pêche V1.1 stable — voilà le fichier final.
+## 📄 Licence & Usage
+Ce projet est publié sous licence **Source Available**.
+* **Usage Personnel** : Gratuit et encouragé.
+* **Usage Commercial** : Strictement interdit sans autorisation.
+* **Code** : La copie partielle ou totale du code source pour redistribution est interdite.
 
+*Pour toute demande de licence commerciale ou suggestion majeure, merci de me contacter via GitHub.*
 
-Récap de tout ce qui a été construit dans cette version :
+---
+*Version 1.1 Stable - Développé avec passion pour la communauté des pêcheurs.*
 
- - Fonctionnalités — sélecteur espèce Rivière/Mer avec popup, catégories d'appâts avec popup, météo automatique via open-meteo, phase de lune automatique, filtres dynamiques par espèce, filtre par année, swipe tactile dans les stats.
-  
- - Sauvegarde — rotation automatique sur 3 fichiers dans un dossier choisi, sauvegarde déclenchée à chaque ajout/suppression/export manuel.
-  
- - PWA & Service Worker — architecture simplifiée et robuste, version en dur dans sw.js, plus de trace condition sur mobile.
-  
- - Qualité — nettoyage de 85 lignes de code mort, W3C validé (sauf env() intentionnel), bugs carousel stats corrigés, bug popup bloquant les clics corrigés.
-
-   
-
-Bonne déroule à tous
+<p align="center">
+  <img src="./assets/screen1.jpg" alt="Aperçu mobile de Carnet de Pêche" width="300">
+</p>
+<p align="center">
+  <img src="./assets/screen2.jpg" alt="Aperçu mobile de Carnet de Pêche" width="300">
+</p>
