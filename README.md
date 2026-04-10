@@ -34,5 +34,9 @@ Ce projet est publié sous licence **Source Available**.
   <img src="./assets/screen1.jpg" alt="Aperçu mobile de Carnet de Pêche" width="300">
 </p>
 <p align="center">
+  <img src="./assets/screen3.jpg" alt="Aperçu mobile de Carnet de Pêche" width="300">
+</p>
+
+<p align="center">
   <img src="./assets/screen2.jpg" alt="Aperçu mobile de Carnet de Pêche" width="300">
 </p>
