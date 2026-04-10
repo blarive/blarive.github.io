@@ -17,5 +17,3 @@ yarn-error.log*
 .idea/
 *.swp
 
-# node modules
-node_modules/
