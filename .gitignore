@@ -1,0 +1,18 @@
+# Systèmes
+.DS_Store
+thumbs.db
+
+# Environnement de dev (Vite / Node)
+node_modules/
+dist/
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
