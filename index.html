@@ -828,6 +828,7 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
 <div class="mobile-header">
   <span class="icon">🎣</span>
   <p class="mobile-header-title">Carnet de Pêche</p>
+  <span id="offline-badge-mobile" role="status" aria-live="polite" style="display:none;font-size:11px;background:rgba(255,200,0,0.2);color:#ffd54f;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:auto">📵</span>
 </div>
 <div class="mobile-stats-bar">
   <div class="mob-stat"><span class="num" id="m-total">0</span><span class="label">Sorties</span></div>
@@ -1260,6 +1261,16 @@ body.dark .confirm-btn-cancel:hover{color:#e0e8f4;}
       <label class="form-label">📝 Notes</label>
       <textarea class="form-textarea" id="edit-notes" placeholder="Notes, observations…"></textarea>
     </div>
+    <div class="form-group">
+      <label class="form-label">📸 Photos</label>
+      <div class="photo-grid-upload">
+        <div class="photo-thumb-list" id="edit-photo-thumb-list"></div>
+        <div class="photo-add-btn" id="edit-photo-add-btn" onclick="addEditPhotoInput()">
+          <span>➕</span> Ajouter (<span id="edit-photo-count">0</span>/3)
+        </div>
+      </div>
+      <input type="file" id="edit-photo-input" accept="image/*" style="display:none" onchange="handleEditPhotoSelect(event)">
+    </div>
     <div style="display:flex;gap:10px;margin-top:6px">
       <button type="button" class="btn-submit" onclick="saveEditEntry()" style="flex:1">💾 Enregistrer</button>
       <button type="button" onclick="closeEdit()" style="flex:0 0 auto;padding:14px 20px;border:1.5px solid #ddd;border-radius:12px;background:none;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--gris)">Annuler</button>
@@ -1512,12 +1523,10 @@ const topbarTitles={
 // ════════════════════════════════════════════════════════
 function updateOnlineStatus(){
   const badge = document.getElementById('offline-badge');
-  if(!badge) return;
-  if(navigator.onLine){
-    badge.classList.remove('visible');
-  } else {
-    badge.classList.add('visible');
-  }
+  const badgeMobile = document.getElementById('offline-badge-mobile');
+  const online = navigator.onLine;
+  if(badge){ badge.classList.toggle('visible', !online); }
+  if(badgeMobile){ badgeMobile.style.display = online ? 'none' : 'inline-block'; }
 }
 window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
@@ -2253,7 +2262,9 @@ function validateEntry(){
   else {
     const d=new Date(dateVal);
     const now=new Date();
+    const minDate=new Date('1970-01-01');
     if(isNaN(d.getTime())){ markInvalid('f-date','err-date'); ok=false; }
+    else if(d<minDate){ markInvalid('f-date','err-date'); ok=false; }
     else if(d>now){ markInvalid('f-date','err-date-future'); ok=false; }
   }
   if(!isCapot){
@@ -3842,6 +3853,9 @@ function openEditEntry(id){
   document.getElementById('edit-temp-eau').value=e.tempEau||'';
   document.getElementById('edit-lune').value=e.lune||'';
   document.getElementById('edit-nb-poissons').value=e.nbPoissons||1;
+  // Photos
+  window._editPhotos = e.photos ? [...e.photos] : [];
+  updateEditPhotoThumbList();
   document.getElementById('edit-wrap').classList.add('open');
 }
 function closeEdit(){
@@ -3850,6 +3864,43 @@ function closeEdit(){
   if(editAutre){editAutre.style.display='none';editAutre.value='';}
 }
 function closeEditOnOverlay(ev){ if(ev.target===document.getElementById('edit-wrap')) closeEdit(); }
+
+function updateEditPhotoThumbList(){
+  const list=document.getElementById('edit-photo-thumb-list');
+  const counter=document.getElementById('edit-photo-count');
+  const addBtn=document.getElementById('edit-photo-add-btn');
+  if(!list) return;
+  const photos=window._editPhotos||[];
+  if(counter) counter.textContent=photos.length;
+  if(addBtn) addBtn.style.display=photos.length>=3?'none':'flex';
+  list.innerHTML=photos.map((p,i)=>`
+    <div class="photo-thumb-wrap">
+      <img class="photo-thumb" src="${p}" alt="Photo ${i+1}" onclick="viewFullImage('${p}')">
+      <button type="button" class="photo-thumb-del" onclick="removeEditPhoto(${i})" aria-label="Supprimer photo">✕</button>
+    </div>`).join('');
+}
+
+function removeEditPhoto(idx){
+  if(!window._editPhotos) return;
+  window._editPhotos.splice(idx,1);
+  updateEditPhotoThumbList();
+}
+
+function addEditPhotoInput(){
+  document.getElementById('edit-photo-input').click();
+}
+
+async function handleEditPhotoSelect(event){
+  const file=event.target.files[0]; if(!file) return;
+  if(!window._editPhotos) window._editPhotos=[];
+  if(window._editPhotos.length>=3){ showToast('⚠️ 3 photos maximum'); return; }
+  try {
+    const compressed=await compressImage(file,800,0.75);
+    window._editPhotos.push(compressed);
+    updateEditPhotoThumbList();
+  } catch(e){ showToast('❌ Erreur photo'); }
+  event.target.value='';
+}
 
 function saveEditEntry(){
   const id=parseInt(document.getElementById('edit-id').value);
@@ -3873,6 +3924,7 @@ function saveEditEntry(){
     tempEau:document.getElementById('edit-temp-eau').value||null,
     lune:document.getElementById('edit-lune').value,
     nbPoissons:parseInt(document.getElementById('edit-nb-poissons').value)||entries[idx].nbPoissons||1,
+    photos: window._editPhotos || entries[idx].photos || [],
   };
   haptic('medium');
   saveEntries().catch(e=>console.error('[DB] saveEntries:', e));
@@ -4475,7 +4527,11 @@ function importData(event){
       }
       _moisCache=null; _statsCache=null;
   renderJournal(); updateAllStats(); renderSpotsForm();
-      showToast(`📥 ${nouveaux.length} sortie(s) importée(s) !`);
+      const doublons=imported.length-nouveaux.length;
+      const msgImport=doublons>0
+        ? `📥 ${nouveaux.length} importée(s) — ${doublons} doublon(s) ignoré(s)`
+        : `📥 ${nouveaux.length} sortie(s) importée(s) !`;
+      showToast(msgImport);
     }catch{showToast('❌ Fichier invalide');}
     event.target.value='';
   };
