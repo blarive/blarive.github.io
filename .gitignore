@@ -16,3 +16,6 @@ yarn-error.log*
 .vscode/
 .idea/
 *.swp
+
+# node modules
+node_modules/
