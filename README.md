@@ -1,4 +1,8 @@
+![License](https://img.shields.io/badge/License-Source--Available-orange?style=for-the-badge)
+![Usage](https://img.shields.io/badge/Usage-Personal--Only-blue?style=for-the-badge)
+
 # carnet-peche
+
 Mon carnet de pêche
 
 Petite application purement personnelle, orientée mobile (on peut l'installer après avoir lancé la version WEB depuis son téléphone)
